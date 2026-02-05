@@ -1,0 +1,94 @@
+# app/services/signal_generation_service.py
+from sqlalchemy.orm import Session
+from sqlalchemy import text
+from app.db.models.signals import Signal
+
+def infer_signal_type(column_name: str) -> str:
+    if column_name.startswith("y"):
+        return "yi"
+    if column_name.startswith("z"):
+        return "zi"
+    return "xi"
+
+
+def infer_roles(signal_type: str):
+    if signal_type == "xi":
+        return ["ops"]
+    if signal_type == "yi":
+        return ["architect", "exec"]
+    return ["exec"]
+
+
+def infer_unit(column_name: str) -> str:
+    mapping = {
+        "_ms": "ms",
+        "_sec": "sec",
+        "_percent": "percent",
+        "_ratio": "ratio",
+        "_bytes": "bytes",
+        "_kb": "kb",
+        "_mb": "mb",
+        "_count": "count",
+        "_rate": "rate",
+        "_probability": "probability",
+    }
+    for suffix, unit in mapping.items():
+        if column_name.endswith(suffix):
+            return unit
+    return "value"
+
+
+def humanize(text_value: str) -> str:
+    return text_value.replace("_", " ").capitalize()
+
+
+def generate_signals(db: Session):
+    """
+    Discover all metrics from timeseries_points.payload
+    and insert missing signals.
+    """
+
+    # Get one payload per component (enough to discover all keys)
+    rows = db.execute(text("""
+        SELECT DISTINCT ON (component_code)
+               component_code,
+               payload
+        FROM timeseries_points
+        ORDER BY component_code, tick
+    """)).mappings().all()
+
+    created = 0
+
+    for row in rows:
+        component = row["component_code"]
+        payload = row["payload"]
+
+        for column_name in payload.keys():
+            signal_code = f"{component}.{column_name}"
+
+            exists = db.query(Signal).filter(
+                Signal.signal_code == signal_code
+            ).first()
+
+            if exists:
+                continue
+
+            signal_type = infer_signal_type(column_name)
+
+            signal = Signal(
+                signal_code=signal_code,
+                component_code=component,
+                column_name=column_name,
+                signal_type=signal_type,
+                unit=infer_unit(column_name),
+                polarity="higher_is_worse",
+                description=humanize(column_name),
+                visible_to_roles=infer_roles(signal_type),
+                family=f"AUTO_{component}",
+            )
+
+            db.add(signal)
+            created += 1
+
+    db.commit()
+    return created

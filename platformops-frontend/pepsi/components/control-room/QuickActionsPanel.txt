@@ -1,0 +1,51 @@
+﻿ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\components\control-room\QuickActionsPanel.tsx
+==================================================
+// src/components/control-room/QuickActionsPanel.tsx
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { evaluateAlerts, evaluateIncidents, rollbackAnomaly } from '../../api/controlRoom.api';
+
+export function QuickActionsPanel() {
+  const queryClient = useQueryClient();
+
+  const evalAlertsMut = useMutation({
+    mutationFn: evaluateAlerts,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['alertSummary', 'incidents', 'systemOverview'] }),
+  });
+
+  const evalIncidentsMut = useMutation({
+    mutationFn: evaluateIncidents,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['incidents', 'systemOverview'] }),
+  });
+
+  const rollbackMut = useMutation({
+    mutationFn: rollbackAnomaly,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['activeAnomaly', 'anomalyImpact', 'anomalyAnalysis', 'systemOverview'] }),
+  });
+
+  return (
+    <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4 space-y-2">
+      <div className="text-xs uppercase text-zinc-500">Quick Actions</div>
+      <button
+        className="w-full rounded bg-zinc-800 py-2 text-sm disabled:opacity-50"
+        onClick={() => evalAlertsMut.mutate()}
+        disabled={evalAlertsMut.isPending}
+      >
+        {evalAlertsMut.isPending ? 'Evaluating...' : 'Evaluate Alerts'}
+      </button>
+      <button
+        className="w-full rounded bg-zinc-800 py-2 text-sm disabled:opacity-50"
+        onClick={() => evalIncidentsMut.mutate()}
+        disabled={evalIncidentsMut.isPending}
+      >
+        {evalIncidentsMut.isPending ? 'Evaluating...' : 'Evaluate Incidents'}
+      </button>
+      <button
+        className="w-full rounded bg-red-800 py-2 text-sm disabled:opacity-50"
+        onClick={() => rollbackMut.mutate()}
+        disabled={rollbackMut.isPending}
+      >
+        {rollbackMut.isPending ? 'Rolling back...' : 'Rollback Anomaly'}
+      </button>
+    </div>
+  );
+}

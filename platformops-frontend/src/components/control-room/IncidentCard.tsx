@@ -1,0 +1,31 @@
+// src/components/control-room/IncidentCard.tsx
+import { useQuery } from '@tanstack/react-query';
+import { fetchIncidents } from '../../api/controlRoom.api';
+import { HealthBadge } from './HealthBadge'; // Reuse for severity
+
+export function IncidentCard() {
+  const { data } = useQuery({
+    queryKey: ['incidents'],
+    queryFn: fetchIncidents,
+  });
+
+  const active = data?.filter((i: any) => i.status === 'OPEN') ?? [];
+  const count = active.length;
+
+  return (
+    <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
+      <div className="text-xs uppercase text-zinc-500">Active Incidents</div>
+      <div className="mt-2 text-xl font-semibold text-red-400">{count}</div>
+      {count > 0 && (
+        <div className="mt-4 space-y-2">
+          {active.slice(0, 3).map((inc: any) => (
+            <div key={inc.id} className="text-xs">
+              <HealthBadge status={inc.severity.toUpperCase()} /> {inc.summary} (Ticks: {inc.start_tick}-{inc.end_tick ?? 'Ongoing'})
+            </div>
+          ))}
+          {count > 3 && <div className="text-zinc-400">+{count - 3} more</div>}
+        </div>
+      )}
+    </div>
+  );
+}

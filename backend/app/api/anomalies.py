@@ -1,0 +1,66 @@
+# app/api/anomalies.py
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy.orm import Session
+
+from app.db.session import get_db
+from app.services.anomaly_analysis_service import anomaly_full_analysis
+from app.services.anomaly_injection_service import inject_anomaly
+from app.services.anomaly_rollback_service import rollback_anomalies
+from app.services.anomaly_insight_service import active_anomalies
+from app.services.anomaly_impact_service import anomaly_impact_summary
+
+
+router = APIRouter(prefix="/api/anomalies", tags=["Anomalies"])
+
+
+@router.post("/inject")
+def inject(
+    pipeline: str = Query(...),
+    anomaly_type: str = Query(...),
+    from_tick: int = Query(...),
+    to_tick: int = Query(...),
+    strength: float = Query(1.0),
+    db: Session = Depends(get_db),
+):
+    try:
+        affected = inject_anomaly(
+            db=db,
+            pipeline=pipeline,
+            anomaly_type=anomaly_type,
+            from_tick=from_tick,
+            to_tick=to_tick,
+            strength=strength,
+        )
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    return {
+        "anomaly_type": anomaly_type,
+        "pipeline": pipeline,
+        "affected_points": affected,
+    }
+
+
+@router.post("/rollback")
+def rollback(db: Session = Depends(get_db)):
+    restored = rollback_anomalies(db)
+    return {"restored_points": restored}
+
+
+@router.get("/active")
+def active(db: Session = Depends(get_db)):
+    return active_anomalies(db)
+
+
+@router.get("/impact")
+def impact(db: Session = Depends(get_db)):
+    return anomaly_impact_summary(db)
+
+#@router.get("/analysis1")
+#def analysis(db: Session = Depends(get_db)):
+#    return analyze_anomaly(db)
+
+@router.get("/analysis")
+def analysis(db: Session = Depends(get_db)):
+    return anomaly_full_analysis(db)
+

@@ -1,0 +1,127 @@
+﻿ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\api\anomalies.api.ts
+==================================================
+// src/api/anomalies.api.ts (new file - hooks for all anomalies APIs)
+import { http } from "./http";
+
+export type InjectParams = {
+  pipeline: string;
+  anomaly_type: string;
+  from_tick: number;
+  to_tick: number;
+  strength?: number;
+};
+
+export type ActiveAnomaly = {
+  active: boolean;
+  anomalies?: {
+    anomaly_type: string;
+    pipeline: string;
+    from_tick: number;
+    to_tick: number;
+  }[];
+};
+
+export type ImpactSummary = {
+  active: boolean;
+  anomaly: {
+    type: string;
+    from_tick: number;
+    to_tick: number;
+    duration_ticks: number;
+    affected_components: string[];
+    affected_signals: number;
+    points_modified: number;
+  };
+  alerts: {
+    total: number;
+    by_severity: Record<string, number>;
+    by_component: Record<string, number>;
+  };
+  components: Array<{
+    component_code: string;
+    health_score: number;
+    open_alerts: number;
+    severity_pressure: Record<string, number>;
+  }>;
+  metric_deviation: Array<{
+    signal_code: string;
+    avg_delta_pct: number;
+    max_delta_pct: number;
+  }>;
+  global_health: {
+    collapse_risk: number;
+    status: string;
+  };
+};
+
+export type FullAnalysis = {
+  active: boolean;
+  anomaly: {
+    type: string;
+    title: string;
+    expected_behavior: string[];
+    pipeline: string;
+    window: {
+      from_tick: number;
+      to_tick: number;
+      duration_ticks: number;
+    };
+    scope: {
+      affected_components: { code: string; label: string }[];
+      affected_signals: string[];
+    };
+  };
+  system_state: {
+    global_health: {
+      collapse_risk: number;
+      status: string;
+    };
+    cascading_behavior: boolean;
+    stability: string;
+  };
+  alerts: {
+    open_total: number;
+    by_severity: Record<string, number>;
+    by_component: { component_code: string; component_label: string; open_alerts: number; pipeline_position: number }[];
+    timeline: { from_tick: number; to_tick: number; open_alerts: number; critical: number; warning: number }[];
+    ticks: {
+      first_open_tick: number | null;
+      latest_open_tick: number | null;
+    };
+  };
+  deviation: {
+    per_component: { component_code: string; component_label: string; points_modified: number; signals_modified: string[]; families_touched: string[]; mean_delta_pct: number; peak_delta_pct: number }[];
+    per_signal: { signal_code: string; component_code: string; family: string; column_name: string; unit: string | null; description: string | null; points: number; mean_original: number; mean_current: number; mean_delta_abs: number; mean_delta_pct: number; min_delta_pct: number; max_delta_pct: number; peak_current: number }[];
+  };
+  health: {
+    components_ranked: { component_code: string; component_label: string; open_alerts: number; health_score: number | null }[];
+  };
+  observations: { type: string; message: string }[];
+};
+
+export async function injectAnomaly(params: InjectParams) {
+  const { data } = await http.post("/api/anomalies/inject", params);
+  return data;
+}
+
+export async function rollbackAnomaly() {
+  const { data } = await http.post("/api/anomalies/rollback");
+  return data;
+}
+
+export async function fetchActiveAnomaly() {
+  const { data } = await http.get<ActiveAnomaly>("/api/anomalies/active");
+  return data;
+}
+
+export async function fetchAnomalyImpact() {
+  const { data } = await http.get<ImpactSummary>("/api/anomalies/impact");
+  return data;
+}
+
+export async function fetchAnomalyAnalysis() {
+  const { data } = await http.get<FullAnalysis>("/api/anomalies/analysis");
+  return data;
+}
+
+

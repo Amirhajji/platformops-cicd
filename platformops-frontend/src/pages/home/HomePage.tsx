@@ -1,0 +1,50 @@
+// src/pages/home/HomePage.tsx (updated full file)
+import { useTimeWindow } from '../../context/TimeContext'; // For time context
+import { SystemGrid } from '../../components/control-room/SystemGrid';
+import { AlertSummary } from '../../components/control-room/AlertSummary';
+import { IncidentCard } from '../../components/control-room/IncidentCard';
+import { AnomalyStatus } from '../../components/control-room/AnomalyStatus';
+import { QuickActionsPanel } from '../../components/control-room/QuickActionsPanel';
+import { MiniLaneMap } from '../../components/control-room/MiniLaneMap';
+
+export function HomePage() {
+  const { window, setWindow } = useTimeWindow(); // Example enrichment: Time selector
+
+  return (
+    <div className="space-y-6">
+      <h1 className="text-2xl font-semibold tracking-tight">Control Room</h1>
+      <p className="text-sm text-zinc-400 max-w-xl">
+        System status at a glance. Monitor health, alerts, incidents, anomalies. Triage and act.
+      </p>
+
+      {/* Time Selector - Enrichment */}
+      <div className="flex items-center gap-4 text-sm">
+        <label className="text-zinc-500">Time Window:</label>
+        <input
+          type="number"
+          value={window.fromTick}
+          onChange={e => setWindow({ ...window, fromTick: +e.target.value })}
+          className="w-20 rounded border border-zinc-800 bg-zinc-950 px-2 py-1"
+        />
+        <span>→</span>
+        <input
+          type="number"
+          value={window.toTick}
+          onChange={e => setWindow({ ...window, toTick: +e.target.value })}
+          className="w-20 rounded border border-zinc-800 bg-zinc-950 px-2 py-1"
+        />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <AlertSummary />
+        <IncidentCard />
+        <AnomalyStatus />
+        <QuickActionsPanel />
+      </div>
+
+      <SystemGrid />
+
+      <MiniLaneMap />
+    </div>
+  );
+}

@@ -1,0 +1,157 @@
+// src/components/alerts/AlertEventsTable.tsx
+import { useMemo, useState } from 'react';
+import { fetchTimeseries } from '../../api/components.api';
+import { useQuery } from '@tanstack/react-query';
+import { LineChart, Line, ResponsiveContainer } from 'recharts';
+import { ArrowUpDown, Download, LinkIcon } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import type { AlertEvent } from '../../api/alerts.api';
+import { AlertRow } from './AlertRow';
+
+type Props = {
+  alerts: AlertEvent[];
+  filter: { component: string; severity: string; origin: string };
+};
+
+export function AlertEventsTable({ alerts, filter }: Props) {
+  const [sort, setSort] = useState<{ key: keyof AlertEvent; dir: 'asc' | 'desc' }>({ key: 'id', dir: 'desc' });
+  const [page, setPage] = useState(0);
+  const pageSize = 20;
+
+  const filteredAlerts = useMemo(() => {
+    return alerts.filter((a) => {
+      return (
+        (!filter.component || a.component_code?.toLowerCase().includes(filter.component.toLowerCase())) &&
+        (!filter.severity || a.severity === filter.severity) &&
+        (!filter.origin || a.origin === filter.origin)
+      );
+    });
+  }, [alerts, filter]);
+
+  const sortedAlerts = useMemo(() => {
+    return [...filteredAlerts].sort((a, b) => {
+      const valA = a[sort.key] ?? 0; // safe fallback
+      const valB = b[sort.key] ?? 0;
+      if (valA < valB) return sort.dir === 'asc' ? -1 : 1;
+      if (valA > valB) return sort.dir === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [filteredAlerts, sort]);
+
+  const paginated = sortedAlerts.slice(page * pageSize, (page + 1) * pageSize);
+
+  const toggleSort = (key: keyof AlertEvent) => {
+    setSort({
+      key,
+      dir: sort.key === key && sort.dir === 'asc' ? 'desc' : 'asc',
+    });
+  };
+
+  const exportCSV = () => {
+    const headers = ['id', 'signal_code', 'severity', 'status', 'origin', 'tick_start', 'tick_end', 'peak_value'];
+    const rows = sortedAlerts.map((a) => [
+      a.id,
+      a.signal_code,
+      a.severity,
+      a.status,
+      a.origin,
+      a.tick_start,
+      a.tick_end ?? 'Ongoing',
+      a.peak_value?.toFixed(2) ?? '',
+    ]);
+    const csv = [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
+
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'alerts_export.csv';
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const getSparkline = (alert: AlertEvent) => {
+    const start = alert.tick_start - 10;
+    const end = alert.tick_end ?? alert.tick_start + 10;
+    const { data } = useQuery({
+      queryKey: ['sparkline', alert.id],
+      queryFn: () => fetchTimeseries(alert.signal_code, start, end),
+    });
+    return data ?? [];
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-end">
+        <button
+          onClick={exportCSV}
+          className="flex items-center gap-2 rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-sm text-zinc-300 hover:bg-zinc-800"
+        >
+          <Download size={16} />
+          Export CSV
+        </button>
+      </div>
+
+      <div className="overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900">
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-zinc-800">
+            <thead className="bg-zinc-950">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider cursor-pointer" onClick={() => toggleSort('signal_code')}>
+                  Signal {sort.key === 'signal_code' && (sort.dir === 'asc' ? '↑' : '↓')}
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">Severity</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider cursor-pointer" onClick={() => toggleSort('status')}>
+                  Status {sort.key === 'status' && (sort.dir === 'asc' ? '↑' : '↓')}
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">Origin</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider cursor-pointer" onClick={() => toggleSort('tick_start')}>
+                  Ticks {sort.key === 'tick_start' && (sort.dir === 'asc' ? '↑' : '↓')}
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">Peak</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">Sparkline</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-zinc-800 bg-zinc-900">
+  {paginated.length === 0 ? (
+    <tr>
+      <td colSpan={8} className="px-6 py-10 text-center text-sm text-zinc-500">
+        No alerts match the current filters
+      </td>
+    </tr>
+  ) : (
+    paginated.map((a) => (
+      <AlertRow key={a.id} alert={a} />
+    ))
+  )}
+</tbody>
+          </table>
+        </div>
+
+        {/* Pagination */}
+        <div className="flex items-center justify-between px-4 py-3 text-sm text-zinc-400">
+          <div>
+            Showing {page * pageSize + 1} to {Math.min((page + 1) * pageSize, sortedAlerts.length)} of {sortedAlerts.length}
+          </div>
+          <div className="flex gap-2">
+            <button
+              disabled={page === 0}
+              onClick={() => setPage((p) => p - 1)}
+              className="rounded border border-zinc-700 px-3 py-1 hover:bg-zinc-800 disabled:opacity-50"
+            >
+              Previous
+            </button>
+            <button
+              disabled={(page + 1) * pageSize >= sortedAlerts.length}
+              onClick={() => setPage((p) => p + 1)}
+              className="rounded border border-zinc-700 px-3 py-1 hover:bg-zinc-800 disabled:opacity-50"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

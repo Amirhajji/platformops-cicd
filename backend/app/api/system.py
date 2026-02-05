@@ -1,0 +1,145 @@
+# app/api/system.py
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+from sqlalchemy import func
+from app.db.session import get_db
+from app.db.models.signals import Signal
+from app.db.models.alerts import AlertEvent
+from app.services.analytics_service import component_health
+from app.services.email_service import send_email
+
+
+router = APIRouter(prefix="/api/system", tags=["System"])
+
+
+@router.get("/overview")
+def system_overview(db: Session = Depends(get_db)):
+    components = (
+        db.query(Signal.component_code)
+        .distinct()
+        .all()
+    )
+
+    result = []
+
+    for (component_code,) in components:
+        health = component_health(db, component_code)
+
+        active_alerts = (
+            db.query(AlertEvent)
+            .filter(AlertEvent.component_code == component_code)
+            .count()
+        )
+
+        result.append({
+            "component_code": component_code,
+            "health_score": health,
+            "active_alerts": active_alerts,
+            "status": (
+                "CRITICAL" if health < 40 else
+                "DEGRADED" if health < 70 else
+                "OK"
+            )
+        })
+
+    return result
+
+
+@router.get("/components")
+def list_components(db: Session = Depends(get_db)):
+    components = (
+        db.query(
+            Signal.component_code,
+            func.count(Signal.signal_code).label("signals")
+        )
+        .group_by(Signal.component_code)
+        .all()
+    )
+
+    return [
+        {
+            "component_code": c,
+            "signal_count": count
+        }
+        for c, count in components
+    ]
+
+
+@router.get("/components/{component_code}")
+def component_details(component_code: str, db: Session = Depends(get_db)):
+    signals = (
+        db.query(Signal)
+        .filter(Signal.component_code == component_code)
+        .all()
+    )
+
+    return {
+        "component_code": component_code,
+        "signals": [
+            {
+                "signal_code": s.signal_code,
+                "type": s.signal_type,
+                "unit": s.unit,
+                "polarity": s.polarity,
+                "description": s.description
+            }
+            for s in signals
+        ],
+        "health_score": component_health(db, component_code)
+    }
+
+
+
+
+
+@router.post("/test-email")
+def test_email():
+    send_email(
+        to_email="test@local.test",
+        subject="SMTP Test",
+        text="Plain text email works",
+        html="<h1>HTML email works</h1>",
+    )
+    return {"sent": True}
+
+
+@router.get("/{component_code}/related-signals")
+def get_related_signals(
+    component_code: str,
+    limit: int = 8,
+    min_correlation: float = 0.7,
+    db: Session = Depends(get_db)
+):
+    # Use existing propagation evidence table or compute on-the-fly
+    related = (
+        db.query(PropagationEvidence)
+        .filter(
+            or_(
+                PropagationEvidence.source_signal.in_(
+                    db.query(Signal.signal_code).filter(Signal.component_code == component_code)
+                ),
+                PropagationEvidence.target_signal.in_(
+                    db.query(Signal.signal_code).filter(Signal.component_code == component_code)
+                )
+            ),
+            PropagationEvidence.correlation >= min_correlation
+        )
+        .order_by(desc(PropagationEvidence.correlation))
+        .limit(limit)
+        .all()
+    )
+
+    return {
+        "component_code": component_code,
+        "related": [
+            {
+                "signal_code": r.target_signal if r.source_signal in primary else r.source_signal,
+                "component_code": "...",  # resolve from signals table
+                "lag_ticks": r.lag_ticks,
+                "correlation": r.correlation,
+                "confidence": r.confidence_score,
+                "direction": "upstream" if r.target_signal in primary else "downstream"
+            }
+            for r in related
+        ]
+    }

@@ -1,0 +1,24 @@
+﻿ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\backend\app\db\models\anomalies.py
+==================================================
+# app/db/models/anomalies.py
+from sqlalchemy import Column, Integer, Text, TIMESTAMP
+from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.sql import func
+
+from app.db.base import Base
+
+
+class InjectedAnomaly(Base):
+    __tablename__ = "injected_anomalies"
+
+    id = Column(Integer, primary_key=True)
+    signal_code = Column(Text, nullable=False)
+    component_code = Column(Text, nullable=False)
+    tick = Column(Integer, nullable=False)
+
+    # store the original scalar value as jsonb (number, string, etc.)
+    original_value = Column(JSONB, nullable=False)
+
+    anomaly_type = Column(Text, nullable=False)
+    injected_at = Column(TIMESTAMP, server_default=func.now(), nullable=False)
+

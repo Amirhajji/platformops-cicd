@@ -1,0 +1,130 @@
+﻿ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\features\control-room\ComponentStatusTable.tsx
+==================================================
+// src/features/control-room/ComponentStatusTable.tsx
+import { useMemo, useState } from "react";
+import { useSystemOverview } from "../../hooks/useSystemOverview";
+import { Card } from "../../ui/Card";
+import { Badge } from "../../ui/Badge";
+import type { SystemComponentOverview } from "../../api/system.api";
+
+type SortKey = "status" | "health" | "alerts" | "component";
+
+function statusRank(s: SystemComponentOverview["status"]) {
+  if (s === "CRITICAL") return 3;
+  if (s === "DEGRADED") return 2;
+  return 1;
+}
+
+export function ComponentStatusTable() {
+  const { data, isLoading, isError } = useSystemOverview();
+  const [sortKey, setSortKey] = useState<SortKey>("status");
+
+  const sorted = useMemo(() => {
+    const rows = (data ?? []).slice();
+    rows.sort((a, b) => {
+      if (sortKey === "status") return statusRank(b.status) - statusRank(a.status);
+      if (sortKey === "alerts") return b.active_alerts - a.active_alerts;
+      if (sortKey === "health") return a.health_score - b.health_score; // lower health first
+      return a.component_code.localeCompare(b.component_code);
+    });
+    return rows;
+  }, [data, sortKey]);
+
+  if (isLoading) {
+    return (
+      <Card title="Component Health (Operational)">
+        <div className="text-sm text-zinc-500">Loading system overviewâ€¦</div>
+      </Card>
+    );
+  }
+
+  if (isError) {
+    return (
+      <Card title="Component Health (Operational)">
+        <div className="rounded-lg border border-red-900/40 bg-red-950/20 p-3 text-sm text-red-200">
+          Failed to load system overview.
+        </div>
+      </Card>
+    );
+  }
+
+  if (!sorted || sorted.length === 0) {
+    return (
+      <Card title="Component Health (Operational)">
+        <div className="text-sm text-zinc-500">No components found.</div>
+      </Card>
+    );
+  }
+
+  return (
+    <Card
+      title="Component Health (Operational)"
+      right={
+        <div className="flex items-center gap-2 text-xs text-zinc-400">
+          <span>Sort</span>
+          <select
+            value={sortKey}
+            onChange={(e) => setSortKey(e.target.value as SortKey)}
+            className="rounded border border-zinc-800 bg-zinc-950 px-2 py-1 text-zinc-200 outline-none"
+          >
+            <option value="status">Status</option>
+            <option value="alerts">Open Alerts</option>
+            <option value="health">Health Score</option>
+            <option value="component">Component</option>
+          </select>
+        </div>
+      }
+    >
+      <div className="mb-3 text-xs text-zinc-500">
+        This table is the NOC board: degraded/critical services, health score, and current alert pressure.
+      </div>
+
+      <table className="w-full text-sm">
+        <thead className="text-zinc-400">
+          <tr>
+            <th className="py-2 text-left">Component</th>
+            <th className="py-2">Status</th>
+            <th className="py-2 text-right">Health</th>
+            <th className="py-2 text-right">Open Alerts</th>
+            <th className="py-2 text-right">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {sorted.map((c) => {
+            const tone =
+              c.status === "CRITICAL"
+                ? "crit"
+                : c.status === "DEGRADED"
+                ? "warn"
+                : "ok";
+
+            return (
+              <tr key={c.component_code} className="border-t border-zinc-800 hover:bg-zinc-800/30">
+                <td className="py-2 font-mono">{c.component_code}</td>
+                <td className="py-2 text-center">
+                  <Badge label={c.status} tone={tone} />
+                </td>
+                <td className="py-2 text-right font-mono">
+                  {c.health_score.toFixed(2)}
+                </td>
+                <td className="py-2 text-right font-mono">
+                  {c.active_alerts}
+                </td>
+                <td className="py-2 text-right">
+                  <button
+                    className="rounded border border-zinc-800 bg-zinc-950 px-2 py-1 text-xs text-zinc-300 hover:bg-zinc-800/30"
+                    disabled
+                    title="Drilldowns will be wired in Components / Alerts sections next."
+                  >
+                    Investigate â†’
+                  </button>
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </Card>
+  );
+}
+

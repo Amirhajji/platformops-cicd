@@ -1,0 +1,109 @@
+﻿ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\pages\auth\LoginPage.tsx
+==================================================
+// src/pages/auth/LoginPage.tsx
+import { useMutation } from "@tanstack/react-query";
+import { useNavigate, Link } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useAuth } from "../../auth/auth.store";
+import { login, me } from "../../auth/auth.api";
+import { AuthLayout } from "./AuthLayout";
+
+const schema = z.object({
+  username: z.string().min(3),
+  password: z.string().min(3),
+});
+
+type FormValues = z.infer<typeof schema>;
+
+export function LoginPage() {
+  const nav = useNavigate();
+  const { setSession } = useAuth();
+
+  const form = useForm<FormValues>({
+    resolver: zodResolver(schema),
+  });
+
+  const mutation = useMutation({
+    mutationFn: async (values: FormValues) => {
+      const tokenRes = await login(values.username, values.password);
+      localStorage.setItem("access_token", tokenRes.access_token);
+      const user = await me();
+      return { token: tokenRes.access_token, user };
+    },
+    onSuccess: ({ token, user }) => {
+      setSession(token, user);
+      nav("/home", { replace: true });
+    },
+  });
+
+  return (
+    <AuthLayout>
+      <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-8 shadow-lg">
+        <div className="mb-6">
+          <div className="text-xl font-semibold tracking-tight">
+            Sign in to PlatformOPS
+          </div>
+          <div className="mt-1 text-sm text-zinc-400">
+            Access the operational control plane.
+          </div>
+        </div>
+
+        <form
+          className="space-y-4"
+          onSubmit={form.handleSubmit((v) => mutation.mutate(v))}
+        >
+          <div>
+            <label className="text-xs uppercase tracking-wide text-zinc-400">
+              Username / Email
+            </label>
+            <input
+              className="mt-2 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm outline-none focus:border-zinc-600"
+              {...form.register("username")}
+            />
+          </div>
+
+          <div>
+            <label className="text-xs uppercase tracking-wide text-zinc-400">
+              Password
+            </label>
+            <input
+              type="password"
+              className="mt-2 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm outline-none focus:border-zinc-600"
+              {...form.register("password")}
+            />
+          </div>
+
+          {mutation.isError && (
+            <div className="rounded-lg border border-red-900/50 bg-red-950/30 p-3 text-sm text-red-300">
+              Authentication failed. Check credentials.
+            </div>
+          )}
+
+          <button
+            type="submit"
+            disabled={mutation.isPending}
+            className="mt-2 w-full rounded-lg bg-white/90 py-2 text-sm font-semibold text-zinc-950 hover:bg-white disabled:opacity-60"
+          >
+            {mutation.isPending ? "Authenticatingâ€¦" : "Sign in"}
+          </button>
+        </form>
+
+        <div className="mt-6 flex justify-between text-sm text-zinc-400">
+          <span>
+            No account?{" "}
+            <Link className="text-zinc-100 underline" to="/signup">
+              Create one
+            </Link>
+          </span>
+        </div>
+
+        <div className="mt-4 text-xs text-zinc-500">
+          Email verification required after signup.
+        </div>
+      </div>
+    </AuthLayout>
+  );
+}
+

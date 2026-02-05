@@ -1,0 +1,33 @@
+﻿ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\backend\app\db\models\users.py
+==================================================
+# app/db/models/users.py
+from sqlalchemy import Column, Text, Boolean, ForeignKey
+from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import relationship
+import uuid
+from app.db.base import Base
+
+class User(Base):
+    __tablename__ = "users"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    username = Column(Text, unique=True, nullable=False)
+    password_hash = Column(Text, nullable=False)
+    is_active = Column(Boolean, default=True)
+
+    roles = relationship("Role", secondary="user_roles", back_populates="users")
+
+
+class Role(Base):
+    __tablename__ = "roles"
+
+    id = Column(Text, primary_key=True)  # EXEC / OPS / ARCH
+    users = relationship("User", secondary="user_roles", back_populates="roles")
+
+
+class UserRole(Base):
+    __tablename__ = "user_roles"
+
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), primary_key=True)
+    role_id = Column(Text, ForeignKey("roles.id"), primary_key=True)
+

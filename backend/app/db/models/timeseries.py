@@ -1,0 +1,13 @@
+# app/db/models/timeseries.py
+from sqlalchemy import Column, BigInteger, Integer, Text
+from sqlalchemy.dialects.postgresql import JSONB
+from app.db.base import Base
+
+class TimeSeriesPoint(Base):
+    __tablename__ = "timeseries_points"
+
+    id = Column(BigInteger, primary_key=True)
+    component_code = Column(Text, nullable=False, index=True)
+    tick = Column(Integer, nullable=False, index=True)
+    timestamp = Column(BigInteger, nullable=False)
+    payload = Column(JSONB, nullable=False)

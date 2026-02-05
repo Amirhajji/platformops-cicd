@@ -1,0 +1,47 @@
+﻿ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\backend\app\observability\metric_families.py
+==================================================
+# app/observability/metric_families.py
+
+FAMILY_F1 = "utilization"
+FAMILY_F2 = "throughput"
+FAMILY_F3 = "backlog"
+FAMILY_F4 = "latency"
+FAMILY_F5 = "error_rate"
+FAMILY_F6 = "count"
+FAMILY_F7 = "events"
+
+# substring-based classification (robust + scalable)
+FAMILY_RULES = {
+    FAMILY_F4: [
+        "latency", "delay", "jitter", "rtt", "response", "wait", "duration"
+    ],
+    FAMILY_F3: [
+        "queue", "backlog", "lag", "depth", "pending"
+    ],
+    FAMILY_F1: [
+        "utilization", "ratio", "percent", "pressure"
+    ],
+    FAMILY_F5: [
+        "error", "failure", "timeout", "drop", "reject"
+    ],
+    FAMILY_F2: [
+        "rate", "throughput", "per_sec", "qps"
+    ],
+    FAMILY_F6: [
+        "count", "total", "size", "cardinality", "bytes", "mb"
+    ],
+    FAMILY_F7: [
+        "event", "restart", "election", "deadlock", "oom", "failover"
+    ],
+}
+
+def detect_family(metric_name: str) -> str:
+    name = metric_name.lower()
+
+    for family, keywords in FAMILY_RULES.items():
+        if any(k in name for k in keywords):
+            return family
+
+    # fallback (safe)
+    return FAMILY_F6
+

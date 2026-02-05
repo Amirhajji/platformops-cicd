@@ -1,0 +1,543 @@
+
+# app/services/anomaly_analysis_service.py
+from __future__ import annotations
+
+from dataclasses import dataclass
+from typing import Dict, Any, List, Tuple, Optional
+from collections import defaultdict
+
+from sqlalchemy.orm import Session
+from sqlalchemy import text, func
+
+from app.db.models.anomalies import InjectedAnomaly
+from app.db.models.alerts import AlertEvent
+from app.db.models.signals import Signal
+from app.observability.metric_families import detect_family
+from app.services.analytics_service import component_health, global_health
+
+
+# --- Optional friendly names for UI narrative (you can edit freely) ---
+COMPONENT_LABELS = {
+    "C1": "Batch Ingest",
+    "C2": "Kafka / Stream Ingest",
+    "C3": "Stream Processor",
+    "C6": "Storage / Processing Layer",
+    "C8": "API / Serving Layer",
+}
+
+PIPELINE_DEF = {
+    "stream_lane": ["C2", "C3", "C6", "C8"],
+    "rail": ["C1", "C6"],
+}
+
+ANOMALY_DOC = {
+    "cpu_saturation": {
+        "title": "CPU Saturation",
+        "expected": [
+            "utilization increases and stays elevated",
+            "latency may increase if compute is constrained",
+            "errors may increase if overload happens",
+        ],
+    },
+    "error_spike": {
+        "title": "Error Spike",
+        "expected": [
+            "error_rate increases sharply",
+            "downstream may see throughput drop",
+            "retries may cause latency increase",
+        ],
+    },
+    "latency_regression": {
+        "title": "Latency Regression",
+        "expected": [
+            "latency metrics drift upward",
+            "queue/backlog may grow if system falls behind",
+        ],
+    },
+    "event_storm": {
+        "title": "Event Storm",
+        "expected": [
+            "event counters increase (restarts, timeouts, failovers)",
+            "secondary increases in latency/errors may appear",
+        ],
+    },
+    "backlog_growth": {
+        "title": "Backlog Growth",
+        "expected": [
+            "backlog/queue depth increases",
+            "latency increases due to waiting time",
+            "downstream pressure may rise (cascading effect)",
+        ],
+    },
+}
+
+
+def _component_label(code: str) -> str:
+    return COMPONENT_LABELS.get(code, code)
+
+
+def _infer_pipeline(components: List[str]) -> Optional[str]:
+    comp_set = set(components)
+    for p, chain in PIPELINE_DEF.items():
+        if comp_set.issubset(set(chain)):
+            return p
+    return None
+
+
+def _safe_float(x) -> Optional[float]:
+    try:
+        if x is None:
+            return None
+        return float(x)
+    except Exception:
+        return None
+
+
+def anomaly_full_analysis(db: Session) -> Dict[str, Any]:
+    """
+    Monitoring-grade anomaly analysis.
+    Uses ONLY existing tables and deterministic logic.
+
+    Outputs are UI-ready:
+      - timeline objects
+      - per-component tables
+      - per-signal deviation stats
+      - observations and narrative
+    """
+
+    anomalies: List[InjectedAnomaly] = db.query(InjectedAnomaly).all()
+    if not anomalies:
+        return {"active": False}
+
+    # ------------------------------
+    # Core anomaly window + scope
+    # ------------------------------
+    anomaly_type = anomalies[0].anomaly_type
+    from_tick = int(min(a.tick for a in anomalies))
+    to_tick = int(max(a.tick for a in anomalies))
+    duration = int(to_tick - from_tick + 1)
+
+    affected_components = sorted({a.component_code for a in anomalies})
+    affected_signals = sorted({a.signal_code for a in anomalies})
+
+    pipeline = _infer_pipeline(affected_components)
+
+    doc = ANOMALY_DOC.get(anomaly_type, {"title": anomaly_type, "expected": []})
+
+    # ------------------------------
+    # Pull Signal metadata (column names, families)
+    # ------------------------------
+    signal_rows: List[Signal] = (
+        db.query(Signal)
+        .filter(Signal.signal_code.in_(affected_signals))
+        .all()
+    )
+    sig_meta = {
+        s.signal_code: {
+            "component_code": s.component_code,
+            "column_name": s.column_name,
+            "family": detect_family(s.column_name),
+            "unit": getattr(s, "unit", None),
+            "description": getattr(s, "description", None),
+        }
+        for s in signal_rows
+    }
+
+    # ------------------------------
+    # Compute deviation stats:
+    # original_value (stored) vs current value in timeseries_points
+    #
+    # We'll fetch current values for all affected (component, tick, column)
+    # and compute:
+    #   delta_abs, delta_pct
+    # plus aggregations per signal and per component.
+    # ------------------------------
+    # Build lookup: (component, tick) -> payload
+    payload_rows = db.execute(
+        text("""
+            SELECT component_code, tick, payload
+            FROM timeseries_points
+            WHERE tick BETWEEN :from_tick AND :to_tick
+              AND component_code = ANY(:components)
+        """),
+        {"from_tick": from_tick, "to_tick": to_tick, "components": affected_components},
+    ).fetchall()
+
+    payload_by_ct: Dict[Tuple[str, int], Dict[str, Any]] = {}
+    for r in payload_rows:
+        payload_by_ct[(r.component_code, int(r.tick))] = dict(r.payload)
+
+    # Aggregate containers
+    per_signal_stats = defaultdict(lambda: {
+        "signal_code": None,
+        "component_code": None,
+        "family": None,
+        "column_name": None,
+        "points": 0,
+        "mean_original": None,
+        "mean_current": None,
+        "mean_delta_abs": None,
+        "mean_delta_pct": None,
+        "min_delta_pct": None,
+        "max_delta_pct": None,
+        "peak_current": None,
+    })
+
+    per_component_stats = defaultdict(lambda: {
+        "component_code": None,
+        "component_label": None,
+        "points_modified": 0,
+        "signals_modified": set(),
+        "families_touched": set(),
+        "mean_delta_pct": None,
+        "peak_delta_pct": None,
+    })
+
+    # For mean computations
+    signal_sum_orig = defaultdict(float)
+    signal_sum_cur = defaultdict(float)
+    signal_sum_delta_abs = defaultdict(float)
+    signal_sum_delta_pct = defaultdict(float)
+    signal_min_delta_pct = defaultdict(lambda: None)
+    signal_max_delta_pct = defaultdict(lambda: None)
+    signal_peak_cur = defaultdict(lambda: None)
+    signal_n = defaultdict(int)
+
+    component_sum_delta_pct = defaultdict(float)
+    component_peak_delta_pct = defaultdict(lambda: None)
+    component_n = defaultdict(int)
+
+    for a in anomalies:
+        s = a.signal_code
+        meta = sig_meta.get(s)
+        if not meta:
+            # fallback: try parse column from signal_code
+            col = s.split(".", 1)[1] if "." in s else None
+            meta = {
+                "component_code": a.component_code,
+                "column_name": col,
+                "family": detect_family(col or ""),
+                "unit": None,
+                "description": None,
+            }
+
+        col = meta["column_name"]
+        if not col:
+            continue
+
+        key = (a.component_code, int(a.tick))
+        payload = payload_by_ct.get(key, {})
+        current_val = _safe_float(payload.get(col))
+        original_val = _safe_float(a.original_value)
+
+        if original_val is None or current_val is None:
+            continue
+
+        delta_abs = current_val - original_val
+        delta_pct = (delta_abs / original_val) * 100.0 if original_val != 0 else None
+
+        if delta_pct is None:
+            continue
+
+        signal_n[s] += 1
+        signal_sum_orig[s] += original_val
+        signal_sum_cur[s] += current_val
+        signal_sum_delta_abs[s] += delta_abs
+        signal_sum_delta_pct[s] += delta_pct
+
+        # min/max delta pct
+        if signal_min_delta_pct[s] is None or delta_pct < signal_min_delta_pct[s]:
+            signal_min_delta_pct[s] = delta_pct
+        if signal_max_delta_pct[s] is None or delta_pct > signal_max_delta_pct[s]:
+            signal_max_delta_pct[s] = delta_pct
+
+        # peak current
+        if signal_peak_cur[s] is None or current_val > signal_peak_cur[s]:
+            signal_peak_cur[s] = current_val
+
+        # per component
+        c = a.component_code
+        component_n[c] += 1
+        component_sum_delta_pct[c] += delta_pct
+        if component_peak_delta_pct[c] is None or delta_pct > component_peak_delta_pct[c]:
+            component_peak_delta_pct[c] = delta_pct
+
+        per_component_stats[c]["component_code"] = c
+        per_component_stats[c]["component_label"] = _component_label(c)
+        per_component_stats[c]["points_modified"] += 1
+        per_component_stats[c]["signals_modified"].add(s)
+        per_component_stats[c]["families_touched"].add(meta["family"])
+
+    # finalize per signal
+    for s in affected_signals:
+        if signal_n[s] == 0:
+            continue
+
+        meta = sig_meta.get(s, {})
+        per_signal_stats[s].update({
+            "signal_code": s,
+            "component_code": meta.get("component_code"),
+            "family": meta.get("family"),
+            "column_name": meta.get("column_name"),
+            "unit": meta.get("unit"),
+            "description": meta.get("description"),
+            "points": signal_n[s],
+            "mean_original": signal_sum_orig[s] / signal_n[s],
+            "mean_current": signal_sum_cur[s] / signal_n[s],
+            "mean_delta_abs": signal_sum_delta_abs[s] / signal_n[s],
+            "mean_delta_pct": signal_sum_delta_pct[s] / signal_n[s],
+            "min_delta_pct": signal_min_delta_pct[s],
+            "max_delta_pct": signal_max_delta_pct[s],
+            "peak_current": signal_peak_cur[s],
+        })
+
+    # finalize per component
+    component_table = []
+    for c, v in per_component_stats.items():
+        n = component_n[c]
+        if n == 0:
+            continue
+        component_table.append({
+            "component_code": c,
+            "component_label": v["component_label"],
+            "points_modified": v["points_modified"],
+            "signals_modified": sorted(list(v["signals_modified"])),
+            "families_touched": sorted(list(v["families_touched"])),
+            "mean_delta_pct": component_sum_delta_pct[c] / n,
+            "peak_delta_pct": component_peak_delta_pct[c],
+        })
+
+    component_table.sort(key=lambda x: (-x["points_modified"], x["component_code"]))
+
+    signal_table = list(per_signal_stats.values())
+    signal_table = [x for x in signal_table if x["signal_code"] is not None]
+    signal_table.sort(key=lambda x: (-x["mean_delta_pct"], x["signal_code"]))
+
+    # ------------------------------
+    # Alert analysis (SIMULATED only)
+    # ------------------------------
+    open_alerts = (
+        db.query(AlertEvent)
+        .filter(AlertEvent.origin == "SIMULATED", AlertEvent.status == "OPEN")
+        .all()
+    )
+
+    alerts_by_sev = defaultdict(int)
+    alerts_by_component = defaultdict(int)
+    earliest_alert_tick = None
+    latest_alert_tick = None
+
+    for ev in open_alerts:
+        alerts_by_sev[ev.severity] += 1
+        alerts_by_component[ev.component_code] += 1
+
+        if ev.tick_start is not None:
+            earliest_alert_tick = ev.tick_start if earliest_alert_tick is None else min(earliest_alert_tick, ev.tick_start)
+        if ev.tick_end is not None:
+            latest_alert_tick = ev.tick_end if latest_alert_tick is None else max(latest_alert_tick, ev.tick_end)
+
+    total_alerts = sum(alerts_by_sev.values())
+
+    # timeline buckets (UI chart ready)
+    # bucket size depends on duration
+    bucket = 1
+    if duration > 200:
+        bucket = 10
+    elif duration > 80:
+        bucket = 5
+    elif duration > 30:
+        bucket = 2
+
+    # count alerts overlapping each bucket window
+    # lightweight: using in-memory events
+    timeline = []
+    if duration > 0:
+        t = from_tick
+        while t <= to_tick:
+            t_end = min(to_tick, t + bucket - 1)
+            count = 0
+            crit = 0
+            warn = 0
+            for ev in open_alerts:
+                # overlapping window check
+                if ev.tick_start is None or ev.tick_end is None:
+                    continue
+                if ev.tick_start <= t_end and ev.tick_end >= t:
+                    count += 1
+                    if ev.severity == "critical":
+                        crit += 1
+                    else:
+                        warn += 1
+            timeline.append({
+                "from_tick": t,
+                "to_tick": t_end,
+                "open_alerts": count,
+                "critical": crit,
+                "warning": warn,
+            })
+            t += bucket
+
+    # ------------------------------
+    # Health ranking for impacted components
+    # ------------------------------
+    impacted_components = sorted(alerts_by_component.keys(), key=lambda c: alerts_by_component[c], reverse=True)
+    health_table = []
+    for c in impacted_components:
+        try:
+            health = float(component_health(db, c))
+        except Exception:
+            health = None
+        health_table.append({
+            "component_code": c,
+            "component_label": _component_label(c),
+            "open_alerts": int(alerts_by_component[c]),
+            "health_score": health,
+        })
+    health_table.sort(key=lambda x: (x["health_score"] if x["health_score"] is not None else 999))
+
+    # ------------------------------
+    # Propagation inference (simple & explainable)
+    # We infer cascading if:
+    #  - >1 component has alerts OR
+    #  - deviation observed across >1 pipeline stage
+    # ------------------------------
+    pipeline_chain = PIPELINE_DEF.get(pipeline or "", affected_components)
+    chain_positions = {c: i for i, c in enumerate(pipeline_chain)}
+
+    stages_impacted = sorted([chain_positions.get(c, 99) for c in alerts_by_component.keys()])
+    cascading = len(set(stages_impacted)) >= 2
+
+    # ------------------------------
+    # Observations (monitoring-grade, factual)
+    # ------------------------------
+    observations: List[Dict[str, str]] = []
+
+    # Early indicator: the signal with earliest anomaly tick and largest mean delta
+    if signal_table:
+        top_by_delta = signal_table[0]
+        observations.append({
+            "type": "early_indicator",
+            "message": f"{top_by_delta['signal_code']} showed the strongest deviation (mean {top_by_delta['mean_delta_pct']:.1f}%)."
+        })
+
+    if earliest_alert_tick is not None:
+        observations.append({
+            "type": "alert_onset",
+            "message": f"First simulated alert opened at tick {int(earliest_alert_tick)} (anomaly window {from_tick} → {to_tick})."
+        })
+
+    if total_alerts > 0:
+        critical_cnt = alerts_by_sev.get("critical", 0)
+        warn_cnt = alerts_by_sev.get("warning", 0)
+        observations.append({
+            "type": "severity_mix",
+            "message": f"Open simulated alerts: {total_alerts} total (critical={critical_cnt}, warning={warn_cnt})."
+        })
+
+    if cascading:
+        observations.append({
+            "type": "propagation",
+            "message": "Behavior matches cascading impact: multiple pipeline stages show alerts/deviation."
+        })
+    else:
+        observations.append({
+            "type": "localization",
+            "message": "Behavior appears localized: impact concentrated in a single stage/component."
+        })
+
+    # Component concentration
+    if health_table:
+        worst = health_table[0]
+        observations.append({
+            "type": "most_impacted_component",
+            "message": f"Most impacted component is {worst['component_label']} ({worst['component_code']}) with health={worst['health_score']}."
+        })
+
+    # Deviation shape observation
+    if component_table:
+        peak = max(component_table, key=lambda x: x["peak_delta_pct"] if x["peak_delta_pct"] is not None else -1)
+        observations.append({
+            "type": "peak_deviation",
+            "message": f"Peak deviation observed in {peak['component_label']} ({peak['component_code']}): {peak['peak_delta_pct']:.1f}%."
+        })
+
+    # Stability: look at timeline trend
+    stability = "stable"
+    if len(timeline) >= 3:
+        first = timeline[0]["open_alerts"]
+        mid = timeline[len(timeline)//2]["open_alerts"]
+        last = timeline[-1]["open_alerts"]
+
+        if last > first * 2 and last > mid:
+            stability = "escalating"
+        elif last < first and last < mid:
+            stability = "recovering"
+        elif max(first, mid, last) > 50:
+            stability = "high_pressure"
+
+        observations.append({
+            "type": "stability",
+            "message": f"Alert pressure pattern classified as '{stability}'."
+        })
+
+    # ------------------------------
+    # Final payload (UI-ready)
+    # ------------------------------
+    return {
+        "active": True,
+        "anomaly": {
+            "type": anomaly_type,
+            "title": doc["title"],
+            "expected_behavior": doc["expected"],
+            "pipeline": pipeline,
+            "window": {
+                "from_tick": from_tick,
+                "to_tick": to_tick,
+                "duration_ticks": duration,
+            },
+            "scope": {
+                "affected_components": [
+                    {"code": c, "label": _component_label(c)} for c in sorted(affected_components, key=lambda x: chain_positions.get(x, 99))
+                ],
+                "affected_signals": affected_signals,
+            },
+        },
+
+        # high-level system reading
+        "system_state": {
+            "global_health": global_health(db),
+            "cascading_behavior": cascading,
+            "stability": stability,
+        },
+
+        # charts / tables for UI
+        "alerts": {
+            "open_total": int(total_alerts),
+            "by_severity": dict(alerts_by_sev),
+            "by_component": [
+                {
+                    "component_code": c,
+                    "component_label": _component_label(c),
+                    "open_alerts": int(cnt),
+                    "pipeline_position": chain_positions.get(c, 99),
+                }
+                for c, cnt in sorted(alerts_by_component.items(), key=lambda x: -x[1])
+            ],
+            "timeline": timeline,
+            "ticks": {
+                "first_open_tick": int(earliest_alert_tick) if earliest_alert_tick is not None else None,
+                "latest_open_tick": int(latest_alert_tick) if latest_alert_tick is not None else None,
+            },
+        },
+
+        "deviation": {
+            "per_component": component_table,
+            "per_signal": signal_table,
+        },
+
+        "health": {
+            "components_ranked": health_table,
+        },
+
+        "observations": observations,
+    }

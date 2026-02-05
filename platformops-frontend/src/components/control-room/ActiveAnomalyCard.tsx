@@ -1,0 +1,19 @@
+export function ActiveAnomalyCard({ anomaly }: { anomaly: any }) {
+  if (!anomaly?.active) {
+    return (
+      <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
+        <div className="text-xs uppercase text-zinc-500">Anomaly</div>
+        <div className="mt-2 text-sm text-emerald-400">No active anomaly</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-xl border border-red-900 bg-red-950/40 p-4">
+      <div className="text-xs uppercase text-red-300">Active Anomaly</div>
+      <div className="mt-2 text-sm text-red-200">
+        {anomaly.anomalies?.[0]?.anomaly_type ?? "Unknown"}
+      </div>
+    </div>
+  );
+}

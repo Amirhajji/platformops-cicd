@@ -1,0 +1,98 @@
+﻿ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\backend\app\services\patterns_service.py
+==================================================
+# app/services/patterns_service.py
+import statistics
+from sqlalchemy.orm import Session
+from sqlalchemy import text
+from app.db.models.signals import Signal
+
+
+def detect_spikes(db: Session, window: int = 50, zscore: float = 3.0):
+    results = []
+
+    signals = db.query(Signal).all()
+
+    for s in signals:
+        sql = """
+        SELECT tick, (payload ->> :column)::double precision AS value
+        FROM timeseries_points
+        WHERE component_code = :component
+          AND payload ? :column
+        ORDER BY tick DESC
+        LIMIT :window
+        """
+
+        rows = db.execute(
+            text(sql),
+            {
+                "component": s.component_code,
+                "column": s.column_name,
+                "window": window
+            }
+        ).fetchall()
+
+        values = [r.value for r in rows if r.value is not None]
+
+        if len(values) < 10:
+            continue
+
+        mean = statistics.mean(values)
+        std = statistics.stdev(values)
+
+        for r in rows:
+            if r.value is None:
+                continue
+
+            if abs(r.value - mean) > zscore * std:
+                results.append({
+                    "signal_code": s.signal_code,
+                    "component_code": s.component_code,
+                    "tick": r.tick,
+                    "value": r.value,
+                    "type": "SPIKE"
+                })
+                break
+
+    return results
+
+
+def detect_recovery(db: Session, window: int = 30):
+    results = []
+
+    signals = db.query(Signal).filter(Signal.signal_type == "yi").all()
+
+    for s in signals:
+        sql = """
+        SELECT tick, (payload ->> :column)::double precision AS value
+        FROM timeseries_points
+        WHERE component_code = :component
+          AND payload ? :column
+        ORDER BY tick DESC
+        LIMIT :window
+        """
+
+        rows = db.execute(
+            text(sql),
+            {
+                "component": s.component_code,
+                "column": s.column_name,
+                "window": window
+            }
+        ).fetchall()
+
+        values = [r.value for r in rows if r.value is not None]
+
+        if len(values) < 5:
+            continue
+
+        if values[-1] > values[0]:
+            results.append({
+                "signal_code": s.signal_code,
+                "component_code": s.component_code,
+                "from": values[0],
+                "to": values[-1],
+                "type": "RECOVERY"
+            })
+
+    return results
+

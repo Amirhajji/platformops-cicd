@@ -1,0 +1,31 @@
+﻿ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\router.tsx
+==================================================
+// src/router.tsx
+import { createBrowserRouter, Navigate } from "react-router-dom";
+import { LoginPage } from "./pages/auth/LoginPage";
+import { SignupPage } from "./pages/auth/SignupPage";
+import { VerifyEmailPage } from "./pages/auth/VerifyEmailPage";
+import { ProtectedRoute } from "./auth/guards";
+
+import { ControlRoomPage } from "./features/control-room/ControlRoomPage";
+import { AppShell } from "./components/layout/AppShell";
+
+export const router = createBrowserRouter([
+  { path: "/login", element: <LoginPage /> },
+  { path: "/signup", element: <SignupPage /> },
+  { path: "/verify-email", element: <VerifyEmailPage /> },
+
+  {
+    element: <ProtectedRoute />,
+    children: [
+      {
+        element: <AppShell />,
+        children: [
+          { path: "/", element: <Navigate to="/control-room" replace /> },
+          { path: "/control-room", element: <ControlRoomPage /> },
+        ],
+      },
+    ],
+  },
+]);
+

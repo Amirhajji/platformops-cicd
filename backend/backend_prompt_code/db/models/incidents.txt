@@ -1,0 +1,38 @@
+﻿ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\backend\app\db\models\incidents.py
+==================================================
+# app/db/models/incidents.py
+from sqlalchemy import Column, Integer, Text, ForeignKey
+from app.db.base import Base
+
+
+class Incident(Base):
+    __tablename__ = "incidents"
+
+    id = Column(Integer, primary_key=True)
+
+    component_code = Column(Text, nullable=False)
+
+    start_tick = Column(Integer, nullable=False)
+    end_tick = Column(Integer)
+
+    severity = Column(Text, nullable=False)
+    status = Column(Text, default="OPEN")   # OPEN | RESOLVED
+    origin = Column(Text, default="REAL")   # REAL | SIMULATED (we will only create REAL)
+
+    summary = Column(Text, nullable=False)
+
+
+class IncidentAlert(Base):
+    __tablename__ = "incident_alerts"
+
+    incident_id = Column(
+        Integer,
+        ForeignKey("incidents.id"),
+        primary_key=True,
+    )
+    alert_event_id = Column(
+        Integer,
+        ForeignKey("alert_events.id"),
+        primary_key=True,
+    )
+

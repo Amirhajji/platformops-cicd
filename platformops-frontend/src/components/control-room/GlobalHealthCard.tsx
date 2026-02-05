@@ -1,0 +1,15 @@
+export function GlobalHealthCard({ status }: { status: "OK" | "DEGRADED" | "CRITICAL" }) {
+  const color =
+    status === "CRITICAL"
+      ? "text-red-400"
+      : status === "DEGRADED"
+      ? "text-yellow-400"
+      : "text-emerald-400";
+
+  return (
+    <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
+      <div className="text-xs uppercase text-zinc-500">Global Health</div>
+      <div className={`mt-2 text-xl font-semibold ${color}`}>{status}</div>
+    </div>
+  );
+}

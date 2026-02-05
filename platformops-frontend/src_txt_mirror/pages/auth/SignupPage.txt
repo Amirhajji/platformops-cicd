@@ -1,0 +1,80 @@
+﻿ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\pages\auth\SignupPage.tsx
+==================================================
+// src/pages/auth/SignupPage.tsx
+import { useMutation } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { signup } from "../../auth/auth.api";
+import { AuthLayout } from "./AuthLayout";
+
+const schema = z
+  .object({
+    username: z.string().min(3),
+    password: z.string().min(6),
+    confirm: z.string().min(6),
+  })
+  .refine((v) => v.password === v.confirm, {
+    message: "Passwords do not match",
+    path: ["confirm"],
+  });
+
+type FormValues = z.infer<typeof schema>;
+
+export function SignupPage() {
+  const form = useForm<FormValues>({ resolver: zodResolver(schema) });
+
+  const mutation = useMutation({
+    mutationFn: (v: FormValues) => signup(v.username, v.password),
+  });
+
+  return (
+    <AuthLayout>
+      <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-8 shadow-lg">
+        <div className="mb-6">
+          <div className="text-xl font-semibold">Create PlatformOPS account</div>
+          <div className="mt-1 text-sm text-zinc-400">
+            Verification email will be sent.
+          </div>
+        </div>
+
+        <form
+          className="space-y-4"
+          onSubmit={form.handleSubmit((v) => mutation.mutate(v))}
+        >
+          {["username", "password", "confirm"].map((field) => (
+            <div key={field}>
+              <label className="text-xs uppercase tracking-wide text-zinc-400">
+                {field === "confirm" ? "Confirm password" : field}
+              </label>
+              <input
+                type={field.includes("password") ? "password" : "text"}
+                className="mt-2 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm outline-none focus:border-zinc-600"
+                {...form.register(field as any)}
+              />
+            </div>
+          ))}
+
+          {mutation.isSuccess && (
+            <div className="rounded-lg border border-emerald-900/40 bg-emerald-950/30 p-3 text-sm text-emerald-300">
+              Account created. Check your email.
+            </div>
+          )}
+
+          <button className="w-full rounded-lg bg-white/90 py-2 text-sm font-semibold text-zinc-950 hover:bg-white">
+            Create account
+          </button>
+        </form>
+
+        <div className="mt-6 text-sm text-zinc-400">
+          Already registered?{" "}
+          <Link className="text-zinc-100 underline" to="/login">
+            Sign in
+          </Link>
+        </div>
+      </div>
+    </AuthLayout>
+  );
+}
+

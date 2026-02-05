@@ -1,0 +1,24 @@
+﻿ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\api\anomalies.api.ts
+==================================================
+// src/api/anomalies.api.ts
+import { http } from "./http";
+
+export interface ActiveAnomaly {
+  anomaly_type: string;
+  component_code: string;
+  from_tick: number;
+  to_tick: number;
+  points_modified: number;
+}
+
+export interface ActiveAnomalyResponse {
+  active: boolean;
+  total_points_modified: number;
+  affected_components: string[];
+  anomalies: ActiveAnomaly[];
+}
+
+export function fetchActiveAnomaly(): Promise<ActiveAnomalyResponse> {
+  return http.get("/api/anomalies/active").then(res => res.data);
+}
+

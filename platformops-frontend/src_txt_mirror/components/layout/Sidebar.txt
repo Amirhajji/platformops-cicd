@@ -1,0 +1,65 @@
+﻿ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\components\layout\Sidebar.tsx
+==================================================
+// src/components/layout/Sidebar.tsx
+import { NavLink } from "react-router-dom";
+import { LayoutDashboard, Boxes, Activity, Bell, Flame, Beaker, BarChart3, Shield } from "lucide-react";
+import { useAuth } from "../../auth/auth.store";
+
+const navItems = [
+  { to: "/home", label: "Overview", icon: LayoutDashboard },
+  { to: "/components", label: "Components", icon: Boxes },
+  { to: "/metrics", label: "Metrics", icon: Activity },
+  { to: "/alerts", label: "Alerts", icon: Bell },
+  { to: "/incidents", label: "Incidents", icon: Flame },
+  { to: "/anomalies", label: "Anomalies", icon: Beaker },
+  { to: "/analytics", label: "Analytics", icon: BarChart3 },
+];
+
+export function Sidebar() {
+  const { user } = useAuth();
+  const isAdmin = user?.roles?.includes("admin");
+
+  return (
+    <aside className="w-64 border-r border-zinc-800 bg-zinc-950 p-4">
+      <div className="mb-6 text-lg font-semibold tracking-tight">
+        PlatformOPS
+      </div>
+
+      <nav className="flex flex-col gap-1 text-sm">
+        {navItems.map(({ to, label, icon: Icon }) => (
+          <NavLink
+            key={to}
+            to={to}
+            className={({ isActive }) =>
+              `flex items-center gap-2 rounded-lg px-3 py-2 ${
+                isActive
+                  ? "bg-zinc-800 text-zinc-100"
+                  : "text-zinc-400 hover:bg-zinc-900 hover:text-zinc-100"
+              }`
+            }
+          >
+            <Icon size={16} />
+            {label}
+          </NavLink>
+        ))}
+
+        {isAdmin && (
+          <NavLink
+            to="/admin"
+            className={({ isActive }) =>
+              `mt-4 flex items-center gap-2 rounded-lg px-3 py-2 ${
+                isActive
+                  ? "bg-zinc-800 text-zinc-100"
+                  : "text-zinc-400 hover:bg-zinc-900 hover:text-zinc-100"
+              }`
+            }
+          >
+            <Shield size={16} />
+            Admin
+          </NavLink>
+        )}
+      </nav>
+    </aside>
+  );
+}
+

@@ -1,0 +1,14 @@
+# app/scripts/generate_signals.py
+from app.db.session import SessionLocal
+from app.services.signal_generation_service import generate_signals
+
+def main():
+    db = SessionLocal()
+    try:
+        created = generate_signals(db)
+        print(f"[OK] {created} signals generated")
+    finally:
+        db.close()
+
+if __name__ == "__main__":
+    main()

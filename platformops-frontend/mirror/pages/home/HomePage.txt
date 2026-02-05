@@ -1,0 +1,25 @@
+﻿ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\pages\home\HomePage.tsx
+==================================================
+// src/pages/home/HomePage.tsx
+export function HomePage() {
+  return (
+    <div className="space-y-4">
+      <h1 className="text-2xl font-semibold">
+        Welcome to PlatformOPS
+      </h1>
+
+      <p className="text-sm text-zinc-400 max-w-xl">
+        This is your operational workspace.  
+        Features like monitoring, alerts, analytics, and system control
+        will appear here.
+      </p>
+
+      <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-6">
+        <p className="text-zinc-300">
+          ðŸš§ Features under construction.
+        </p>
+      </div>
+    </div>
+  );
+}
+

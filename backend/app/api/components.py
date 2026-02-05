@@ -1,0 +1,58 @@
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+
+from app.db.session import get_db
+from app.services.components_service import (
+    get_related_signals,
+    get_health_breakdown,
+    get_family_snapshot,
+    get_anomaly_contribution,
+    get_forecast_summary,
+)
+
+router = APIRouter(prefix="/api/components", tags=["Components"])
+
+
+@router.get("/{component_code}/related-signals")
+def related_signals(
+    component_code: str,
+    limit: int = 8,
+    min_correlation: float = 0.7,
+    db: Session = Depends(get_db),
+):
+    return get_related_signals(db, component_code, limit, min_correlation)
+
+
+@router.get("/{component_code}/health-breakdown")
+def health_breakdown(
+    component_code: str,
+    db: Session = Depends(get_db),
+):
+    return get_health_breakdown(db, component_code)
+
+
+@router.get("/{component_code}/family-snapshot")
+def family_snapshot(
+    component_code: str,
+    family: str,
+    window: int = 60,
+    db: Session = Depends(get_db),
+):
+    return get_family_snapshot(db, component_code, family, window)
+
+
+@router.get("/{component_code}/anomaly-contribution")
+def anomaly_contribution(
+    component_code: str,
+    db: Session = Depends(get_db),
+):
+    return get_anomaly_contribution(db, component_code)
+
+
+@router.get("/{component_code}/forecast-summary")
+def forecast_summary(
+    component_code: str,
+    horizon_ticks: int = 60,
+    db: Session = Depends(get_db),
+):
+    return get_forecast_summary(db, component_code, horizon_ticks)

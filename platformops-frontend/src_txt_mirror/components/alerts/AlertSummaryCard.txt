@@ -1,0 +1,39 @@
+﻿ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\components\alerts\AlertSummaryCard.tsx
+==================================================
+// src/components/alerts/AlertSummaryCard.tsx
+import { useQuery } from '@tanstack/react-query';
+import { fetchAlertSummary } from '../../api/alerts.api';
+
+export function AlertSummaryCard() {
+  const { data, isLoading } = useQuery({
+    queryKey: ['alertSummary'],
+    queryFn: fetchAlertSummary,
+  });
+
+  if (isLoading) {
+    return <div className="text-zinc-400 animate-pulse">Loading summary...</div>;
+  }
+
+  const total = (data?.critical ?? 0) + (data?.warning ?? 0) + (data?.info ?? 0);
+
+  return (
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-4 rounded-xl border border-zinc-800 bg-zinc-900 p-6 shadow-sm">
+      <div className="text-center">
+        <p className="text-sm text-zinc-500">Total Alerts</p>
+        <p className="mt-1 text-3xl font-bold text-zinc-100">{total}</p>
+      </div>
+      <div className="text-center">
+        <p className="text-sm text-red-400">Critical</p>
+        <p className="mt-1 text-3xl font-bold text-red-400">{data?.critical ?? 0}</p>
+      </div>
+      <div className="text-center">
+        <p className="text-sm text-yellow-400">Warning</p>
+        <p className="mt-1 text-3xl font-bold text-yellow-400">{data?.warning ?? 0}</p>
+      </div>
+      <div className="text-center">
+        <p className="text-sm text-zinc-400">Info</p>
+        <p className="mt-1 text-3xl font-bold text-zinc-400">{data?.info ?? 0}</p>
+      </div>
+    </div>
+  );
+}

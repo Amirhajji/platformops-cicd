@@ -1,0 +1,96 @@
+﻿ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\components\anomalies\InjectionForm.tsx
+==================================================
+// src/components/anomalies/InjectionForm.tsx
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { injectAnomaly } from '../../api/anomalies.api';
+import { useState } from 'react';
+
+export function InjectionForm() {
+  const queryClient = useQueryClient();
+  const [params, setParams] = useState({
+    pipeline: 'stream_lane',
+    anomaly_type: 'backlog_growth',
+    from_tick: 100,
+    to_tick: 200,
+    strength: 1.0,
+  });
+
+  const mutation = useMutation({
+    mutationFn: injectAnomaly,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['activeAnomaly', 'anomalyImpact', 'anomalyAnalysis'] }),
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    mutation.mutate(params);
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6 rounded-xl border border-zinc-800 bg-zinc-900 p-6">
+      <h2 className="text-lg font-medium">Anomaly Injection Lab</h2>
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm text-zinc-400 mb-1">Pipeline</label>
+          <select
+            className="w-full rounded border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm"
+            value={params.pipeline}
+            onChange={e => setParams({ ...params, pipeline: e.target.value })}
+          >
+            <option value="stream_lane">Stream Lane</option>
+            <option value="rail">Rail</option>
+          </select>
+        </div>
+        <div>
+          <label className="block text-sm text-zinc-400 mb-1">Type</label>
+          <select
+            className="w-full rounded border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm"
+            value={params.anomaly_type}
+            onChange={e => setParams({ ...params, anomaly_type: e.target.value })}
+          >
+            <option value="cpu_saturation">CPU Saturation</option>
+            <option value="error_spike">Error Spike</option>
+            <option value="latency_regression">Latency Regression</option>
+            <option value="event_storm">Event Storm</option>
+            <option value="backlog_growth">Backlog Growth</option>
+          </select>
+        </div>
+        <div>
+          <label className="block text-sm text-zinc-400 mb-1">From Tick</label>
+          <input
+            type="number"
+            className="w-full rounded border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm"
+            value={params.from_tick}
+            onChange={e => setParams({ ...params, from_tick: +e.target.value })}
+          />
+        </div>
+        <div>
+          <label className="block text-sm text-zinc-400 mb-1">To Tick</label>
+          <input
+            type="number"
+            className="w-full rounded border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm"
+            value={params.to_tick}
+            onChange={e => setParams({ ...params, to_tick: +e.target.value })}
+          />
+        </div>
+        <div>
+          <label className="block text-sm text-zinc-400 mb-1">Strength</label>
+          <input
+            type="number"
+            step="0.1"
+            className="w-full rounded border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm"
+            value={params.strength}
+            onChange={e => setParams({ ...params, strength: +e.target.value })}
+          />
+        </div>
+      </div>
+      <button
+        type="submit"
+        disabled={mutation.isPending}
+        className="rounded bg-zinc-700 px-4 py-2 text-sm hover:bg-zinc-600 disabled:opacity-50"
+      >
+        {mutation.isPending ? 'Injecting...' : 'Inject Anomaly'}
+      </button>
+      {mutation.data && <p className="text-green-400 text-sm">Injected: {mutation.data.affected_points} points</p>}
+    </form>
+  );
+}

@@ -1,0 +1,93 @@
+# app/services/alert_rule_generator.py
+from sqlalchemy.orm import Session
+
+from app.db.models.alerts import AlertRule
+from app.db.models.signals import Signal
+from app.observability.baseline import metric_baseline
+from app.observability.metric_families import detect_family
+
+
+def generate_rules_for_all_metrics(db: Session) -> int:
+    """
+    Deterministic, family-based alert rule generation.
+    NO std, NO dynamic math instability.
+    """
+
+    existing = {r.signal_code for r in db.query(AlertRule.signal_code).all()}
+    created = 0
+
+    signals = db.query(Signal).all()
+
+    for s in signals:
+        if s.signal_code in existing:
+            continue
+
+        family = detect_family(s.column_name)
+        baseline = metric_baseline(db, s.component_code, s.column_name)
+
+        rules = []
+
+        # ---------------- Utilization / Saturation ----------------
+        if family == "utilization":
+            rules = [
+                ("gt", 0.75, "warning"),
+                ("gt", 0.90, "critical"),
+            ]
+
+        # ---------------- Throughput / Rates ----------------
+        elif family == "throughput" and baseline:
+            rules = [
+                ("gt", baseline["mean"] * 1.5, "warning"),
+                ("gt", baseline["mean"] * 2.5, "critical"),
+            ]
+
+        # ---------------- Backlog / Lag / Queues ----------------
+        elif family == "backlog" and baseline:
+            rules = [
+                ("gt", baseline["p95"], "warning"),
+                ("gt", baseline["max"], "critical"),
+            ]
+
+        # ---------------- Latency ----------------
+        elif family == "latency" and baseline:
+            rules = [
+                ("gt", baseline["p95"], "warning"),
+                ("gt", baseline["p95"] * 2.0, "critical"),
+            ]
+
+        # ---------------- Error rates ----------------
+        elif family == "error_rate":
+            rules = [
+                ("gt", 0.01, "warning"),
+                ("gt", 0.05, "critical"),
+            ]
+
+        # ---------------- Events / Counters ----------------
+        elif family == "events":
+            rules = [
+                ("gt", 1, "warning"),
+                ("gt", 3, "critical"),
+            ]
+
+        # ---------------- Generic counts ----------------
+        elif family == "count" and baseline:
+            rules = [
+                ("gt", baseline["p95"], "warning"),
+                ("gt", baseline["max"], "critical"),
+            ]
+
+        for op, threshold, severity in rules:
+            db.add(
+                AlertRule(
+                    signal_code=s.signal_code,
+                    operator=op,
+                    threshold=float(threshold),
+                    min_duration_ticks=2 if severity == "warning" else 3,
+                    severity=severity,
+                    enabled=True,
+                )
+            )
+            created += 1
+
+    db.commit()
+    return created

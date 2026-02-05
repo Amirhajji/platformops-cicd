@@ -1,0 +1,159 @@
+// src/pages/incidents/IncidentDetailsPage.tsx
+import { useParams } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { fetchIncident, resolveIncident } from '../../api/incidents.api';
+import { useState } from 'react';
+import { AlertCircle, CheckCircle, Clock } from 'lucide-react';
+
+export function IncidentDetailsPage() {
+  const { id } = useParams<{ id: string }>();
+  const incidentId = Number(id);
+  const queryClient = useQueryClient();
+
+  const { data: incident, isLoading, isError } = useQuery({
+    queryKey: ['incident', incidentId],
+    queryFn: () => fetchIncident(incidentId),
+  });
+
+  const [note, setNote] = useState('');
+
+  const resolveMutation = useMutation({
+    mutationFn: () => resolveIncident(incidentId, note),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['incident', incidentId] });
+      queryClient.invalidateQueries({ queryKey: ['incidents'] });
+      setNote('');
+    },
+  });
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-zinc-400"></div>
+      </div>
+    );
+  }
+
+  if (isError || !incident) {
+    return (
+      <div className="rounded-xl border border-red-800 bg-red-950/20 p-10 text-center">
+        <AlertCircle className="mx-auto h-12 w-12 text-red-400 mb-4" />
+        <h2 className="text-xl font-bold text-red-300 mb-2">Incident Not Found</h2>
+        <p className="text-zinc-400">ID {id} doesn't exist or failed to load.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-8 pb-20">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row justify-between items-start gap-6">
+        <div>
+          <h1 className="text-3xl font-bold text-zinc-100 mb-2">{incident.title}</h1>
+          <p className="text-lg text-zinc-300">{incident.description || 'No description'}</p>
+        </div>
+        <div className="flex flex-wrap gap-3">
+          <span className={`px-4 py-1.5 rounded-full text-sm font-semibold ${
+            incident.severity === 'CRITICAL' ? 'bg-red-900/80 text-red-200 ring-1 ring-red-500/50' :
+            incident.severity === 'WARNING' ? 'bg-yellow-900/80 text-yellow-200 ring-1 ring-yellow-500/50' :
+            'bg-zinc-800 text-zinc-300'
+          }`}>
+            {incident.severity}
+          </span>
+          <span className={`px-4 py-1.5 rounded-full text-sm font-semibold ${
+            incident.status === 'OPEN' ? 'bg-red-900/80 text-red-200 ring-1 ring-red-500/50' :
+            incident.status === 'ACKNOWLEDGED' ? 'bg-yellow-900/80 text-yellow-200 ring-1 ring-yellow-500/50' :
+            'bg-emerald-900/80 text-emerald-200 ring-1 ring-emerald-500/50'
+          }`}>
+            {incident.status}
+          </span>
+        </div>
+      </div>
+
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="rounded-xl border border-zinc-800 bg-zinc-900/70 p-6 text-center">
+          <Clock className="mx-auto h-8 w-8 text-zinc-400 mb-2" />
+          <p className="text-sm text-zinc-400">Opened</p>
+          <p className="text-xl font-medium text-zinc-200 mt-1">
+            {new Date(incident.opened_at).toLocaleDateString()}
+          </p>
+        </div>
+
+        <div className="rounded-xl border border-zinc-800 bg-zinc-900/70 p-6 text-center">
+          <AlertCircle className="mx-auto h-8 w-8 text-amber-400 mb-2" />
+          <p className="text-sm text-zinc-400">Collapse Risk</p>
+          <p className="text-2xl font-bold text-amber-400 mt-1">
+            {incident.collapse_risk?.toFixed(2) ?? '—'}
+          </p>
+        </div>
+
+        <div className="rounded-xl border border-zinc-800 bg-zinc-900/70 p-6 text-center">
+          <p className="text-sm text-zinc-400 mb-1">Affected Components</p>
+          <p className="text-lg font-medium text-zinc-300">
+            {incident.affected_components?.length 
+              ? incident.affected_components.join(', ') 
+              : 'None detected'}
+          </p>
+        </div>
+
+        <div className="rounded-xl border border-zinc-800 bg-zinc-900/70 p-6 text-center">
+          <p className="text-sm text-zinc-400 mb-1">Linked Alerts</p>
+          <p className="text-2xl font-bold text-zinc-200">
+            {incident.linked_alerts?.length ?? 0}
+          </p>
+        </div>
+      </div>
+
+      {/* Resolution */}
+      <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-6">
+        <h3 className="text-xl font-semibold text-zinc-100 mb-4 flex items-center gap-2">
+          <CheckCircle className="h-5 w-5 text-emerald-400" />
+          Resolution
+        </h3>
+
+        {incident.resolved_at ? (
+          <div className="p-6 rounded-lg bg-emerald-950/30 border border-emerald-800">
+            <p className="text-sm text-emerald-300 mb-2 font-medium">
+              Resolved on {new Date(incident.resolved_at).toLocaleString()}
+            </p>
+            <p className="text-zinc-300">{incident.resolution_note || 'No resolution note provided'}</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <textarea
+              className="w-full rounded-md border border-zinc-700 bg-zinc-950 p-4 text-sm text-zinc-300 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 min-h-[140px] resize-y"
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              placeholder="Enter resolution details, root cause, actions taken, lessons learned..."
+            />
+            <button
+              onClick={() => resolveMutation.mutate()}
+              disabled={resolveMutation.isPending || !note.trim()}
+              className="rounded-md bg-emerald-700 px-6 py-3 text-sm font-medium text-white hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+            >
+              {resolveMutation.isPending ? 'Resolving...' : 'Resolve & Close Incident'}
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Placeholders for upcoming features */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-6">
+          <h3 className="text-xl font-semibold text-zinc-100 mb-4">Timeline</h3>
+          <div className="h-64 bg-zinc-950/50 rounded-lg flex items-center justify-center text-zinc-500">
+            Timeline chart (Recharts) coming soon – needs backend /timeline endpoint
+          </div>
+        </div>
+
+        <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-6">
+          <h3 className="text-xl font-semibold text-zinc-100 mb-4">Linked Alerts</h3>
+          <div className="h-64 bg-zinc-950/50 rounded-lg flex items-center justify-center text-zinc-500">
+            Full table with sparklines – needs backend linked_alerts array
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

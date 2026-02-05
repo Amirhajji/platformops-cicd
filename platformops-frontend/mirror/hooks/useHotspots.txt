@@ -1,0 +1,15 @@
+﻿ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\hooks\useHotspots.ts
+==================================================
+// src/hooks/useHotspots.ts
+import { useQuery } from "@tanstack/react-query";
+import { fetchHotspots } from "../api/analytics.api";
+import type { Hotspot } from "../api/analytics.api";
+
+export function useHotspots() {
+  return useQuery<Hotspot[]>({
+    queryKey: ["analytics", "hotspots"],
+    queryFn: fetchHotspots,
+    refetchInterval: 5000,
+  });
+}
+

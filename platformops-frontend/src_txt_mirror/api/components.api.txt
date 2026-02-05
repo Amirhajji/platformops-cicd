@@ -1,0 +1,110 @@
+﻿ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\api\components.api.ts
+==================================================
+// src/api/components.api.ts (updated full file)
+import { http } from "./http";
+
+export type ComponentSummary = {
+  component_code: string;
+  signal_count: number;
+};
+
+export type ComponentSignal = {
+  signal_code: string;
+  type: string;
+  unit: string;
+  polarity: string;
+  description: string;
+  family?: string; // Enrich: Detect from backend or frontend via metric_families
+};
+
+export type ComponentDetails = {
+  component_code: string;
+  health_score: number;
+  signals: ComponentSignal[];
+};
+
+export async function fetchComponents() {
+  const { data } = await http.get<ComponentSummary[]>("/api/system/components");
+  return data;
+}
+
+export async function fetchComponentDetails(componentCode: string) {
+  const { data } = await http.get<ComponentDetails>(`/api/system/components/${componentCode}`);
+  // Enrich: Add family if not in response (use detect_family from backend logic, but frontend sim)
+  data.signals = data.signals.map(s => ({ ...s, family: detectFamily(s.signal_code) }));
+  return data;
+}
+
+// Mock detectFamily (from backend metric_families.pyâ€”copy logic for alignment)
+function detectFamily(name: string): string {
+  const lower = name.toLowerCase();
+  if (['latency', 'delay', 'jitter', 'rtt', 'response', 'wait', 'duration'].some(k => lower.includes(k))) return 'latency';
+  if (['queue', 'backlog', 'lag', 'depth', 'pending'].some(k => lower.includes(k))) return 'backlog';
+  if (['utilization', 'ratio', 'percent', 'pressure'].some(k => lower.includes(k))) return 'utilization';
+  if (['error', 'failure', 'timeout', 'drop', 'reject'].some(k => lower.includes(k))) return 'error_rate';
+  if (['rate', 'throughput', 'per_sec', 'qps'].some(k => lower.includes(k))) return 'throughput';
+  if (['count', 'total', 'size', 'cardinality', 'bytes', 'mb'].some(k => lower.includes(k))) return 'count';
+  if (['event', 'restart', 'election', 'deadlock', 'oom', 'failover'].some(k => lower.includes(k))) return 'events';
+  return 'count'; // Fallback
+}
+
+// Timeseries hooks (for charts)
+export async function fetchTimeseries(signalCode: string, fromTick?: number, toTick?: number) {
+  const params = fromTick && toTick ? `?from_tick=${fromTick}&to_tick=${toTick}` : '';
+  const { data } = await http.get(`/api/timeseries${params}&signal_code=${signalCode}`);
+  return data;
+}
+
+export async function fetchMultiTimeseries(signalCodes: string[]) {
+  const { data } = await http.get(`/api/timeseries/multi?signals=${signalCodes.join(',')}`);
+  return data.signals;
+}
+
+export async function fetchAggregate(signalCode: string, window = 10, type = 'avg') {
+  const { data } = await http.get(`/api/timeseries/aggregate?signal_code=${signalCode}&window=${window}&type=${type}`);
+  return data;
+}
+
+export async function fetchDerivative(signalCode: string) {
+  const { data } = await http.get(`/api/timeseries/derivative?signal_code=${signalCode}`);
+  return data;
+}
+
+export async function fetchNormalized(signalCode: string) {
+  const { data } = await http.get(`/api/timeseries/normalized?signal_code=${signalCode}`);
+  return data;
+}
+
+// Alerts by component
+export async function fetchAlertsByComponent(componentCode: string) {
+  const { data } = await http.get(`/api/alerts/by-component/${componentCode}`);
+  return data;
+}
+
+// Analytics for timeline/health
+export async function fetchComponentTimeAnalysis(componentCode: string, maxTicks = 500) {
+  const { data } = await http.get(`/api/analytics/component-time-analysis/${componentCode}?max_ticks=${maxTicks}`);
+  return data;
+}
+
+export async function fetchComponentVolatility(signalCode: string, window = 10) {
+  const { data } = await http.get(`/api/analytics/volatility?signal_code=${signalCode}&window=${window}`);
+  return data.volatility;
+}
+
+// Anomalies for overlays
+export async function fetchActiveAnomaly() {
+  const { data } = await http.get("/api/anomalies/active");
+  return data;
+}
+
+// Add these to src/api/components.api.ts
+export async function fetchComponentRegimes(componentCode: string, window = 1440, bucket = 60) {
+  const { data } = await http.get(`/api/analytics/component-regimes/${componentCode}?window=${window}&bucket_size=${bucket}`);
+  return data;
+}
+
+export async function fetchComponentStress(componentCode: string, window = 600, bucket = 20) {
+  const { data } = await http.get(`/api/analytics/component-stress/${componentCode}?window=${window}&bucket=${bucket}`);
+  return data;
+}

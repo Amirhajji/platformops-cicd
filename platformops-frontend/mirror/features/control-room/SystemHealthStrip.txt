@@ -1,0 +1,42 @@
+﻿ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\features\control-room\SystemHealthStrip.tsx
+==================================================
+// src/features/control-room/SystemHealthStrip.tsx
+import { useGlobalHealth } from "../../hooks/useGlobalHealth";
+import { Badge } from "../../ui/Badge";
+
+export function SystemHealthStrip() {
+  const { data, isFetching } = useGlobalHealth();
+
+  if (!data) return null;
+
+  const tone =
+    data.status === "CRITICAL"
+      ? "crit"
+      : data.status === "DEGRADED"
+      ? "warn"
+      : "ok";
+
+  return (
+    <div className="flex items-center justify-between rounded border border-zinc-800 bg-zinc-900 p-4">
+      <div>
+        <div className="text-sm text-zinc-400">
+          Global System State
+        </div>
+
+        <div className="mt-1 flex items-center gap-2">
+          <Badge label={data.status} tone={tone} />
+          <span className="text-sm text-zinc-400">
+            collapse risk = {(data.collapse_risk * 100).toFixed(1)}%
+          </span>
+
+          {isFetching && (
+            <span className="text-xs text-zinc-500">
+              (refreshingâ€¦)
+            </span>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+

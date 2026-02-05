@@ -1,0 +1,71 @@
+front code prparator 
+--------------------
+
+$srcPath = "C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src"
+$outputRoot = "C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src_txt_mirror"
+
+Get-ChildItem -Path $srcPath -Recurse -File | ForEach-Object {
+
+    # Compute relative path from src
+    $relativePath = $_.FullName.Substring($srcPath.Length).TrimStart('\')
+
+    # Replace original extension with .txt
+    $relativeTxtPath = [System.IO.Path]::ChangeExtension($relativePath, ".txt")
+
+    # Final target path
+    $targetPath = Join-Path $outputRoot $relativeTxtPath
+
+    # Ensure directory exists
+    $targetDir = Split-Path $targetPath -Parent
+    if (!(Test-Path $targetDir)) {
+        New-Item -ItemType Directory -Path $targetDir -Force | Out-Null
+    }
+
+    # Write file with header + content
+    $content = @()
+    $content += "ORIGINAL FILE: $($_.FullName)"
+    $content += "=================================================="
+    $content += Get-Content $_.FullName -Raw
+
+    $content | Set-Content -Path $targetPath -Encoding UTF8
+}
+
+Write-Host "✔ FULL src mirror created at:"
+Write-Host "  $outputRoot"
+
+
+
+----------------------------
+
+combine mirror files : 
+
+
+
+
+
+
+$mirrorRoot = "C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src_txt_mirror"
+$outputFile = "C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\mirror_all_combined.txt"
+
+# Create StreamWriter (overwrite output)
+$writer = [System.IO.StreamWriter]::new($outputFile, $false, [System.Text.Encoding]::UTF8)
+
+Get-ChildItem -Path $mirrorRoot -Recurse -File -Filter "*.txt" | ForEach-Object {
+
+    $writer.WriteLine("############################################################")
+    $writer.WriteLine("FILE: $($_.FullName)")
+    $writer.WriteLine("############################################################")
+    $writer.WriteLine("")
+
+    $writer.WriteLine((Get-Content $_.FullName -Raw))
+    $writer.WriteLine("")
+    $writer.WriteLine("")
+}
+
+$writer.Close()
+
+Write-Host "✔ All txt files combined into:"
+Write-Host "  $outputFile"
+
+
+

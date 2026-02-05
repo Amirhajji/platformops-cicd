@@ -1,0 +1,47 @@
+from datetime import timedelta
+from pydantic import BaseSettings, SettingsConfigDict
+
+
+
+class Settings(BaseSettings):
+    # --------------------
+    # App
+    # --------------------
+    APP_NAME: str = "PlatformOPS Backend"
+    DEBUG: bool = True
+
+    # --------------------
+    # Database
+    # --------------------
+    DB_HOST: str = "localhost"
+    DB_PORT: int = 5432
+    DB_NAME: str = "platformops"
+    DB_USER: str = "platformops"
+    DB_PASSWORD: str = "platformops"
+
+    # --------------------
+    # Security / Auth
+    # --------------------
+    SECRET_KEY: str = "CHANGE_ME_SUPER_SECRET"
+    ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24  # 24 hours
+
+    # --------------------
+    # Pydantic settings config
+    # --------------------
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=True,
+    )
+
+    @property
+    def database_url(self) -> str:
+        return (
+            f"postgresql+psycopg://{self.DB_USER}:"
+            f"{self.DB_PASSWORD}@{self.DB_HOST}:"
+            f"{self.DB_PORT}/{self.DB_NAME}"
+        )
+
+
+settings = Settings()

@@ -1,0 +1,94 @@
+﻿ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\pages\alerts\AlertsPage.tsx
+==================================================
+// src/pages/alerts/AlertsPage.tsx
+import { useState } from 'react';
+import { AlertTimelineGraph } from '../../components/alerts/AlertTimelineGraph';
+import { ActiveAlertsPage, AlertHistoryPage } from './ActiveAlertsPage';
+import { RulesPage } from './RulesPage';
+import { AlertActions } from '../../components/alerts/AlertActions';
+import { AlertSummaryCard } from '../../components/alerts/AlertSummaryCard';
+
+
+export function AlertsPage() {
+  const [activeTab, setActiveTab] = useState<'active' | 'history' | 'rules'>('active');
+  const [globalFilter, setGlobalFilter] = useState({
+    component: '',
+    signal: '',
+    severity: '',
+    origin: '',
+  });
+
+  return (
+    <div className="space-y-6 p-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold tracking-tight">Alerts Console</h1>
+        <AlertActions />
+      </div>
+
+      <AlertSummaryCard />
+
+      {/* Global Filter */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <input
+          placeholder="Filter by Component"
+          className="rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm placeholder-zinc-500 focus:border-zinc-500 focus:outline-none"
+          value={globalFilter.component}
+          onChange={(e) => setGlobalFilter({ ...globalFilter, component: e.target.value })}
+        />
+        <input
+          placeholder="Filter by Signal"
+          className="rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm placeholder-zinc-500 focus:border-zinc-500 focus:outline-none"
+          value={globalFilter.signal}
+          onChange={(e) => setGlobalFilter({ ...globalFilter, signal: e.target.value })}
+        />
+        <select
+          className="rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none"
+          value={globalFilter.severity}
+          onChange={(e) => setGlobalFilter({ ...globalFilter, severity: e.target.value })}
+        >
+          <option value="">All Severities</option>
+          <option value="critical">Critical</option>
+          <option value="warning">Warning</option>
+          <option value="info">Info</option>
+        </select>
+        <select
+          className="rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none"
+          value={globalFilter.origin}
+          onChange={(e) => setGlobalFilter({ ...globalFilter, origin: e.target.value })}
+        >
+          <option value="">All Origins</option>
+          <option value="REAL">Real</option>
+          <option value="SIMULATED">Simulated</option>
+        </select>
+      </div>
+
+      <AlertTimelineGraph filter={globalFilter} />
+
+      {/* Tabs */}
+      <div className="border-b border-zinc-800">
+        <nav className="-mb-px flex space-x-8">
+          {(['active', 'history', 'rules'] as const).map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`
+                whitespace-nowrap border-b-2 px-1 pb-4 text-sm font-medium
+                ${activeTab === tab
+                  ? 'border-zinc-200 text-zinc-100'
+                  : 'border-transparent text-zinc-400 hover:border-zinc-600 hover:text-zinc-200'}
+              `}
+            >
+              {tab.charAt(0).toUpperCase() + tab.slice(1)}
+            </button>
+          ))}
+        </nav>
+      </div>
+
+      <div className="mt-6">
+        {activeTab === 'active' && <ActiveAlertsPage filter={globalFilter} />}
+        {activeTab === 'history' && <AlertHistoryPage filter={globalFilter} />}
+        {activeTab === 'rules' && <RulesPage />}
+      </div>
+    </div>
+  );
+}

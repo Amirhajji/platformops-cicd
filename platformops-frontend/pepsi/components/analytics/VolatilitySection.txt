@@ -1,0 +1,36 @@
+﻿ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\components\analytics\VolatilitySection.tsx
+==================================================
+// src/components/analytics/VolatilitySection.tsx
+import { useQuery } from '@tanstack/react-query';
+import { fetchVolatility } from '../../api/analytics.api';
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts';
+
+export function VolatilitySection() {
+  const signalCodes = ['C1.latency', 'C6.error_rate']; // Example - add selector later
+
+  const queries = signalCodes.map(code => useQuery({
+    queryKey: ['volatility', code],
+    queryFn: () => fetchVolatility(code),
+  }));
+
+  const data = queries.map((q, i) => ({
+    signal: signalCodes[i],
+    volatility: q.data ?? 0,
+  }));
+
+  if (queries.some(q => q.isLoading)) return <div className="text-zinc-400">Loading volatility...</div>;
+
+  return (
+    <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-6">
+      <h2 className="text-xl font-medium mb-4">Signal Volatility</h2>
+      <ResponsiveContainer width="100%" height={300}>
+        <BarChart data={data}>
+          <XAxis dataKey="signal" stroke="#71717a" />
+          <YAxis stroke="#71717a" />
+          <Tooltip />
+          <Bar dataKey="volatility" fill="#10b981" />
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}

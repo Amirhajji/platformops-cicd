@@ -1,0 +1,16 @@
+﻿ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\api\system.api.ts
+==================================================
+// src/api/system.api.ts
+import { http } from "./http";
+
+export interface SystemComponentOverview {
+  component_code: string;
+  health_score: number;
+  active_alerts: number;
+  status: "OK" | "DEGRADED" | "CRITICAL";
+}
+
+export function fetchSystemOverview(): Promise<SystemComponentOverview[]> {
+  return http.get("/api/system/overview").then(res => res.data);
+}
+

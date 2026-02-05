@@ -1,0 +1,23 @@
+﻿ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\features\control-room\ControlRoomPage.tsx
+==================================================
+import { ControlRoomHeader } from "./ControlRoomHeader";
+import { SystemHealthStrip } from "./SystemHealthStrip";
+import { ComponentStatusTable } from "./ComponentStatusTable";
+import { HotspotsPanel } from "./HotspotsPanel";
+
+export function ControlRoomPage() {
+  return (
+    <div className="space-y-6">
+      <ControlRoomHeader />
+      <SystemHealthStrip />
+
+      <div className="grid grid-cols-3 gap-6">
+        <div className="col-span-2">
+          <ComponentStatusTable />
+        </div>
+        <HotspotsPanel />
+      </div>
+    </div>
+  );
+}
+

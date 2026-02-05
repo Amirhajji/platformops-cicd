@@ -1,0 +1,27 @@
+﻿ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\api\analytics.api.ts
+==================================================
+// src/api/analytics.api.ts
+import { http } from "./http";
+
+export function fetchGlobalHealth() {
+  return http.get("/api/analytics/global-health").then(r => r.data);
+}
+
+export function fetchHotspots() {
+  return http
+    .get("/api/analytics/active-hotspots")
+    .then(r => r.data.hotspots);
+}
+
+/* =========================
+   Domain Types (Frontend)
+   ========================= */
+
+export interface Hotspot {
+  signal_code: string;
+  open_events: number;
+  critical_open: number;
+  max_duration_ticks: number;
+  last_tick: number;
+}
+

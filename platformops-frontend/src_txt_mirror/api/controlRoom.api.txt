@@ -1,0 +1,61 @@
+﻿ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\api\controlRoom.api.ts
+==================================================
+// src/api/controlRoom.api.ts (updated full file)
+import { http } from "./http";
+
+/* ---------- System ---------- */
+export function fetchSystemOverview() {
+  return http.get("/api/system/overview").then(r => r.data);
+}
+
+/* ---------- Analytics ---------- */
+export function fetchGlobalHealth() {
+  return http.get("/api/analytics/global-health").then(r => r.data);
+}
+
+export function fetchActiveHotspots(limit = 15) {
+  return http.get(`/api/analytics/active-hotspots?limit=${limit}`).then(r => r.data);
+}
+
+export function fetchComponentRankings(limit = 10) {
+  return http.get(`/api/analytics/component-rankings?limit=${limit}`).then(r => r.data);
+}
+
+export function fetchSystemStats() {
+  return http.get("/api/analytics/system-stats").then(r => r.data);
+}
+
+/* ---------- Alerts ---------- */
+export function fetchAlertSummary() {
+  return http.get("/api/alerts/summary").then(r => r.data);
+}
+
+export function evaluateAlerts() {
+  return http.post("/api/alerts/evaluate");
+}
+
+/* ---------- Incidents ---------- */
+export function fetchIncidents() {
+  return http.get("/api/incidents/").then(r => r.data);
+}
+
+export function evaluateIncidents() {
+  return http.post("/api/incidents/evaluate");
+}
+
+/* ---------- Anomalies ---------- */
+export function fetchActiveAnomaly() {
+  return http.get("/api/anomalies/active").then(r => r.data);
+}
+
+export function fetchAnomalyImpact() {
+  return http.get("/api/anomalies/impact").then(r => r.data);
+}
+
+export function fetchAnomalyAnalysis() {
+  return http.get("/api/anomalies/analysis").then(r => r.data);
+}
+
+export function rollbackAnomaly() {
+  return http.post("/api/anomalies/rollback");
+}

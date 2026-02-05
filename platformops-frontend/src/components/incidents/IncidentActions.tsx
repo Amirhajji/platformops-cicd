@@ -1,0 +1,28 @@
+// src/components/incidents/IncidentActions.tsx
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { groupAlertsIntoIncidents } from '../../api/incidents.api';
+
+export function IncidentActions() {
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation({
+    mutationFn: groupAlertsIntoIncidents,
+    onSuccess: (groupedCount) => {
+      queryClient.invalidateQueries({ queryKey: ['incidents'] });
+      alert(`Grouped ${groupedCount} new incidents!`); // or use toast later
+    },
+    onError: (error) => {
+      alert(`Grouping failed: ${error.message}`);
+    },
+  });
+
+  return (
+    <button
+      onClick={() => mutation.mutate()}
+      disabled={mutation.isPending}
+      className="rounded bg-zinc-700 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-600 disabled:opacity-50 transition-colors"
+    >
+      {mutation.isPending ? 'Grouping...' : 'Group Open Alerts'}
+    </button>
+  );
+}

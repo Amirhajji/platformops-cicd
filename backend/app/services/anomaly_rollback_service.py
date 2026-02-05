@@ -1,0 +1,61 @@
+import json
+from typing import Dict, Any, Tuple, List
+
+from sqlalchemy.orm import Session
+from sqlalchemy import text
+
+from app.db.models.anomalies import InjectedAnomaly
+from app.db.models.alerts import AlertEvent
+
+
+def rollback_anomalies(db: Session) -> int:
+    anomalies = db.query(InjectedAnomaly).all()
+    if not anomalies:
+        return 0
+
+    grouped: Dict[Tuple[str, int], List[InjectedAnomaly]] = {}
+
+    for a in anomalies:
+        grouped.setdefault((a.component_code, a.tick), []).append(a)
+
+    restored = 0
+
+    for (component, tick), items in grouped.items():
+        row = db.execute(
+            text("""
+                SELECT id, payload
+                FROM timeseries_points
+                WHERE component_code = :component AND tick = :tick
+            """),
+            {"component": component, "tick": tick},
+        ).fetchone()
+
+        if not row:
+            continue
+
+        payload: Dict[str, Any] = dict(row.payload)
+
+        for a in items:
+            metric = a.signal_code.split(".", 1)[1]
+            payload[metric] = a.original_value
+            restored += 1
+
+        db.execute(
+            text("""
+                UPDATE timeseries_points
+                SET payload = CAST(:payload AS jsonb)
+                WHERE id = :id
+            """),
+            {"payload": json.dumps(payload), "id": row.id},
+        )
+
+    # 🔥 Delete ONLY simulated alerts
+    db.query(AlertEvent).filter(
+        AlertEvent.origin == "SIMULATED"
+    ).delete(synchronize_session=False)
+
+    # 🔥 Remove anomaly records
+    db.query(InjectedAnomaly).delete()
+
+    db.commit()
+    return restored

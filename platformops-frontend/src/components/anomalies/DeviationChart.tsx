@@ -1,0 +1,34 @@
+// src/components/anomalies/DeviationChart.tsx
+import { useQuery } from '@tanstack/react-query';
+import { fetchAnomalyAnalysis } from '../../api/anomalies.api';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+
+export function DeviationChart() {
+  const { data } = useQuery({
+    queryKey: ['anomalyAnalysis'],
+    queryFn: fetchAnomalyAnalysis,
+  });
+
+  if (!data?.deviation?.per_component) return null;
+
+  const chartData = data.deviation.per_component.map(c => ({
+    name: c.component_label,
+    mean_delta: c.mean_delta_pct,
+    peak_delta: c.peak_delta_pct,
+  }));
+
+  return (
+    <div className="space-y-4">
+      <h3 className="text-sm font-medium">Deviation by Component (%)</h3>
+      <ResponsiveContainer width="100%" height={300}>
+        <BarChart data={chartData}>
+          <XAxis dataKey="name" stroke="#71717a" />
+          <YAxis stroke="#71717a" />
+          <Tooltip />
+          <Bar dataKey="mean_delta" fill="#10b981" name="Mean Delta" />
+          <Bar dataKey="peak_delta" fill="#ef4444" name="Peak Delta" />
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}

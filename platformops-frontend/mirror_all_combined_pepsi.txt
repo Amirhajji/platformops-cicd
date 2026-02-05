@@ -1,0 +1,5043 @@
+﻿############################################################
+FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\pepsi\App.txt
+############################################################
+
+ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\App.css
+==================================================
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #61dafbaa);
+}
+
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
+}
+
+.card {
+  padding: 2em;
+}
+
+.read-the-docs {
+  color: #888;
+}
+
+
+
+
+############################################################
+FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\pepsi\index.txt
+############################################################
+
+ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\index.css
+==================================================
+@import "tailwindcss";
+
+/* Global platform theming */
+:root {
+  color-scheme: dark;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background-color: #09090b; /* zinc-950 */
+  color: #f4f4f5; /* zinc-100 */
+  font-family:
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Helvetica,
+    Arial,
+    "Apple Color Emoji",
+    "Segoe UI Emoji";
+}
+
+
+
+
+############################################################
+FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\pepsi\main.txt
+############################################################
+
+ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\main.tsx
+==================================================
+import React from "react";
+import ReactDOM from "react-dom/client";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { RouterProvider } from "react-router-dom";
+
+import { AuthProvider } from "./auth/auth.store";
+import { TimeProvider } from "./context/TimeContext";
+import { router } from "./router";
+
+import "./index.css";
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: false,
+    },
+  },
+});
+
+ReactDOM.createRoot(document.getElementById("root")!).render(
+  <React.StrictMode>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <TimeProvider>
+          <RouterProvider router={router} />
+        </TimeProvider>
+      </AuthProvider>
+    </QueryClientProvider>
+  </React.StrictMode>
+);
+
+
+
+
+############################################################
+FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\pepsi\router.txt
+############################################################
+
+ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\router.tsx
+==================================================
+// src/router.tsx
+import { createBrowserRouter } from "react-router-dom";
+import { LoginPage } from "./pages/auth/LoginPage";
+import { SignupPage } from "./pages/auth/SignupPage";
+import { VerifyEmailPage } from "./pages/auth/VerifyEmailPage";
+import { ProtectedRoute } from "./auth/guards";
+import { AppShell } from "./components/layout/AppShell";
+import { HomePage } from "./pages/home/HomePage";
+import { ComponentsPage } from "./pages/components/ComponentsPage";
+import { ComponentDetailsPage } from "./pages/components/ComponentDetailsPage";
+import { AlertsPage } from "./pages/alerts/AlertsPage";
+import { AnomaliesPage } from "./pages/anomalies/AnomaliesPage";
+import { IncidentsPage } from "./pages/incidents/IncidentsPage";
+import { IncidentDetailsPage } from "./pages/incidents/IncidentDetailsPage";
+import { AnalyticsPage } from "./pages/analytics/AnalyticsPage";
+
+export const router = createBrowserRouter([
+  { path: "/login", element: <LoginPage /> },
+  { path: "/signup", element: <SignupPage /> },
+  { path: "/verify-email", element: <VerifyEmailPage /> },
+
+
+  {
+    element: <ProtectedRoute />,
+    children: [
+      {
+        element: <AppShell />,
+        children: [
+          { path: "/home", element: <HomePage /> },
+          { path: "/components", element: <ComponentsPage /> }, // New: List
+          { path: "/components/:code", element: <ComponentDetailsPage /> }, // New: Details
+          { path: "/alerts", element: <AlertsPage /> },
+          { path: "/anomalies", element: <AnomaliesPage /> },
+          { path: "/incidents", element: <IncidentsPage /> },
+          { path: "/incidents/:id", element: <IncidentDetailsPage /> },
+          { path: "/analytics", element: <AnalyticsPage /> },
+
+          
+        ],
+      },
+    ],
+  },
+]);
+
+
+
+
+############################################################
+FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\pepsi\api\alerts.api.txt
+############################################################
+
+ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\api\alerts.api.ts
+==================================================
+// src/api/alerts.api.ts (updated full file)
+import { http } from "./http";
+
+export type AlertRule = {
+  id: number;
+  signal_code: string;
+  operator: string;
+  threshold: number;
+  min_duration_ticks: number;
+  severity: string;
+  enabled: boolean;
+};
+
+export type AlertEvent = {
+  id: number;
+  rule_id: number;
+  component_code: string;
+  signal_code: string;
+  tick_start: number;
+  tick_end?: number;
+  peak_value: number;
+  severity: string;
+  status: string;
+  origin: string;
+};
+
+export async function fetchAlertRules() {
+  const { data } = await http.get<AlertRule[]>("/api/alerts/rules");
+  return data;
+}
+
+export async function generateAllRules() {
+  const { data } = await http.post("/api/alerts/rules/generate-all");
+  return data;
+}
+
+export async function evaluateAlerts(lookbackTicks = 200, simulationMode = false) {
+  const { data } = await http.post("/api/alerts/evaluate", { lookback_ticks: lookbackTicks, simulation_mode: simulationMode });
+  return data;
+}
+
+export async function resetAndEvaluate(lookbackTicks = 200) {
+  const { data } = await http.post("/api/alerts/reset-and-evaluate", { lookback_ticks: lookbackTicks });
+  return data;
+}
+
+export async function fetchAlertEvents(signalCode?: string, status?: string, limit = 100) {
+  const params = new URLSearchParams();
+  if (signalCode) params.append("signal_code", signalCode);
+  if (status) params.append("status", status);
+  params.append("limit", limit.toString());
+  const { data } = await http.get<AlertEvent[]>(`/api/alerts/events?${params}`);
+  return data;
+}
+
+export async function fetchAlertSummary() {
+  const { data } = await http.get<Record<string, number>>("/api/alerts/summary");
+  return data;
+}
+
+export async function fetchAlertsStats(fromTick?: number, toTick?: number, limit = 10) {
+  const params = new URLSearchParams();
+  if (fromTick) params.append("from_tick", fromTick.toString());
+  if (toTick) params.append("to_tick", toTick.toString());
+  params.append("limit", limit.toString());
+  const { data } = await http.get(`/api/analytics/alerts-stats?${params}`);
+  return data;
+}
+
+// Bonus: Fetch spikes for alert patterns
+export async function fetchAlertSpikes() {
+  const { data } = await http.get("/api/analytics/patterns/spikes");
+  return data;
+}
+
+
+
+############################################################
+FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\pepsi\api\analytics.api.txt
+############################################################
+
+ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\api\analytics.api.ts
+==================================================
+// src/api/analytics.api.ts
+import { http } from "./http";
+
+// Global health (returns number or { health: number })
+export async function fetchGlobalHealth() {
+  const { data } = await http.get<number | { health: number }>("/api/analytics/global-health");
+  return typeof data === 'object' ? data.health : data;
+}
+
+// Component health
+export async function fetchComponentHealth(code: string) {
+  const { data } = await http.get<number>(`/api/analytics/component-health/${code}`);
+  return data;
+}
+
+// Volatility (returns number)
+export async function fetchVolatility(signal: string, window = 10) {
+  const { data } = await http.get<number>(`/api/analytics/volatility`, {
+    params: { signal_code: signal, window },
+  });
+  return data;
+}
+
+// Forecast (array of points)
+export async function fetchForecast(signal: string, horizon = 50) {
+  const { data } = await http.get<ForecastPoint[]>(`/api/analytics/forecast/signal`, {
+    params: { signal_code: signal, horizon_ticks: horizon },
+  });
+  return data;
+}
+
+export type ForecastPoint = {
+  tick: number;
+  value: number;
+  upper: number;
+  lower: number;
+};
+
+// Regimes
+export async function fetchRegimes(component: string) {
+  const { data } = await http.get<Regime[]>(`/api/analytics/component-regimes/${component}`, {
+    params: { window: 1440, bucket_size: 60 },
+  });
+  return data;
+}
+
+export type Regime = {
+  start_tick: number;
+  end_tick: number;
+  type: string;
+};
+
+// Stress curve
+export async function fetchStressCurve(component: string) {
+  const { data } = await http.get<StressCurve[]>(`/api/analytics/component-stress/${component}`, {
+    params: { window: 600, bucket: 20 },
+  });
+  return data;
+}
+
+export type StressCurve = {
+  tick: number;
+  stress_level: number;
+};
+
+// Change impact
+export async function fetchChangeImpact(signal?: string) {
+  const params = signal ? { signal_code: signal } : {};
+  const { data } = await http.get<ChangeImpact[]>(`/api/analytics/signal-change-impact`, { params });
+  return data;
+}
+
+export type ChangeImpact = {
+  change_tick: number;
+  impact_score: number;
+  affected_signals: string[];
+};
+
+
+
+############################################################
+FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\pepsi\api\anomalies.api.txt
+############################################################
+
+ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\api\anomalies.api.ts
+==================================================
+// src/api/anomalies.api.ts (new file - hooks for all anomalies APIs)
+import { http } from "./http";
+
+export type InjectParams = {
+  pipeline: string;
+  anomaly_type: string;
+  from_tick: number;
+  to_tick: number;
+  strength?: number;
+};
+
+export type ActiveAnomaly = {
+  active: boolean;
+  anomalies?: {
+    anomaly_type: string;
+    pipeline: string;
+    from_tick: number;
+    to_tick: number;
+  }[];
+};
+
+export type ImpactSummary = {
+  active: boolean;
+  anomaly: {
+    type: string;
+    from_tick: number;
+    to_tick: number;
+    duration_ticks: number;
+    affected_components: string[];
+    affected_signals: number;
+    points_modified: number;
+  };
+  alerts: {
+    total: number;
+    by_severity: Record<string, number>;
+    by_component: Record<string, number>;
+  };
+  components: Array<{
+    component_code: string;
+    health_score: number;
+    open_alerts: number;
+    severity_pressure: Record<string, number>;
+  }>;
+  metric_deviation: Array<{
+    signal_code: string;
+    avg_delta_pct: number;
+    max_delta_pct: number;
+  }>;
+  global_health: {
+    collapse_risk: number;
+    status: string;
+  };
+};
+
+export type FullAnalysis = {
+  active: boolean;
+  anomaly: {
+    type: string;
+    title: string;
+    expected_behavior: string[];
+    pipeline: string;
+    window: {
+      from_tick: number;
+      to_tick: number;
+      duration_ticks: number;
+    };
+    scope: {
+      affected_components: { code: string; label: string }[];
+      affected_signals: string[];
+    };
+  };
+  system_state: {
+    global_health: {
+      collapse_risk: number;
+      status: string;
+    };
+    cascading_behavior: boolean;
+    stability: string;
+  };
+  alerts: {
+    open_total: number;
+    by_severity: Record<string, number>;
+    by_component: { component_code: string; component_label: string; open_alerts: number; pipeline_position: number }[];
+    timeline: { from_tick: number; to_tick: number; open_alerts: number; critical: number; warning: number }[];
+    ticks: {
+      first_open_tick: number | null;
+      latest_open_tick: number | null;
+    };
+  };
+  deviation: {
+    per_component: { component_code: string; component_label: string; points_modified: number; signals_modified: string[]; families_touched: string[]; mean_delta_pct: number; peak_delta_pct: number }[];
+    per_signal: { signal_code: string; component_code: string; family: string; column_name: string; unit: string | null; description: string | null; points: number; mean_original: number; mean_current: number; mean_delta_abs: number; mean_delta_pct: number; min_delta_pct: number; max_delta_pct: number; peak_current: number }[];
+  };
+  health: {
+    components_ranked: { component_code: string; component_label: string; open_alerts: number; health_score: number | null }[];
+  };
+  observations: { type: string; message: string }[];
+};
+
+export async function injectAnomaly(params: InjectParams) {
+  const { data } = await http.post("/api/anomalies/inject", params);
+  return data;
+}
+
+export async function rollbackAnomaly() {
+  const { data } = await http.post("/api/anomalies/rollback");
+  return data;
+}
+
+export async function fetchActiveAnomaly() {
+  const { data } = await http.get<ActiveAnomaly>("/api/anomalies/active");
+  return data;
+}
+
+export async function fetchAnomalyImpact() {
+  const { data } = await http.get<ImpactSummary>("/api/anomalies/impact");
+  return data;
+}
+
+export async function fetchAnomalyAnalysis() {
+  const { data } = await http.get<FullAnalysis>("/api/anomalies/analysis");
+  return data;
+}
+
+
+
+
+
+############################################################
+FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\pepsi\api\components.api.txt
+############################################################
+
+ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\api\components.api.ts
+==================================================
+// src/api/components.api.ts (updated full file)
+import { http } from "./http";
+
+export type ComponentSummary = {
+  component_code: string;
+  signal_count: number;
+};
+
+export type ComponentSignal = {
+  signal_code: string;
+  type: string;
+  unit: string;
+  polarity: string;
+  description: string;
+  family?: string; // Enrich: Detect from backend or frontend via metric_families
+};
+
+export type ComponentDetails = {
+  component_code: string;
+  health_score: number;
+  signals: ComponentSignal[];
+};
+
+export async function fetchComponents() {
+  const { data } = await http.get<ComponentSummary[]>("/api/system/components");
+  return data;
+}
+
+export async function fetchComponentDetails(componentCode: string) {
+  const { data } = await http.get<ComponentDetails>(`/api/system/components/${componentCode}`);
+  // Enrich: Add family if not in response (use detect_family from backend logic, but frontend sim)
+  data.signals = data.signals.map(s => ({ ...s, family: detectFamily(s.signal_code) }));
+  return data;
+}
+
+// Mock detectFamily (from backend metric_families.pyâ€”copy logic for alignment)
+function detectFamily(name: string): string {
+  const lower = name.toLowerCase();
+  if (['latency', 'delay', 'jitter', 'rtt', 'response', 'wait', 'duration'].some(k => lower.includes(k))) return 'latency';
+  if (['queue', 'backlog', 'lag', 'depth', 'pending'].some(k => lower.includes(k))) return 'backlog';
+  if (['utilization', 'ratio', 'percent', 'pressure'].some(k => lower.includes(k))) return 'utilization';
+  if (['error', 'failure', 'timeout', 'drop', 'reject'].some(k => lower.includes(k))) return 'error_rate';
+  if (['rate', 'throughput', 'per_sec', 'qps'].some(k => lower.includes(k))) return 'throughput';
+  if (['count', 'total', 'size', 'cardinality', 'bytes', 'mb'].some(k => lower.includes(k))) return 'count';
+  if (['event', 'restart', 'election', 'deadlock', 'oom', 'failover'].some(k => lower.includes(k))) return 'events';
+  return 'count'; // Fallback
+}
+
+// Timeseries hooks (for charts)
+export async function fetchTimeseries(signalCode: string, fromTick?: number, toTick?: number) {
+  const params = fromTick && toTick ? `?from_tick=${fromTick}&to_tick=${toTick}` : '';
+  const { data } = await http.get(`/api/timeseries${params}&signal_code=${signalCode}`);
+  return data;
+}
+
+export async function fetchMultiTimeseries(signalCodes: string[]) {
+  const { data } = await http.get(`/api/timeseries/multi?signals=${signalCodes.join(',')}`);
+  return data.signals;
+}
+
+export async function fetchAggregate(signalCode: string, window = 10, type = 'avg') {
+  const { data } = await http.get(`/api/timeseries/aggregate?signal_code=${signalCode}&window=${window}&type=${type}`);
+  return data;
+}
+
+export async function fetchDerivative(signalCode: string) {
+  const { data } = await http.get(`/api/timeseries/derivative?signal_code=${signalCode}`);
+  return data;
+}
+
+export async function fetchNormalized(signalCode: string) {
+  const { data } = await http.get(`/api/timeseries/normalized?signal_code=${signalCode}`);
+  return data;
+}
+
+// Alerts by component
+export async function fetchAlertsByComponent(componentCode: string) {
+  const { data } = await http.get(`/api/alerts/by-component/${componentCode}`);
+  return data;
+}
+
+// Analytics for timeline/health
+export async function fetchComponentTimeAnalysis(componentCode: string, maxTicks = 500) {
+  const { data } = await http.get(`/api/analytics/component-time-analysis/${componentCode}?max_ticks=${maxTicks}`);
+  return data;
+}
+
+export async function fetchComponentVolatility(signalCode: string, window = 10) {
+  const { data } = await http.get(`/api/analytics/volatility?signal_code=${signalCode}&window=${window}`);
+  return data.volatility;
+}
+
+// Anomalies for overlays
+export async function fetchActiveAnomaly() {
+  const { data } = await http.get("/api/anomalies/active");
+  return data;
+}
+
+// Add these to src/api/components.api.ts
+export async function fetchComponentRegimes(componentCode: string, window = 1440, bucket = 60) {
+  const { data } = await http.get(`/api/analytics/component-regimes/${componentCode}?window=${window}&bucket_size=${bucket}`);
+  return data;
+}
+
+export async function fetchComponentStress(componentCode: string, window = 600, bucket = 20) {
+  const { data } = await http.get(`/api/analytics/component-stress/${componentCode}?window=${window}&bucket=${bucket}`);
+  return data;
+}
+
+
+
+############################################################
+FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\pepsi\api\controlRoom.api.txt
+############################################################
+
+ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\api\controlRoom.api.ts
+==================================================
+// src/api/controlRoom.api.ts (updated full file)
+import { http } from "./http";
+
+/* ---------- System ---------- */
+export function fetchSystemOverview() {
+  return http.get("/api/system/overview").then(r => r.data);
+}
+
+/* ---------- Analytics ---------- */
+export function fetchGlobalHealth() {
+  return http.get("/api/analytics/global-health").then(r => r.data);
+}
+
+export function fetchActiveHotspots(limit = 15) {
+  return http.get(`/api/analytics/active-hotspots?limit=${limit}`).then(r => r.data);
+}
+
+export function fetchComponentRankings(limit = 10) {
+  return http.get(`/api/analytics/component-rankings?limit=${limit}`).then(r => r.data);
+}
+
+export function fetchSystemStats() {
+  return http.get("/api/analytics/system-stats").then(r => r.data);
+}
+
+/* ---------- Alerts ---------- */
+export function fetchAlertSummary() {
+  return http.get("/api/alerts/summary").then(r => r.data);
+}
+
+export function evaluateAlerts() {
+  return http.post("/api/alerts/evaluate");
+}
+
+/* ---------- Incidents ---------- */
+export function fetchIncidents() {
+  return http.get("/api/incidents/").then(r => r.data);
+}
+
+export function evaluateIncidents() {
+  return http.post("/api/incidents/evaluate");
+}
+
+/* ---------- Anomalies ---------- */
+export function fetchActiveAnomaly() {
+  return http.get("/api/anomalies/active").then(r => r.data);
+}
+
+export function fetchAnomalyImpact() {
+  return http.get("/api/anomalies/impact").then(r => r.data);
+}
+
+export function fetchAnomalyAnalysis() {
+  return http.get("/api/anomalies/analysis").then(r => r.data);
+}
+
+export function rollbackAnomaly() {
+  return http.post("/api/anomalies/rollback");
+}
+
+
+
+############################################################
+FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\pepsi\api\http.txt
+############################################################
+
+ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\api\http.ts
+==================================================
+// src/api/http.ts
+import axios from "axios";
+
+const baseURL = import.meta.env.VITE_API_BASE_URL ?? "http://127.0.0.1:8000";
+
+export const http = axios.create({
+  baseURL,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+
+// Attach token automatically
+http.interceptors.request.use((config) => {
+  const token = localStorage.getItem("access_token");
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+// Centralize auth failures
+http.interceptors.response.use(
+  (res) => res,
+  (err) => {
+    const status = err?.response?.status;
+    if (status === 401) {
+      // token invalid/expired
+      localStorage.removeItem("access_token");
+      localStorage.removeItem("user");
+      // donâ€™t hard redirect here; let route guard handle it
+    }
+    return Promise.reject(err);
+  }
+);
+
+
+
+
+############################################################
+FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\pepsi\api\incidents.api.txt
+############################################################
+
+ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\api\incidents.api.ts
+==================================================
+// src/api/incidents.api.ts (full file)
+import type { AlertEvent } from "./alerts.api";
+import { http } from "./http";
+
+export type Incident = {
+  id: number;
+  title: string;
+  description: string;
+  status: string; // OPEN, ACKNOWLEDGED, RESOLVED
+  severity: string; // INFO, WARNING, CRITICAL
+  opened_at: string;
+  resolved_at: string | null;
+  resolution_note: string | null;
+  collapse_risk: number | null;
+  affected_components: string[];
+  linked_alerts: AlertEvent[]; // from alerts.api
+};
+
+export type IncidentTimelineEvent = {
+  tick: number;
+  event: string;
+  severity: string;
+  signal: string;
+};
+
+export type IncidentComment = {
+  id: number;
+  incident_id: number;
+  user_id: number;
+  comment: string;
+  created_at: string;
+};
+
+export async function fetchIncidents(status = "OPEN") {
+  const { data } = await http.get<Incident[]>(`/api/incidents?status=${status}`);
+  return data;
+}
+
+export async function fetchIncident(id: number) {
+  const { data } = await http.get<Incident>(`/api/incidents/${id}`);
+  return data;
+}
+
+export async function fetchIncidentTimeline(id: number) {
+  const { data } = await http.get<{ timeline: IncidentTimelineEvent[] }>(`/api/incidents/${id}/timeline`);
+  return data.timeline;
+}
+
+export async function acknowledgeIncident(id: number) {
+  const { data } = await http.post<Incident>(`/api/incidents/${id}/acknowledge`);
+  return data;
+}
+
+export async function resolveIncident(id: number, note: string) {
+  const { data } = await http.post<Incident>(`/api/incidents/${id}/resolve`, { note });
+  return data;
+}
+
+export async function groupAlertsIntoIncidents() {
+  const { data } = await http.post<{ grouped_incidents: number }>("/api/incidents/group-alerts");
+  return data.grouped_incidents;
+}
+
+export async function fetchIncidentComments(id: number) {
+  const { data } = await http.get<IncidentComment[]>(`/api/incidents/${id}/comments`);
+  return data;
+}
+
+export async function addIncidentComment(id: number, comment: string) {
+  const { data } = await http.post<IncidentComment>(`/api/incidents/${id}/comments`, { comment });
+  return data;
+}
+
+
+
+############################################################
+FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\pepsi\api\overview.api.txt
+############################################################
+
+ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\api\overview.api.ts
+==================================================
+import { http } from "./http";
+
+export type ComponentOverview = {
+  component_code: string;
+  health_score: number;
+  active_alerts: number;
+  status: "OK" | "DEGRADED" | "CRITICAL";
+};
+
+export async function fetchSystemOverview() {
+  const { data } = await http.get<ComponentOverview[]>(
+    "/api/system/overview"
+  );
+  return data;
+}
+
+
+
+
+############################################################
+FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\pepsi\api\system.api.txt
+############################################################
+
+ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\api\system.api.ts
+==================================================
+// src/api/system.api.ts
+import { http } from "./http";
+
+export async function pingAlerts() {
+  const res = await http.get<{ ok: boolean }>("/api/alerts/ping");
+  return res.data;
+}
+
+
+
+
+############################################################
+FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\pepsi\assets\react.txt
+############################################################
+
+ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\assets\react.svg
+==================================================
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" role="img" class="iconify iconify--logos" width="35.93" height="32" preserveAspectRatio="xMidYMid meet" viewBox="0 0 256 228"><path fill="#00D8FF" d="M210.483 73.824a171.49 171.49 0 0 0-8.24-2.597c.465-1.9.893-3.777 1.273-5.621c6.238-30.281 2.16-54.676-11.769-62.708c-13.355-7.7-35.196.329-57.254 19.526a171.23 171.23 0 0 0-6.375 5.848a155.866 155.866 0 0 0-4.241-3.917C100.759 3.829 77.587-4.822 63.673 3.233C50.33 10.957 46.379 33.89 51.995 62.588a170.974 170.974 0 0 0 1.892 8.48c-3.28.932-6.445 1.924-9.474 2.98C17.309 83.498 0 98.307 0 113.668c0 15.865 18.582 31.778 46.812 41.427a145.52 145.52 0 0 0 6.921 2.165a167.467 167.467 0 0 0-2.01 9.138c-5.354 28.2-1.173 50.591 12.134 58.266c13.744 7.926 36.812-.22 59.273-19.855a145.567 145.567 0 0 0 5.342-4.923a168.064 168.064 0 0 0 6.92 6.314c21.758 18.722 43.246 26.282 56.54 18.586c13.731-7.949 18.194-32.003 12.4-61.268a145.016 145.016 0 0 0-1.535-6.842c1.62-.48 3.21-.974 4.76-1.488c29.348-9.723 48.443-25.443 48.443-41.52c0-15.417-17.868-30.326-45.517-39.844Zm-6.365 70.984c-1.4.463-2.836.91-4.3 1.345c-3.24-10.257-7.612-21.163-12.963-32.432c5.106-11 9.31-21.767 12.459-31.957c2.619.758 5.16 1.557 7.61 2.4c23.69 8.156 38.14 20.213 38.14 29.504c0 9.896-15.606 22.743-40.946 31.14Zm-10.514 20.834c2.562 12.94 2.927 24.64 1.23 33.787c-1.524 8.219-4.59 13.698-8.382 15.893c-8.067 4.67-25.32-1.4-43.927-17.412a156.726 156.726 0 0 1-6.437-5.87c7.214-7.889 14.423-17.06 21.459-27.246c12.376-1.098 24.068-2.894 34.671-5.345a134.17 134.17 0 0 1 1.386 6.193ZM87.276 214.515c-7.882 2.783-14.16 2.863-17.955.675c-8.075-4.657-11.432-22.636-6.853-46.752a156.923 156.923 0 0 1 1.869-8.499c10.486 2.32 22.093 3.988 34.498 4.994c7.084 9.967 14.501 19.128 21.976 27.15a134.668 134.668 0 0 1-4.877 4.492c-9.933 8.682-19.886 14.842-28.658 17.94ZM50.35 144.747c-12.483-4.267-22.792-9.812-29.858-15.863c-6.35-5.437-9.555-10.836-9.555-15.216c0-9.322 13.897-21.212 37.076-29.293c2.813-.98 5.757-1.905 8.812-2.773c3.204 10.42 7.406 21.315 12.477 32.332c-5.137 11.18-9.399 22.249-12.634 32.792a134.718 134.718 0 0 1-6.318-1.979Zm12.378-84.26c-4.811-24.587-1.616-43.134 6.425-47.789c8.564-4.958 27.502 2.111 47.463 19.835a144.318 144.318 0 0 1 3.841 3.545c-7.438 7.987-14.787 17.08-21.808 26.988c-12.04 1.116-23.565 2.908-34.161 5.309a160.342 160.342 0 0 1-1.76-7.887Zm110.427 27.268a347.8 347.8 0 0 0-7.785-12.803c8.168 1.033 15.994 2.404 23.343 4.08c-2.206 7.072-4.956 14.465-8.193 22.045a381.151 381.151 0 0 0-7.365-13.322Zm-45.032-43.861c5.044 5.465 10.096 11.566 15.065 18.186a322.04 322.04 0 0 0-30.257-.006c4.974-6.559 10.069-12.652 15.192-18.18ZM82.802 87.83a323.167 323.167 0 0 0-7.227 13.238c-3.184-7.553-5.909-14.98-8.134-22.152c7.304-1.634 15.093-2.97 23.209-3.984a321.524 321.524 0 0 0-7.848 12.897Zm8.081 65.352c-8.385-.936-16.291-2.203-23.593-3.793c2.26-7.3 5.045-14.885 8.298-22.6a321.187 321.187 0 0 0 7.257 13.246c2.594 4.48 5.28 8.868 8.038 13.147Zm37.542 31.03c-5.184-5.592-10.354-11.779-15.403-18.433c4.902.192 9.899.29 14.978.29c5.218 0 10.376-.117 15.453-.343c-4.985 6.774-10.018 12.97-15.028 18.486Zm52.198-57.817c3.422 7.8 6.306 15.345 8.596 22.52c-7.422 1.694-15.436 3.058-23.88 4.071a382.417 382.417 0 0 0 7.859-13.026a347.403 347.403 0 0 0 7.425-13.565Zm-16.898 8.101a358.557 358.557 0 0 1-12.281 19.815a329.4 329.4 0 0 1-23.444.823c-7.967 0-15.716-.248-23.178-.732a310.202 310.202 0 0 1-12.513-19.846h.001a307.41 307.41 0 0 1-10.923-20.627a310.278 310.278 0 0 1 10.89-20.637l-.001.001a307.318 307.318 0 0 1 12.413-19.761c7.613-.576 15.42-.876 23.31-.876H128c7.926 0 15.743.303 23.354.883a329.357 329.357 0 0 1 12.335 19.695a358.489 358.489 0 0 1 11.036 20.54a329.472 329.472 0 0 1-11 20.722Zm22.56-122.124c8.572 4.944 11.906 24.881 6.52 51.026c-.344 1.668-.73 3.367-1.15 5.09c-10.622-2.452-22.155-4.275-34.23-5.408c-7.034-10.017-14.323-19.124-21.64-27.008a160.789 160.789 0 0 1 5.888-5.4c18.9-16.447 36.564-22.941 44.612-18.3ZM128 90.808c12.625 0 22.86 10.235 22.86 22.86s-10.235 22.86-22.86 22.86s-22.86-10.235-22.86-22.86s10.235-22.86 22.86-22.86Z"></path></svg>
+
+
+
+############################################################
+FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\pepsi\auth\auth.api.txt
+############################################################
+
+ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\auth\auth.api.ts
+==================================================
+// src/auth/auth.api.ts
+import { http } from "../api/http";
+
+export type TokenResponse = { access_token: string; token_type?: string };
+
+export type UserInfo = {
+  id: string;
+  username: string;
+  roles: string[];
+  is_active: boolean;
+};
+
+export async function signup(username: string, password: string) {
+  const { data } = await http.post("/api/auth/signup", { username, password });
+  return data as { id: string; username: string };
+}
+
+export async function login(username: string, password: string) {
+  const { data } = await http.post<TokenResponse>("/api/auth/login", {
+    username,
+    password,
+  });
+  return data;
+}
+
+export async function me() {
+  const { data } = await http.get<UserInfo>("/api/auth/me");
+  return data;
+}
+
+export async function verifyEmail(token: string) {
+  const { data } = await http.get("/api/auth/verify-email", {
+    params: { token },
+  });
+  return data as { message: string };
+}
+
+
+
+
+############################################################
+FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\pepsi\auth\auth.store.txt
+############################################################
+
+ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\auth\auth.store.ts
+==================================================
+// src/auth/auth.store.ts
+import { createContext, useContext, useMemo, useState, createElement } from "react";
+import type { UserInfo } from "./auth.api";
+
+
+
+
+type AuthState = {
+  token: string | null;
+  user: UserInfo | null;
+  setSession: (token: string, user: UserInfo) => void;
+  clearSession: () => void;
+};
+
+const AuthContext = createContext<AuthState | null>(null);
+
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const [token, setToken] = useState<string | null>(
+    localStorage.getItem("access_token")
+  );
+
+  const [user, setUser] = useState<UserInfo | null>(() => {
+    const raw = localStorage.getItem("user");
+    return raw ? (JSON.parse(raw) as UserInfo) : null;
+  });
+
+  const value = useMemo<AuthState>(
+    () => ({
+      token,
+      user,
+      setSession: (t, u) => {
+        setToken(t);
+        setUser(u);
+        localStorage.setItem("access_token", t);
+        localStorage.setItem("user", JSON.stringify(u));
+      },
+      clearSession: () => {
+        setToken(null);
+        setUser(null);
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("user");
+      },
+    }),
+    [token, user]
+  );
+
+  return createElement(AuthContext.Provider, { value }, children);
+}
+
+export function useAuth() {
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error("useAuth must be used inside AuthProvider");
+  return ctx;
+}
+
+
+
+
+############################################################
+FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\pepsi\auth\guards.txt
+############################################################
+
+ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\auth\guards.tsx
+==================================================
+// src/auth/guards.tsx
+import { Navigate, Outlet } from "react-router-dom";
+import { useAuth } from "./auth.store";
+
+export function ProtectedRoute() {
+  const { token } = useAuth();
+  if (!token) return <Navigate to="/login" replace />;
+  return <Outlet />;
+}
+
+export function AdminRoute() {
+  const { token, user } = useAuth();
+  if (!token) return <Navigate to="/login" replace />;
+
+  // backend sets is_admin based on roles containing "admin"
+  const isAdmin = user?.roles?.includes("admin") ?? false;
+  if (!isAdmin) return <Navigate to="/dashboard" replace />;
+
+  return <Outlet />;
+}
+
+
+
+
+############################################################
+FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\pepsi\components\alerts\AlertActions.txt
+############################################################
+
+ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\components\alerts\AlertActions.tsx
+==================================================
+// src/components/alerts/AlertActions.tsx
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { evaluateAlerts, resetAndEvaluate } from '../../api/alerts.api';
+
+export function AlertActions() {
+  const queryClient = useQueryClient();
+
+  const evalMutation = useMutation({
+    mutationFn: () => evaluateAlerts(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['alertSummary'] });
+      queryClient.invalidateQueries({ queryKey: ['activeAlerts'] });
+      queryClient.invalidateQueries({ queryKey: ['alertHistory'] });
+    },
+  });
+
+  const resetEvalMutation = useMutation({
+    mutationFn: () => resetAndEvaluate(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['alertSummary'] });
+      queryClient.invalidateQueries({ queryKey: ['activeAlerts'] });
+      queryClient.invalidateQueries({ queryKey: ['alertHistory'] });
+    },
+  });
+
+  return (
+    <div className="flex gap-3">
+      <button
+        onClick={() => evalMutation.mutate()}
+        disabled={evalMutation.isPending}
+        className="flex items-center gap-2 rounded-md bg-zinc-700 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-600 disabled:opacity-50 transition-colors"
+      >
+        {evalMutation.isPending ? 'Evaluating...' : 'Evaluate Now'}
+      </button>
+      <button
+        onClick={() => resetEvalMutation.mutate()}
+        disabled={resetEvalMutation.isPending}
+        className="flex items-center gap-2 rounded-md bg-red-900/80 px-4 py-2 text-sm font-medium text-white hover:bg-red-900 disabled:opacity-50 transition-colors"
+      >
+        {resetEvalMutation.isPending ? 'Resetting...' : 'Reset & Re-evaluate'}
+      </button>
+    </div>
+  );
+}
+
+
+
+############################################################
+FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\pepsi\components\alerts\AlertEventsTable.txt
+############################################################
+
+ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\components\alerts\AlertEventsTable.tsx
+==================================================
+// src/components/alerts/AlertEventsTable.tsx
+import { useMemo, useState } from 'react';
+import { fetchTimeseries } from '../../api/components.api';
+import { useQuery } from '@tanstack/react-query';
+import { LineChart, Line, ResponsiveContainer } from 'recharts';
+import { ArrowUpDown, Download, LinkIcon } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import type { AlertEvent } from '../../api/alerts.api';
+import { AlertRow } from './AlertRow';
+
+type Props = {
+  alerts: AlertEvent[];
+  filter: { component: string; severity: string; origin: string };
+};
+
+export function AlertEventsTable({ alerts, filter }: Props) {
+  const [sort, setSort] = useState<{ key: keyof AlertEvent; dir: 'asc' | 'desc' }>({ key: 'id', dir: 'desc' });
+  const [page, setPage] = useState(0);
+  const pageSize = 20;
+
+  const filteredAlerts = useMemo(() => {
+    return alerts.filter((a) => {
+      return (
+        (!filter.component || a.component_code?.toLowerCase().includes(filter.component.toLowerCase())) &&
+        (!filter.severity || a.severity === filter.severity) &&
+        (!filter.origin || a.origin === filter.origin)
+      );
+    });
+  }, [alerts, filter]);
+
+  const sortedAlerts = useMemo(() => {
+    return [...filteredAlerts].sort((a, b) => {
+      const valA = a[sort.key] ?? 0; // safe fallback
+      const valB = b[sort.key] ?? 0;
+      if (valA < valB) return sort.dir === 'asc' ? -1 : 1;
+      if (valA > valB) return sort.dir === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [filteredAlerts, sort]);
+
+  const paginated = sortedAlerts.slice(page * pageSize, (page + 1) * pageSize);
+
+  const toggleSort = (key: keyof AlertEvent) => {
+    setSort({
+      key,
+      dir: sort.key === key && sort.dir === 'asc' ? 'desc' : 'asc',
+    });
+  };
+
+  const exportCSV = () => {
+    const headers = ['id', 'signal_code', 'severity', 'status', 'origin', 'tick_start', 'tick_end', 'peak_value'];
+    const rows = sortedAlerts.map((a) => [
+      a.id,
+      a.signal_code,
+      a.severity,
+      a.status,
+      a.origin,
+      a.tick_start,
+      a.tick_end ?? 'Ongoing',
+      a.peak_value?.toFixed(2) ?? '',
+    ]);
+    const csv = [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
+
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'alerts_export.csv';
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const getSparkline = (alert: AlertEvent) => {
+    const start = alert.tick_start - 10;
+    const end = alert.tick_end ?? alert.tick_start + 10;
+    const { data } = useQuery({
+      queryKey: ['sparkline', alert.id],
+      queryFn: () => fetchTimeseries(alert.signal_code, start, end),
+    });
+    return data ?? [];
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-end">
+        <button
+          onClick={exportCSV}
+          className="flex items-center gap-2 rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-sm text-zinc-300 hover:bg-zinc-800"
+        >
+          <Download size={16} />
+          Export CSV
+        </button>
+      </div>
+
+      <div className="overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900">
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-zinc-800">
+            <thead className="bg-zinc-950">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider cursor-pointer" onClick={() => toggleSort('signal_code')}>
+                  Signal {sort.key === 'signal_code' && (sort.dir === 'asc' ? 'â†‘' : 'â†“')}
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">Severity</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider cursor-pointer" onClick={() => toggleSort('status')}>
+                  Status {sort.key === 'status' && (sort.dir === 'asc' ? 'â†‘' : 'â†“')}
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">Origin</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider cursor-pointer" onClick={() => toggleSort('tick_start')}>
+                  Ticks {sort.key === 'tick_start' && (sort.dir === 'asc' ? 'â†‘' : 'â†“')}
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">Peak</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">Sparkline</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-zinc-800 bg-zinc-900">
+  {paginated.length === 0 ? (
+    <tr>
+      <td colSpan={8} className="px-6 py-10 text-center text-sm text-zinc-500">
+        No alerts match the current filters
+      </td>
+    </tr>
+  ) : (
+    paginated.map((a) => (
+      <AlertRow key={a.id} alert={a} />
+    ))
+  )}
+</tbody>
+          </table>
+        </div>
+
+        {/* Pagination */}
+        <div className="flex items-center justify-between px-4 py-3 text-sm text-zinc-400">
+          <div>
+            Showing {page * pageSize + 1} to {Math.min((page + 1) * pageSize, sortedAlerts.length)} of {sortedAlerts.length}
+          </div>
+          <div className="flex gap-2">
+            <button
+              disabled={page === 0}
+              onClick={() => setPage((p) => p - 1)}
+              className="rounded border border-zinc-700 px-3 py-1 hover:bg-zinc-800 disabled:opacity-50"
+            >
+              Previous
+            </button>
+            <button
+              disabled={(page + 1) * pageSize >= sortedAlerts.length}
+              onClick={() => setPage((p) => p + 1)}
+              className="rounded border border-zinc-700 px-3 py-1 hover:bg-zinc-800 disabled:opacity-50"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+
+############################################################
+FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\pepsi\components\alerts\AlertList.txt
+############################################################
+
+ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\components\alerts\AlertList.tsx
+==================================================
+// src/components/alerts/AlertList.tsx
+import { useQuery } from '@tanstack/react-query';
+import { fetchTimeseries } from '../../api/components.api';
+import { HealthBadge } from '../control-room/HealthBadge';
+import { LineChart, Line, ResponsiveContainer } from 'recharts';
+
+interface Alert {
+  id: number;
+  signal_code: string;
+  tick_start: number;
+  tick_end?: number;
+  peak_value: number;
+  severity: string;
+  status: string;
+  origin: string;
+}
+
+interface TimeseriesPoint {
+  tick: number;
+  value: number;
+}
+
+export function AlertList({ alerts, componentCode }: { alerts: Alert[]; componentCode: string }) {
+  const mapSeverityToStatus = (severity: string): 'OK' | 'DEGRADED' | 'CRITICAL' => {
+    const upper = severity.toUpperCase();
+    if (upper === 'CRITICAL') return 'CRITICAL';
+    if (upper === 'WARNING') return 'DEGRADED';
+    return 'OK';
+  };
+
+  const getSparkline = (alert: Alert) => {
+    const start = alert.tick_start - 10;
+    const end = alert.tick_end !== undefined ? alert.tick_end + 10 : alert.tick_start + 10;
+
+    return useQuery<TimeseriesPoint[]>({
+      queryKey: ['sparkline', alert.id],
+      queryFn: async () => {
+        const res = await fetchTimeseries(alert.signal_code, start, end);
+        return res; // Assume backend returns [{tick, value}]
+      },
+    });
+  };
+
+  return (
+    <table className="w-full text-sm rounded-xl border border-zinc-800 bg-zinc-900">
+      <thead className="border-b border-zinc-800 text-zinc-400">
+        <tr>
+          <th className="px-4 py-2 text-left">Signal</th>
+          <th className="px-4 py-2 text-left">Severity</th>
+          <th className="px-4 py-2 text-left">Status</th>
+          <th className="px-4 py-2 text-left">Origin</th>
+          <th className="px-4 py-2 text-left">Ticks</th>
+          <th className="px-4 py-2 text-left">Peak</th>
+          <th className="px-4 py-2 text-left">Sparkline</th>
+        </tr>
+      </thead>
+      <tbody>
+        {alerts.map(a => {
+          const { data: sparkData } = getSparkline(a);
+          return (
+            <tr key={a.id} className="border-b border-zinc-800 last:border-0">
+              <td className="px-4 py-2 font-mono text-xs">{a.signal_code}</td>
+              <td className="px-4 py-2"><HealthBadge status={mapSeverityToStatus(a.severity)} /></td>
+              <td className="px-4 py-2"><span className={`px-2 py-1 rounded text-xs ${a.status === 'OPEN' ? 'bg-red-950 text-red-400' : 'bg-emerald-950 text-emerald-400'}`}>{a.status}</span></td>
+              <td className="px-4 py-2"><span className={`px-2 py-1 rounded text-xs ${a.origin === 'SIMULATED' ? 'bg-yellow-950 text-yellow-400' : 'bg-zinc-800 text-zinc-200'}`}>{a.origin}</span></td>
+              <td className="px-4 py-2">{a.tick_start}-{a.tick_end ?? 'Ongoing'}</td>
+              <td className="px-4 py-2">{a.peak_value.toFixed(2)}</td>
+              <td className="px-4 py-2">
+                <ResponsiveContainer width={80} height={24}>
+                  <LineChart data={sparkData ?? []} margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
+                    <Line type="monotone" dataKey="value" stroke="#10b981" dot={false} strokeWidth={1} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </td>
+            </tr>
+          );
+        })}
+      </tbody>
+    </table>
+  );
+}
+
+
+
+############################################################
+FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\pepsi\components\alerts\AlertRow.txt
+############################################################
+
+ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\components\alerts\AlertRow.tsx
+==================================================
+// src/components/alerts/AlertRow.tsx
+import { useQuery } from '@tanstack/react-query';
+import { fetchTimeseries } from '../../api/components.api';
+import { ResponsiveContainer, LineChart, Line } from 'recharts';
+import { Link } from 'react-router-dom';
+import { LinkIcon } from 'lucide-react';
+import type { AlertEvent } from '../../api/alerts.api';
+
+type Props = {
+  alert: AlertEvent;
+};
+
+export function AlertRow({ alert }: Props) {
+  const start = alert.tick_start - 10;
+  const end = alert.tick_end ?? alert.tick_start + 10;
+
+  const { data: sparkData = [] } = useQuery({
+    queryKey: ['sparkline', alert.id],
+    queryFn: () => fetchTimeseries(alert.signal_code, start, end),
+  });
+
+  const color =
+    alert.severity === 'critical' ? '#ef4444' :
+    alert.severity === 'warning' ? '#eab308' :
+    '#6b7280';
+
+  return (
+    <tr className="hover:bg-zinc-800/50 transition-colors">
+      <td className="whitespace-nowrap px-6 py-4 font-mono text-xs text-zinc-300">{alert.signal_code}</td>
+      <td className="whitespace-nowrap px-6 py-4">
+        <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${
+          alert.severity === 'critical' ? 'bg-red-950 text-red-400' :
+          alert.severity === 'warning' ? 'bg-yellow-950 text-yellow-400' :
+          'bg-zinc-800 text-zinc-300'
+        }`}>
+          {alert.severity.toUpperCase()}
+        </span>
+      </td>
+      <td className="whitespace-nowrap px-6 py-4">
+        <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${
+          alert.status === 'OPEN' ? 'bg-red-950 text-red-400' : 'bg-emerald-950 text-emerald-400'
+        }`}>
+          {alert.status}
+        </span>
+      </td>
+      <td className="whitespace-nowrap px-6 py-4">
+        <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${
+          alert.origin === 'SIMULATED' ? 'bg-purple-950 text-purple-400' : 'bg-zinc-800 text-zinc-300'
+        }`}>
+          {alert.origin}
+        </span>
+      </td>
+      <td className="whitespace-nowrap px-6 py-4 text-sm text-zinc-300">
+        {alert.tick_start} â€“ {alert.tick_end ?? 'Ongoing'}
+      </td>
+      <td className="whitespace-nowrap px-6 py-4 text-sm text-zinc-300">
+        {alert.peak_value?.toFixed(2) ?? 'N/A'}
+      </td>
+      <td className="px-6 py-4">
+        <div className="h-8 w-28">
+          <ResponsiveContainer>
+            <LineChart data={sparkData} margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
+              <Line type="monotone" dataKey="value" stroke={color} dot={false} strokeWidth={1.5} />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      </td>
+      <td className="whitespace-nowrap px-6 py-4 text-right text-sm">
+        <Link
+          to={`/components/${alert.component_code}`}
+          className="inline-flex items-center text-zinc-400 hover:text-zinc-200"
+        >
+          <LinkIcon size={16} className="mr-1" />
+          View
+        </Link>
+      </td>
+    </tr>
+  );
+}
+
+
+
+############################################################
+FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\pepsi\components\alerts\AlertSummaryCard.txt
+############################################################
+
+ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\components\alerts\AlertSummaryCard.tsx
+==================================================
+// src/components/alerts/AlertSummaryCard.tsx
+import { useQuery } from '@tanstack/react-query';
+import { fetchAlertSummary } from '../../api/alerts.api';
+
+export function AlertSummaryCard() {
+  const { data, isLoading } = useQuery({
+    queryKey: ['alertSummary'],
+    queryFn: fetchAlertSummary,
+  });
+
+  if (isLoading) {
+    return <div className="text-zinc-400 animate-pulse">Loading summary...</div>;
+  }
+
+  const total = (data?.critical ?? 0) + (data?.warning ?? 0) + (data?.info ?? 0);
+
+  return (
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-4 rounded-xl border border-zinc-800 bg-zinc-900 p-6 shadow-sm">
+      <div className="text-center">
+        <p className="text-sm text-zinc-500">Total Alerts</p>
+        <p className="mt-1 text-3xl font-bold text-zinc-100">{total}</p>
+      </div>
+      <div className="text-center">
+        <p className="text-sm text-red-400">Critical</p>
+        <p className="mt-1 text-3xl font-bold text-red-400">{data?.critical ?? 0}</p>
+      </div>
+      <div className="text-center">
+        <p className="text-sm text-yellow-400">Warning</p>
+        <p className="mt-1 text-3xl font-bold text-yellow-400">{data?.warning ?? 0}</p>
+      </div>
+      <div className="text-center">
+        <p className="text-sm text-zinc-400">Info</p>
+        <p className="mt-1 text-3xl font-bold text-zinc-400">{data?.info ?? 0}</p>
+      </div>
+    </div>
+  );
+}
+
+
+
+############################################################
+FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\pepsi\components\alerts\AlertTimelineGraph.txt
+############################################################
+
+ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\components\alerts\AlertTimelineGraph.tsx
+==================================================
+// src/components/alerts/AlertTimelineGraph.tsx
+import { useQuery } from '@tanstack/react-query';
+import { fetchAlertEvents } from '../../api/alerts.api'; // remove fetchAlertsStats if not needed
+import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+
+interface AlertEvent {
+  tick_start: number;
+  tick_end?: number;
+  severity: string;
+}
+
+interface TimelinePoint {
+  tick: number;
+  critical: number;
+  warning: number;
+  info: number;
+}
+
+type Props = {
+  filter: { component: string; signal: string; severity: string; origin: string };
+};
+
+export function AlertTimelineGraph({ filter }: Props) {
+  // Explicit query function with no params (React Query standard)
+  const fetchEvents = async () => {
+    return fetchAlertEvents(filter.signal || undefined, undefined, 500);
+  };
+
+  const { data: events = [] } = useQuery<AlertEvent[]>({
+    queryKey: ['alertEventsForTimeline', filter],
+    queryFn: fetchEvents,
+  });
+
+  // Group by tick for stacking
+  const timelineData: TimelinePoint[] = [];
+  if (events.length > 0) {
+    const ticks = [...new Set(events.map((e) => e.tick_start))].sort((a, b) => a - b);
+
+    ticks.forEach((tick) => {
+      const atTick = events.filter(
+        (e) => e.tick_start <= tick && (e.tick_end ?? tick) >= tick
+      );
+      timelineData.push({
+        tick,
+        critical: atTick.filter((e) => e.severity === 'critical').length,
+        warning: atTick.filter((e) => e.severity === 'warning').length,
+        info: atTick.filter((e) => e.severity === 'info').length,
+      });
+    });
+  }
+
+  return (
+    <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-6 shadow-sm">
+      <h3 className="mb-4 text-lg font-medium text-zinc-200">Alert Activity Timeline</h3>
+      <ResponsiveContainer width="100%" height={240}>
+        <AreaChart data={timelineData}>
+          <defs>
+            <linearGradient id="colorCritical" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor="#ef4444" stopOpacity={0.8} />
+              <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
+            </linearGradient>
+            <linearGradient id="colorWarning" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor="#eab308" stopOpacity={0.8} />
+              <stop offset="95%" stopColor="#eab308" stopOpacity={0} />
+            </linearGradient>
+            <linearGradient id="colorInfo" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor="#6b7280" stopOpacity={0.8} />
+              <stop offset="95%" stopColor="#6b7280" stopOpacity={0} />
+            </linearGradient>
+          </defs>
+          <XAxis dataKey="tick" stroke="#4b5563" />
+          <YAxis stroke="#4b5563" />
+          <Tooltip
+            contentStyle={{
+              backgroundColor: '#18181b',
+              borderColor: '#27272a',
+              color: '#e5e7eb',
+              borderRadius: '8px',
+            }}
+          />
+          <Area
+            type="monotone"
+            dataKey="critical"
+            stackId="1"
+            stroke="#ef4444"
+            fill="url(#colorCritical)"
+          />
+          <Area
+            type="monotone"
+            dataKey="warning"
+            stackId="1"
+            stroke="#eab308"
+            fill="url(#colorWarning)"
+          />
+          <Area
+            type="monotone"
+            dataKey="info"
+            stackId="1"
+            stroke="#6b7280"
+            fill="url(#colorInfo)"
+          />
+        </AreaChart>
+      </ResponsiveContainer>
+
+      <div className="mt-4 text-xs text-zinc-400">
+        {/* Safe fallback â€” replace with real stats keys after checking response */}
+        Loading stats... (check devtools for /api/analytics/alerts-stats)
+      </div>
+    </div>
+  );
+}
+
+
+
+############################################################
+FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\pepsi\components\analytics\ChangeImpactSection.txt
+############################################################
+
+ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\components\analytics\ChangeImpactSection.tsx
+==================================================
+// src/components/analytics/ChangeImpactSection.tsx
+import { useQuery } from '@tanstack/react-query';
+import { fetchChangeImpact } from '../../api/analytics.api';
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts';
+
+export type ChangeImpact = {
+  change_tick: number;
+  impact_score: number;
+  affected_signals: string[];
+};
+
+export function ChangeImpactSection() {
+  const { data: changes = [], isLoading, isError } = useQuery<ChangeImpact[]>({
+    queryKey: ['changeImpact'],
+    queryFn: () => fetchChangeImpact(), // â† Wrap in arrow function with NO param
+  });
+
+  if (isLoading) {
+    return (
+      <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-8 animate-pulse space-y-6">
+        <div className="h-8 w-64 bg-zinc-800 rounded" />
+        <div className="h-72 bg-zinc-800 rounded" />
+        <div className="space-y-4">
+          <div className="h-24 bg-zinc-800 rounded" />
+          <div className="h-24 bg-zinc-800 rounded" />
+        </div>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="rounded-xl border border-red-800 bg-red-950/20 p-8 text-center text-red-300">
+        Failed to load change impact data.
+      </div>
+    );
+  }
+
+  if (changes.length === 0) {
+    return (
+      <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-10 text-center text-zinc-500">
+        No change impact events detected.
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-10">
+      {/* Impact Bar Chart */}
+      <div className="rounded-2xl border border-zinc-800 bg-zinc-900/80 p-8 shadow-sm">
+        <h2 className="text-2xl font-semibold text-zinc-100 mb-6">Change Impact Over Time</h2>
+        <ResponsiveContainer width="100%" height={350}>
+          <BarChart data={changes}>
+            <XAxis dataKey="change_tick" stroke="#71717a" />
+            <YAxis stroke="#71717a" label={{ value: 'Impact Score', angle: -90, position: 'insideLeft' }} />
+            <Tooltip
+              contentStyle={{ backgroundColor: '#18181b', border: '1px solid #27272a', borderRadius: '8px' }}
+              labelStyle={{ color: '#e5e5e5' }}
+              itemStyle={{ color: '#facc15' }}
+            />
+            <Bar dataKey="impact_score" fill="#facc15" radius={[4, 4, 0, 0]} />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+
+      {/* Affected Signals List */}
+      <div className="rounded-2xl border border-zinc-800 bg-zinc-900/80 p-8 shadow-sm">
+        <h3 className="text-xl font-semibold text-zinc-100 mb-6">Detailed Impact Breakdown</h3>
+        <div className="space-y-5">
+          {changes.map((change, index) => (
+            <div
+              key={index}
+              className="p-6 rounded-xl bg-zinc-950/50 border border-zinc-800 hover:border-zinc-600 transition-colors"
+            >
+              <div className="flex justify-between items-center mb-4">
+                <p className="text-lg font-medium text-zinc-200">
+                  Change at tick <span className="text-indigo-400">{change.change_tick}</span>
+                </p>
+                <span className="px-4 py-1.5 rounded-full text-sm font-semibold bg-amber-900/60 text-amber-300 ring-1 ring-amber-500/40">
+                  Impact: {change.impact_score.toFixed(2)}
+                </span>
+              </div>
+              <p className="text-sm text-zinc-400">
+                Affected signals:{' '}
+                <span className="text-zinc-200 font-mono text-xs break-all">
+                  {change.affected_signals.length > 0 ? change.affected_signals.join(', ') : 'None'}
+                </span>
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+
+############################################################
+FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\pepsi\components\analytics\ForecastSection.txt
+############################################################
+
+ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\components\analytics\ForecastSection.tsx
+==================================================
+// src/components/analytics/ForecastSection.tsx
+import { useQuery } from '@tanstack/react-query';
+import { fetchForecast } from '../../api/analytics.api';
+import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, Area } from 'recharts';
+
+export function ForecastSection() {
+  const { data: forecast = [] } = useQuery({
+    queryKey: ['forecast'],
+    queryFn: () => fetchForecast('C1.latency'),
+  });
+
+  return (
+    <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-6">
+      <h2 className="text-xl font-medium mb-4">Signal Forecast</h2>
+      <ResponsiveContainer width="100%" height={400}>
+        <LineChart data={forecast}>
+          <XAxis dataKey="tick" stroke="#71717a" />
+          <YAxis stroke="#71717a" />
+          <Tooltip />
+          <Area type="monotone" dataKey="upper" fill="#10b981" fillOpacity={0.1} stroke="#10b981" />
+          <Area type="monotone" dataKey="lower" fill="#ef4444" fillOpacity= {0.1} stroke="#ef4444" />
+          <Line type="monotone" dataKey="value" stroke="#a855f7" dot={false} />
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
+
+
+############################################################
+FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\pepsi\components\analytics\HealthSection.txt
+############################################################
+
+ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\components\analytics\HealthSection.tsx
+==================================================
+// src/components/analytics/HealthSection.tsx
+import { useQuery } from '@tanstack/react-query';
+import { fetchGlobalHealth, fetchComponentHealth } from '../../api/analytics.api';
+import { RadialBarChart, RadialBar, PolarAngleAxis, ResponsiveContainer, Text } from 'recharts';
+
+export function HealthSection() {
+  const { data: globalHealth = 0, isLoading: globalLoading, isError: globalError } = useQuery<number>({
+    queryKey: ['globalHealth'],
+    queryFn: fetchGlobalHealth,
+  });
+
+  const components = ['C1', 'C6'];
+
+  const componentQueries = components.map(code => useQuery<number>({
+    queryKey: ['componentHealth', code],
+    queryFn: () => fetchComponentHealth(code),
+  }));
+
+  const isLoading = globalLoading || componentQueries.some(q => q.isLoading);
+  const hasError = globalError || componentQueries.some(q => q.isError);
+
+  if (hasError) {
+    return (
+      <div className="rounded-xl border border-red-800 bg-red-950/20 p-8 text-center text-red-300">
+        Failed to load health data. Check backend.
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="space-y-10 animate-pulse">
+        <div className="rounded-2xl border border-zinc-800 bg-zinc-900/80 p-8">
+          <div className="h-8 w-48 bg-zinc-800 rounded mb-6 mx-auto" />
+          <div className="h-72 bg-zinc-800 rounded" />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="rounded-xl border border-zinc-800 bg-zinc-900/80 p-6 h-80" />
+          <div className="rounded-xl border border-zinc-800 bg-zinc-900/80 p-6 h-80" />
+        </div>
+      </div>
+    );
+  }
+
+  const globalValue = globalHealth ?? 0;
+  const componentValues = componentQueries.map(q => q.data ?? 0);
+
+  return (
+    <div className="space-y-12">
+      {/* Global Health */}
+      <div className="rounded-2xl border border-zinc-800 bg-zinc-900/80 p-8 shadow-sm">
+        <h2 className="text-2xl font-semibold text-zinc-100 mb-8 text-center">Global System Health</h2>
+        <div className="flex flex-col md:flex-row items-center justify-center gap-12">
+          <ResponsiveContainer width={320} height={320} minWidth={0} minHeight={0}>
+            <RadialBarChart
+              cx="50%"
+              cy="50%"
+              innerRadius="60%"
+              outerRadius="90%"
+              barSize={30}
+              data={[{ name: 'Global', value: globalValue }]}
+              startAngle={90}
+              endAngle={-270}
+            >
+              <PolarAngleAxis type="number" domain={[0, 100]} tick={false} />
+              <RadialBar
+                dataKey="value"
+                background={{ fill: '#27272a' }}
+                cornerRadius={10}
+                fill={globalValue >= 90 ? '#10b981' : globalValue >= 70 ? '#f59e0b' : '#ef4444'}
+              />
+              <Text
+                x="50%"
+                y="50%"
+                textAnchor="middle"
+                dominantBaseline="middle"
+                className="text-5xl font-bold fill-zinc-100"
+              >
+                {`${globalValue.toFixed(0)}%`}
+              </Text>
+            </RadialBarChart>
+          </ResponsiveContainer>
+
+          <div className="text-center md:text-left">
+            <p className="text-4xl font-bold text-zinc-100 mb-2">{globalValue.toFixed(1)}%</p>
+            <p className="text-base text-zinc-400 mb-2">Current global health score</p>
+            <p className={`text-lg font-semibold ${
+              globalValue >= 90 ? 'text-emerald-400' :
+              globalValue >= 70 ? 'text-yellow-400' :
+              'text-red-400'
+            }`}>
+              {globalValue >= 90 ? 'Excellent' : globalValue >= 70 ? 'Stable' : 'Critical'}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Component Gauges */}
+      <div className="rounded-2xl border border-zinc-800 bg-zinc-900/80 p-8 shadow-sm">
+        <h2 className="text-2xl font-semibold text-zinc-100 mb-8 text-center">Component Health Scores</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+          {components.map((code, i) => {
+            const health = componentValues[i];
+            return (
+              <div key={code} className="rounded-xl border border-zinc-800 bg-zinc-950/50 p-6">
+                <h3 className="text-xl font-medium text-zinc-200 mb-6 text-center">{code}</h3>
+                <div className="flex items-center justify-center gap-10">
+                  <ResponsiveContainer width={220} height={220} minWidth={0} minHeight={0}>
+                    <RadialBarChart
+                      cx="50%"
+                      cy="50%"
+                      innerRadius="60%"
+                      outerRadius="90%"
+                      barSize={25}
+                      data={[{ name: code, value: health }]}
+                      startAngle={90}
+                      endAngle={-270}
+                    >
+                      <PolarAngleAxis type="number" domain={[0, 100]} tick={false} />
+                      <RadialBar
+                        dataKey="value"
+                        background={{ fill: '#27272a' }}
+                        cornerRadius={8}
+                        fill={health >= 80 ? '#10b981' : health >= 50 ? '#f59e0b' : '#ef4444'}
+                      />
+                      <Text
+                        x="50%"
+                        y="50%"
+                        textAnchor="middle"
+                        dominantBaseline="middle"
+                        className="text-4xl font-bold fill-zinc-100"
+                      >
+                        {`${health.toFixed(0)}%`}
+                      </Text>
+                    </RadialBarChart>
+                  </ResponsiveContainer>
+
+                  <div className="text-center">
+                    <p className="text-3xl font-bold text-zinc-100 mb-2">{health.toFixed(1)}%</p>
+                    <p className={`text-base font-semibold ${
+                      health >= 80 ? 'text-emerald-400' :
+                      health >= 50 ? 'text-yellow-400' :
+                      'text-red-400'
+                    }`}>
+                      {health >= 80 ? 'Healthy' : health >= 50 ? 'Degraded' : 'Critical'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+
+############################################################
+FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\pepsi\components\analytics\RegimesSection.txt
+############################################################
+
+ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\components\analytics\RegimesSection.tsx
+==================================================
+// src/components/analytics/RegimesSection.tsx
+import { useQuery } from '@tanstack/react-query';
+import { fetchRegimes } from '../../api/analytics.api';
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts';
+
+export function RegimesSection() {
+  const { data: regimes = [] } = useQuery({
+    queryKey: ['regimes'],
+    queryFn: () => fetchRegimes('C1.latency'),
+  });
+
+  return (
+    <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-6">
+      <h2 className="text-xl font-medium mb-4">Regime Detection</h2>
+      <ResponsiveContainer width="100%" height= {300}>
+        <BarChart data={regimes}>
+          <XAxis dataKey="start_tick" stroke="#71717a" />
+          <YAxis stroke="#71717a" />
+          <Tooltip />
+          <Bar dataKey="duration" fill="#a855f7" />
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
+
+
+############################################################
+FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\pepsi\components\analytics\StressSection.txt
+############################################################
+
+ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\components\analytics\StressSection.tsx
+==================================================
+// src/components/analytics/StressSection.tsx
+import { useQuery } from '@tanstack/react-query';
+import { fetchStressCurve } from '../../api/analytics.api';
+import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip } from 'recharts';
+
+export function StressSection() {
+  const { data: stress = [] } = useQuery({
+    queryKey: ['stress'],
+    queryFn: () => fetchStressCurve('C6'),
+  });
+
+  return (
+    <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-6">
+      <h2 className="text-xl font-medium mb-4">Stress Curve</h2>
+      <ResponsiveContainer width="100%" height= {400}>
+        <LineChart data={stress}>
+          <XAxis dataKey="tick" stroke="#71717a" />
+          <YAxis stroke="#71717a" />
+          <Tooltip />
+          <Line type="monotone" dataKey="stress_level" stroke="#ef4444" dot={false} />
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
+
+
+############################################################
+FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\pepsi\components\analytics\VolatilitySection.txt
+############################################################
+
+ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\components\analytics\VolatilitySection.tsx
+==================================================
+// src/components/analytics/VolatilitySection.tsx
+import { useQuery } from '@tanstack/react-query';
+import { fetchVolatility } from '../../api/analytics.api';
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts';
+
+export function VolatilitySection() {
+  const signalCodes = ['C1.latency', 'C6.error_rate']; // Example - add selector later
+
+  const queries = signalCodes.map(code => useQuery({
+    queryKey: ['volatility', code],
+    queryFn: () => fetchVolatility(code),
+  }));
+
+  const data = queries.map((q, i) => ({
+    signal: signalCodes[i],
+    volatility: q.data ?? 0,
+  }));
+
+  if (queries.some(q => q.isLoading)) return <div className="text-zinc-400">Loading volatility...</div>;
+
+  return (
+    <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-6">
+      <h2 className="text-xl font-medium mb-4">Signal Volatility</h2>
+      <ResponsiveContainer width="100%" height={300}>
+        <BarChart data={data}>
+          <XAxis dataKey="signal" stroke="#71717a" />
+          <YAxis stroke="#71717a" />
+          <Tooltip />
+          <Bar dataKey="volatility" fill="#10b981" />
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
+
+
+############################################################
+FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\pepsi\components\anomalies\ActiveAnomalyCard.txt
+############################################################
+
+ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\components\anomalies\ActiveAnomalyCard.tsx
+==================================================
+// src/components/anomalies/ActiveAnomalyCard.tsx
+import { useQuery } from '@tanstack/react-query';
+import { fetchActiveAnomaly } from '../../api/anomalies.api';
+
+// Reuse the type from your anomalies.api.ts (or define here if not exported)
+interface ActiveAnomalyResponse {
+  active: boolean;
+  anomalies?: {
+    anomaly_type: string;
+    pipeline: string;
+    from_tick: number;
+    to_tick: number;
+  }[];
+}
+
+export function ActiveAnomalyCard() {
+  const { data, isLoading } = useQuery<ActiveAnomalyResponse>({
+    queryKey: ['activeAnomaly'],
+    queryFn: fetchActiveAnomaly,
+  });
+
+  if (isLoading) {
+    return <div className="text-zinc-400 animate-pulse">Loading active anomaly...</div>;
+  }
+
+  if (!data?.active || !data.anomalies?.length) {
+    return (
+      <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-6 text-center text-zinc-500">
+        No active anomaly detected
+      </div>
+    );
+  }
+
+  // Safe: take first anomaly (assuming only one active at a time)
+  const anomaly = data.anomalies[0];
+
+  return (
+    <div className="rounded-xl border border-red-800 bg-red-950/20 p-6 space-y-4 shadow-sm">
+      <h2 className="text-lg font-medium text-red-400">Active Anomaly Detected</h2>
+      <div className="grid grid-cols-2 gap-6 text-sm">
+        <div>
+          <p className="text-zinc-400 mb-1">Type</p>
+          <p className="font-medium">{anomaly.anomaly_type}</p>
+        </div>
+        <div>
+          <p className="text-zinc-400 mb-1">Pipeline</p>
+          <p className="font-medium">{anomaly.pipeline}</p>
+        </div>
+        <div>
+          <p className="text-zinc-400 mb-1">From Tick</p>
+          <p className="font-medium">{anomaly.from_tick}</p>
+        </div>
+        <div>
+          <p className="text-zinc-400 mb-1">To Tick</p>
+          <p className="font-medium">{anomaly.to_tick ?? 'Ongoing'}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+
+############################################################
+FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\pepsi\components\anomalies\AnalysisNarrative.txt
+############################################################
+
+ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\components\anomalies\AnalysisNarrative.tsx
+==================================================
+// src/components/anomalies/AnalysisNarrative.tsx
+import { useQuery } from '@tanstack/react-query';
+import { fetchAnomalyAnalysis } from '../../api/anomalies.api';
+
+export function AnalysisNarrative() {
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ['anomalyAnalysis'],
+    queryFn: fetchAnomalyAnalysis,
+  });
+
+  if (isLoading) {
+    return (
+      <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-8 animate-pulse space-y-6">
+        <div className="h-8 w-64 bg-zinc-800 rounded" />
+        <div className="space-y-4">
+          <div className="h-6 w-48 bg-zinc-800 rounded" />
+          <div className="h-24 bg-zinc-800 rounded" />
+        </div>
+      </div>
+    );
+  }
+
+  if (isError || !data || !data.active) {
+    return (
+      <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-8 text-center text-zinc-500">
+        No active anomaly to analyze. Inject one first.
+      </div>
+    );
+  }
+
+  const { anomaly, system_state, observations } = data;
+  const collapseRisk = system_state.global_health?.collapse_risk ?? null;
+  const status = system_state.global_health?.status ?? 'UNKNOWN';
+
+  return (
+    <div className="space-y-10">
+      {/* Anomaly Overview */}
+      <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-6">
+        <h2 className="text-2xl font-bold text-zinc-100 mb-4">{anomaly.title}</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
+          <div>
+            <p className="text-zinc-400 mb-1">Type</p>
+            <p className="font-medium">{anomaly.type}</p>
+          </div>
+          <div>
+            <p className="text-zinc-400 mb-1">Pipeline</p>
+            <p className="font-medium">{anomaly.pipeline}</p>
+          </div>
+          <div>
+            <p className="text-zinc-400 mb-1">Window</p>
+            <p className="font-medium">
+              {anomaly.window.from_tick} â†’ {anomaly.window.to_tick} ({anomaly.window.duration_ticks} ticks)
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* System State */}
+      <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-6">
+        <h3 className="text-lg font-medium text-zinc-200 mb-4">System State During Anomaly</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="p-4 rounded-lg bg-zinc-950/50 text-center">
+            <p className="text-sm text-zinc-400 mb-1">Collapse Risk</p>
+            <p className="text-3xl font-bold text-amber-400">
+              {collapseRisk !== null ? collapseRisk.toFixed(2) : 'N/A'}
+            </p>
+          </div>
+          <div className="p-4 rounded-lg bg-zinc-950/50 text-center">
+            <p className="text-sm text-zinc-400 mb-1">Status</p>
+            <p className={`text-2xl font-bold ${
+              status === 'DEGRADED' ? 'text-yellow-400' :
+              status === 'CRITICAL' ? 'text-red-400' :
+              'text-emerald-400'
+            }`}>
+              {status}
+            </p>
+          </div>
+          <div className="p-4 rounded-lg bg-zinc-950/50 text-center">
+            <p className="text-sm text-zinc-400 mb-1">Cascading</p>
+            <p className="text-2xl font-bold text-zinc-100">
+              {system_state.cascading_behavior ? 'Yes' : 'No'}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Key Observations */}
+      <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-6">
+        <h3 className="text-lg font-medium text-zinc-200 mb-4">Key Observations</h3>
+        {observations.length === 0 ? (
+          <p className="text-zinc-500 text-center py-4">No observations available</p>
+        ) : (
+          <ul className="space-y-4">
+            {observations.map((obs, i) => (
+              <li key={i} className="p-4 rounded-lg bg-zinc-950/50 border border-zinc-800">
+                <span className="font-medium text-amber-400 uppercase text-xs tracking-wide block mb-1">
+                  {obs.type.replace('_', ' ')}
+                </span>
+                <p className="text-zinc-300">{obs.message}</p>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      {/* Expected Behavior */}
+      <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-6">
+        <h3 className="text-lg font-medium text-zinc-200 mb-4">Expected Behavior</h3>
+        <ul className="space-y-3 text-sm text-zinc-300">
+          {anomaly.expected_behavior.map((item, i) => (
+            <li key={i} className="flex items-start gap-3">
+              <span className="text-emerald-400 text-xl mt-0.5">â†’</span>
+              <span>{item}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  );
+}
+
+
+
+############################################################
+FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\pepsi\components\anomalies\AnomalyActions.txt
+############################################################
+
+ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\components\anomalies\AnomalyActions.tsx
+==================================================
+// src/components/anomalies/AnomalyActions.tsx
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { rollbackAnomaly } from '../../api/anomalies.api';
+
+export function AnomalyActions() {
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation({
+    mutationFn: rollbackAnomaly,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['activeAnomaly', 'anomalyImpact', 'anomalyAnalysis'] }),
+  });
+
+  return (
+    <button
+      onClick={() => mutation.mutate()}
+      disabled={mutation.isPending}
+      className="rounded bg-red-700 px-4 py-2 text-sm hover:bg-red-600 disabled:opacity-50"
+    >
+      {mutation.isPending ? 'Rolling back...' : 'Rollback Anomaly'}
+    </button>
+  );
+}
+
+
+
+############################################################
+FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\pepsi\components\anomalies\DeviationChart.txt
+############################################################
+
+ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\components\anomalies\DeviationChart.tsx
+==================================================
+// src/components/anomalies/DeviationChart.tsx
+import { useQuery } from '@tanstack/react-query';
+import { fetchAnomalyAnalysis } from '../../api/anomalies.api';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+
+export function DeviationChart() {
+  const { data } = useQuery({
+    queryKey: ['anomalyAnalysis'],
+    queryFn: fetchAnomalyAnalysis,
+  });
+
+  if (!data?.deviation?.per_component) return null;
+
+  const chartData = data.deviation.per_component.map(c => ({
+    name: c.component_label,
+    mean_delta: c.mean_delta_pct,
+    peak_delta: c.peak_delta_pct,
+  }));
+
+  return (
+    <div className="space-y-4">
+      <h3 className="text-sm font-medium">Deviation by Component (%)</h3>
+      <ResponsiveContainer width="100%" height={300}>
+        <BarChart data={chartData}>
+          <XAxis dataKey="name" stroke="#71717a" />
+          <YAxis stroke="#71717a" />
+          <Tooltip />
+          <Bar dataKey="mean_delta" fill="#10b981" name="Mean Delta" />
+          <Bar dataKey="peak_delta" fill="#ef4444" name="Peak Delta" />
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
+
+
+############################################################
+FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\pepsi\components\anomalies\HealthRankingTable.txt
+############################################################
+
+ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\components\anomalies\HealthRankingTable.tsx
+==================================================
+// src/components/anomalies/HealthRankingTable.tsx
+import { useQuery } from '@tanstack/react-query';
+import { fetchAnomalyAnalysis } from '../../api/anomalies.api';
+
+export function HealthRankingTable() {
+  const { data } = useQuery({
+    queryKey: ['anomalyAnalysis'],
+    queryFn: fetchAnomalyAnalysis,
+  });
+
+  if (!data?.health?.components_ranked) return null;
+
+  return (
+    <div className="space-y-4">
+      <h3 className="text-sm font-medium">Health Ranking (Impacted Components)</h3>
+      <table className="w-full text-sm rounded-xl border border-zinc-800 bg-zinc-900">
+        <thead className="border-b border-zinc-800 text-zinc-400">
+          <tr>
+            <th className="px-4 py-3 text-left">Component</th>
+            <th className="px-4 py-3 text-left">Open Alerts</th>
+            <th className="px-4 py-3 text-left">Health Score</th>
+          </tr>
+        </thead>
+        <tbody>
+          {data.health.components_ranked.map((c, i) => (
+            <tr key={i} className="border-b border-zinc-800 last:border-0">
+              <td className="px-4 py-3">{c.component_label} ({c.component_code})</td>
+              <td className="px-4 py-3">{c.open_alerts}</td>
+              <td className="px-4 py-3">{c.health_score?.toFixed(1) ?? 'N/A'}%</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+
+
+############################################################
+FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\pepsi\components\anomalies\ImpactSummaryTable.txt
+############################################################
+
+ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\components\anomalies\ImpactSummaryTable.tsx
+==================================================
+// src/components/anomalies/ImpactSummaryTable.tsx
+import { useQuery } from '@tanstack/react-query';
+import { fetchAnomalyImpact } from '../../api/anomalies.api';
+
+export function ImpactSummaryTable() {
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ['anomalyImpact'],
+    queryFn: fetchAnomalyImpact,
+  });
+
+  if (isLoading) {
+    return (
+      <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-8 animate-pulse space-y-6">
+        <div className="h-8 w-64 bg-zinc-800 rounded" />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="h-40 bg-zinc-800 rounded" />
+          <div className="h-40 bg-zinc-800 rounded" />
+          <div className="h-40 bg-zinc-800 rounded" />
+        </div>
+      </div>
+    );
+  }
+
+  if (isError || !data || !data.active) {
+    return (
+      <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-8 text-center text-zinc-500">
+        No impact data available. Inject an anomaly to see results.
+      </div>
+    );
+  }
+
+  const { anomaly, alerts, components, metric_deviation, global_health } = data;
+
+  return (
+    <div className="space-y-8">
+      {/* Header */}
+      <div>
+        <h2 className="text-2xl font-bold text-zinc-100 mb-2">
+          Impact from {anomaly.type} ({anomaly.from_tick} â†’ {anomaly.to_tick})
+        </h2>
+        <p className="text-sm text-zinc-400">
+          Duration: {anomaly.duration_ticks} ticks | Affected: {anomaly.points_modified} points across {anomaly.affected_components.length} components
+        </p>
+      </div>
+
+      {/* Global Overview Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-6 text-center">
+          <p className="text-sm text-zinc-400 mb-1">Affected Points</p>
+          <p className="text-4xl font-bold text-zinc-100">{anomaly.points_modified}</p>
+        </div>
+
+        <div className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-6 text-center">
+          <p className="text-sm text-zinc-400 mb-1">Affected Signals</p>
+          <p className="text-4xl font-bold text-zinc-100">{anomaly.affected_signals}</p>
+        </div>
+
+        <div className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-6 text-center">
+          <p className="text-sm text-zinc-400 mb-1">Collapse Risk</p>
+          <p className="text-4xl font-bold text-amber-400">
+            {global_health?.collapse_risk?.toFixed(2) ?? 'N/A'}
+          </p>
+        </div>
+
+        <div className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-6 text-center">
+          <p className="text-sm text-zinc-400 mb-1">Status</p>
+          <p className={`text-2xl font-bold ${
+            global_health?.status === 'DEGRADED' ? 'text-yellow-400' :
+            global_health?.status === 'CRITICAL' ? 'text-red-400' :
+            'text-emerald-400'
+          }`}>
+            {global_health?.status ?? 'N/A'}
+          </p>
+        </div>
+      </div>
+
+      {/* Alerts Overview */}
+      <div className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-6">
+        <h3 className="text-lg font-medium text-zinc-200 mb-4">Alert Impact</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="text-center p-4 rounded-lg bg-zinc-950/50">
+            <p className="text-3xl font-bold text-zinc-100">{alerts.total ?? 0}</p>
+            <p className="text-sm text-zinc-400 mt-1">Total Alerts</p>
+          </div>
+          <div className="text-center p-4 rounded-lg bg-zinc-950/50">
+            <p className="text-3xl font-bold text-red-400">{alerts.by_severity?.critical ?? 0}</p>
+            <p className="text-sm text-zinc-400 mt-1">Critical</p>
+          </div>
+          <div className="text-center p-4 rounded-lg bg-zinc-950/50">
+            <p className="text-3xl font-bold text-yellow-400">{alerts.by_severity?.warning ?? 0}</p>
+            <p className="text-sm text-zinc-400 mt-1">Warning</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Components Health */}
+      <div className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-6">
+        <h3 className="text-lg font-medium text-zinc-200 mb-4">Affected Components Health</h3>
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-zinc-800">
+            <thead className="bg-zinc-950">
+              <tr>
+                <th className="px-6 py-4 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">Component</th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">Health Score</th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">Open Alerts</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-zinc-800">
+              {components.map((comp) => (
+                <tr key={comp.component_code} className="hover:bg-zinc-800/50 transition-colors">
+                  <td className="whitespace-nowrap px-6 py-4 font-mono text-sm text-zinc-300">
+                    {comp.component_code}
+                  </td>
+                  <td className="whitespace-nowrap px-6 py-4 text-sm">
+                    {comp.health_score?.toFixed(1) ?? 'N/A'}%
+                  </td>
+                  <td className="whitespace-nowrap px-6 py-4 text-sm text-zinc-300">
+                    {comp.open_alerts}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Metric Deviation â€“ Top 5 */}
+      <div className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-6">
+        <h3 className="text-lg font-medium text-zinc-200 mb-4">Top Metric Deviations</h3>
+        <div className="space-y-3">
+          {metric_deviation.slice(0, 5).map((dev, i) => (
+            <div key={i} className="p-4 rounded-lg bg-zinc-950/50 flex justify-between items-center">
+              <div className="font-mono text-sm text-zinc-300">{dev.signal_code}</div>
+              <div className="text-right">
+                <p className="text-sm text-amber-400">Avg: {dev.avg_delta_pct.toFixed(1)}%</p>
+                <p className="text-xs text-zinc-500">Max: {dev.max_delta_pct.toFixed(1)}%</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+
+############################################################
+FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\pepsi\components\anomalies\InjectionForm.txt
+############################################################
+
+ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\components\anomalies\InjectionForm.tsx
+==================================================
+// src/components/anomalies/InjectionForm.tsx
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
+import { http } from '../../api/http'; // your axios instance
+
+export function InjectionForm() {
+  const queryClient = useQueryClient();
+
+  const [params, setParams] = useState({
+    pipeline: 'stream_lane',
+    anomaly_type: 'backlog_growth',
+    from_tick: 100,
+    to_tick: 200,
+    strength: 1.0 as number | undefined,
+  });
+
+  const mutation = useMutation({
+    mutationFn: async () => {
+      const searchParams = new URLSearchParams();
+      searchParams.append('pipeline', params.pipeline);
+      searchParams.append('anomaly_type', params.anomaly_type);
+      searchParams.append('from_tick', params.from_tick.toString());
+      searchParams.append('to_tick', params.to_tick.toString());
+      if (params.strength !== undefined) {
+        searchParams.append('strength', params.strength.toString());
+      }
+
+      const url = `/api/anomalies/inject?${searchParams.toString()}`;
+      console.log('Sending POST to:', url);
+
+      // Use http.post with URL + no second arg (no body)
+      const response = await http.post(url);
+      return response.data; // return the JSON body
+    },
+    onSuccess: (responseData) => {
+      console.log('Success - response data:', responseData);
+      queryClient.invalidateQueries({ queryKey: ['activeAnomaly'] });
+      queryClient.invalidateQueries({ queryKey: ['anomalyImpact'] });
+      queryClient.invalidateQueries({ queryKey: ['anomalyAnalysis'] });
+    },
+    onError: (error) => {
+      console.error('Full error:', error);
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    mutation.mutate();
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6 rounded-xl border border-zinc-800 bg-zinc-900 p-6">
+      <h2 className="text-lg font-medium">Anomaly Injection Lab</h2>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        <div>
+          <label className="block text-sm text-zinc-400 mb-1.5">Pipeline</label>
+          <select
+            className="w-full rounded-md border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500"
+            value={params.pipeline}
+            onChange={(e) => setParams({ ...params, pipeline: e.target.value })}
+          >
+            <option value="stream_lane">Stream Lane</option>
+            <option value="rail">Rail</option>
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-sm text-zinc-400 mb-1.5">Anomaly Type</label>
+          <select
+            className="w-full rounded-md border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500"
+            value={params.anomaly_type}
+            onChange={(e) => setParams({ ...params, anomaly_type: e.target.value })}
+          >
+            <option value="cpu_saturation">CPU Saturation</option>
+            <option value="error_spike">Error Spike</option>
+            <option value="latency_regression">Latency Regression</option>
+            <option value="event_storm">Event Storm</option>
+            <option value="backlog_growth">Backlog Growth</option>
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-sm text-zinc-400 mb-1.5">From Tick</label>
+          <input
+            type="number"
+            className="w-full rounded-md border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500"
+            value={params.from_tick}
+            onChange={(e) => setParams({ ...params, from_tick: Number(e.target.value) })}
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm text-zinc-400 mb-1.5">To Tick</label>
+          <input
+            type="number"
+            className="w-full rounded-md border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500"
+            value={params.to_tick}
+            onChange={(e) => setParams({ ...params, to_tick: Number(e.target.value) })}
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm text-zinc-400 mb-1.5">Strength (1.0 = normal)</label>
+          <input
+            type="number"
+            step="0.1"
+            min="0.1"
+            max="5.0"
+            className="w-full rounded-md border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500"
+            value={params.strength ?? ''}
+            onChange={(e) => setParams({ ...params, strength: e.target.value ? Number(e.target.value) : undefined })}
+          />
+        </div>
+      </div>
+
+      <div className="flex justify-end">
+        <button
+          type="submit"
+          disabled={mutation.isPending}
+          className="rounded-md bg-zinc-700 px-6 py-2.5 text-sm font-medium text-white hover:bg-zinc-600 disabled:opacity-50 transition-colors"
+        >
+          {mutation.isPending ? 'Injecting...' : 'Inject Anomaly'}
+        </button>
+      </div>
+
+      {mutation.isPending && <div className="text-center text-zinc-400">Injecting...</div>}
+
+      {mutation.isSuccess && mutation.data && (
+        <div className="rounded-md bg-green-950/40 border border-green-800 p-4 text-sm text-green-300">
+          Success! Injected anomaly affecting <strong>{mutation.data?.affected_points ?? 'unknown'}</strong> points.
+        </div>
+      )}
+
+      {mutation.isError && (
+        <div className="rounded-md bg-red-950/40 border border-red-800 p-4 text-sm text-red-300">
+          Injection failed: {mutation.error?.message || 'Unknown error - check Network tab'}
+        </div>
+      )}
+    </form>
+  );
+}
+
+
+
+############################################################
+FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\pepsi\components\charts\TimeseriesChart.txt
+############################################################
+
+ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\components\charts\TimeseriesChart.tsx
+==================================================
+// src/components/charts/TimeseriesChart.tsx
+import { LineChart, Line, XAxis, YAxis, Tooltip, Legend, ReferenceArea, Brush, ReferenceLine } from 'recharts';
+import { useQuery } from '@tanstack/react-query';
+import { fetchMultiTimeseries, fetchAggregate, fetchDerivative, fetchNormalized, fetchComponentVolatility } from '../../api/components.api';
+import { useTimeWindow } from '../../context/TimeContext';
+import { PolarityIcon } from '../icons/PolarityIcon';
+
+interface TimeseriesPoint {
+  tick: number;
+  value: number;
+}
+
+type TimeseriesData = Record<string, TimeseriesPoint[]>;
+
+interface SignalMeta {
+  unit: string;
+  description: string;
+  polarity: string;
+  threshold?: number;
+}
+
+type Props = {
+  signalCodes: string[];
+  transform: 'raw' | 'aggregate' | 'derivative' | 'normalized';
+  anomalyWindow?: { from: number; to: number };
+  data?: TimeseriesPoint[];
+  metas?: Record<string, SignalMeta>;
+};
+
+export function TimeseriesChart({ signalCodes, transform, anomalyWindow, data, metas = {} }: Props) {
+  const { window } = useTimeWindow();
+
+  const queryFn = async (): Promise<TimeseriesData> => {
+    let res: TimeseriesData = {};
+    try {
+      if (transform === 'raw') {
+        const rawRes = await fetchMultiTimeseries(signalCodes);
+        res = rawRes?.signals ?? {};
+      } else if (transform === 'aggregate') {
+        const agg = await Promise.all(signalCodes.map(c => fetchAggregate(c).catch(() => [])));
+        agg.forEach((series, i) => {
+          res[signalCodes[i]] = series;
+        });
+      } else if (transform === 'derivative') {
+        const der = await Promise.all(signalCodes.map(c => fetchDerivative(c).catch(() => [])));
+        der.forEach((series, i) => {
+          res[signalCodes[i]] = series;
+        });
+      } else {
+        const norm = await Promise.all(signalCodes.map(c => fetchNormalized(c).catch(() => [])));
+        norm.forEach((series, i) => {
+          res[signalCodes[i]] = series;
+        });
+      }
+    } catch (err) {
+      console.error("Timeseries fetch failed:", err);
+    }
+    return res;
+  };
+
+  const { data: chartData = {}, isLoading, isError } = useQuery<TimeseriesData>({
+    queryKey: ['timeseries', signalCodes, transform, window],
+    queryFn,
+  });
+
+  if (isLoading) return <div className="text-zinc-400 animate-pulse">Loading chart...</div>;
+  if (isError || Object.keys(chartData).length === 0) {
+    return <div className="text-zinc-500 text-center py-10">No timeseries data available for selected signals</div>;
+  }
+
+  const usedData = data ? { 'health_score': data } : chartData;
+
+  const mergedData: Array<Record<string, number | undefined>> = [];
+  if (usedData) {
+    const allTicks = new Set<number>();
+    Object.values(usedData).forEach(series => {
+      if (Array.isArray(series)) {
+        series.forEach(p => allTicks.add(p.tick));
+      }
+    });
+
+    Array.from(allTicks).sort((a, b) => a - b).forEach(tick => {
+      const point: Record<string, number | undefined> = { tick };
+      signalCodes.forEach(code => {
+        const series = usedData[code];
+        if (Array.isArray(series)) {
+          const p = series.find(sp => sp.tick === tick);
+          point[code] = p?.value;
+        }
+      });
+      mergedData.push(point);
+    });
+  }
+
+  const getTrend = (series: TimeseriesPoint[]): 'up' | 'down' | 'flat' => {
+    if (series.length < 2) return 'flat';
+    const slope = (series[series.length - 1].value - series[0].value) / (series.length - 1);
+    return slope > 0 ? 'up' : slope < 0 ? 'down' : 'flat';
+  };
+
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (!active || !payload) return null;
+    return (
+      <div className="rounded bg-zinc-800 p-3 text-xs border border-zinc-600 shadow-lg">
+        <p className="font-medium">Tick: {label}</p>
+        {payload.map((p: any, i: number) => {
+          const code = signalCodes[i];
+          const meta = metas[code];
+          return (
+            <p key={code} className="mt-1">
+              {code}: <span className="font-medium">{p.value?.toFixed(2) ?? 'N/A'}</span> {meta?.unit ?? ''}
+              <br />
+              <span className="text-zinc-400 text-xs">{meta?.description ?? ''}</span>
+            </p>
+          );
+        })}
+      </div>
+    );
+  };
+
+  const handleExport = () => {
+    const headers = ['tick', ...signalCodes];
+    const rows = mergedData.map(row => [
+      row.tick,
+      ...signalCodes.map(code => row[code] ?? '')
+    ]);
+    const csv = [headers, ...rows].map(r => r.join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${signalCodes.join('-')}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  return (
+    <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4 space-y-4">
+      <div className="flex justify-between items-center">
+        <div className="flex gap-3">
+          {signalCodes.map((code) => {
+            const series = usedData[code] ?? [];
+            const trend = getTrend(series);
+            return (
+              <div key={code} className="flex items-center gap-1 text-sm">
+                <PolarityIcon polarity={metas[code]?.polarity ?? 'higher_is_worse'} trend={trend} />
+                {code}
+              </div>
+            );
+          })}
+        </div>
+        <button 
+          onClick={handleExport}
+          className="text-xs text-zinc-400 hover:text-zinc-200 flex items-center gap-1"
+        >
+          Export CSV
+        </button>
+      </div>
+
+      <LineChart width={800} height={400} data={mergedData.length > 0 ? mergedData : []}>
+        <XAxis dataKey="tick" stroke="#71717a" />
+        <YAxis stroke="#71717a" />
+        <Tooltip content={<CustomTooltip />} />
+        <Legend />
+        {signalCodes.map((code) => {
+          const polarity = metas[code]?.polarity ?? 'higher_is_worse';
+          const color = polarity === 'higher_is_worse' ? '#ef4444' : '#10b981';
+          return <Line key={code} type="monotone" dataKey={code} stroke={color} dot={false} connectNulls />;
+        })}
+        {signalCodes.map(code => {
+          const threshold = metas[code]?.threshold;
+          if (threshold !== undefined) {
+            return <ReferenceLine key={`thresh-${code}`} y={threshold} stroke="#facc15" strokeDasharray="3 3" />;
+          }
+          return null;
+        })}
+        {anomalyWindow && (
+          <ReferenceArea x1={anomalyWindow.from} x2={anomalyWindow.to} fill="#ef4444" fillOpacity={0.08} />
+        )}
+        <Brush dataKey="tick" height={30} stroke="#52525b" fill="#27272a" />
+      </LineChart>
+
+      <div className="grid grid-cols-3 gap-3">
+        {signalCodes.map(code => (
+          <VolatilityCard key={code} signalCode={code} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function VolatilityCard({ signalCode }: { signalCode: string }) {
+  const { data = 0, isLoading } = useQuery<number>({
+    queryKey: ['volatility', signalCode],
+    queryFn: () => fetchComponentVolatility(signalCode),
+    placeholderData: 0,
+  });
+
+  return (
+    <div className="rounded border border-zinc-800 p-3 text-xs bg-zinc-950/50">
+      <div className="text-zinc-500">{signalCode} Volatility</div>
+      <div className="font-medium mt-1">
+        {isLoading ? '...' : data.toFixed(3)}
+      </div>
+    </div>
+  );
+}
+
+
+
+############################################################
+FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\pepsi\components\components\ComponentCard.txt
+############################################################
+
+ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\components\components\ComponentCard.tsx
+==================================================
+// src/components/components/ComponentCard.tsx (updated)
+import { Link } from "react-router-dom";
+import { useQuery } from '@tanstack/react-query';
+import { fetchComponentDetails } from '../../api/components.api'; // For health in card
+import { HealthBadge } from "../control-room/HealthBadge";
+
+type Props = {
+  componentCode: string;
+  signalCount: number;
+};
+
+export function ComponentCard({ componentCode, signalCount }: Props) {
+  const { data } = useQuery({ queryKey: ['componentDetails', componentCode], queryFn: () => fetchComponentDetails(componentCode) });
+
+  const health = data?.health_score ?? 0;
+  const status: 'OK' | 'DEGRADED' | 'CRITICAL' = health > 70 ? 'OK' : health > 40 ? 'DEGRADED' : 'CRITICAL';
+
+  return (
+    <Link
+      to={`/components/${componentCode}`}
+      className="block rounded-xl border border-zinc-800 bg-zinc-900 p-4 hover:border-zinc-600 transition"
+    >
+      <div className="flex items-center justify-between">
+        <div className="font-mono text-sm">{componentCode}</div>
+        <HealthBadge status={status} />
+      </div>
+      <div className="mt-1 text-xs text-zinc-400">{signalCount} signals | Health: {health.toFixed(1)}%</div>
+    </Link>
+  );
+}
+
+
+
+############################################################
+FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\pepsi\components\components\SignalGroupTable.txt
+############################################################
+
+ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\components\components\SignalGroupTable.tsx
+==================================================
+// src/components/components/SignalGroupTable.tsx
+import type { ComponentSignal } from '../../api/components.api';
+import { useState } from 'react';
+import { Search } from 'lucide-react';
+import { PolarityIcon } from '../icons/PolarityIcon';
+
+export function SignalGroupTable({
+  signals,
+  onSelectSignals,
+}: {
+  signals: ComponentSignal[];
+  onSelectSignals: (codes: string[]) => void;
+}) {
+  const [search, setSearch] = useState('');
+  const [openFamilies, setOpenFamilies] = useState<Set<string>>(new Set());
+  const [selected, setSelected] = useState<string[]>([]);
+
+  const toggleFamily = (fam: string) => {
+    const newSet = new Set(openFamilies);
+    if (newSet.has(fam)) newSet.delete(fam);
+    else newSet.add(fam);
+    setOpenFamilies(newSet);
+  };
+
+  // Explicitly typed accumulator
+  const groups = signals.reduce<Record<string, ComponentSignal[]>>((acc, s) => {
+    const fam = s.family ?? 'unknown';
+    if (!acc[fam]) acc[fam] = [];
+    acc[fam].push(s);
+    return acc;
+  }, {});
+
+  // Filter with explicit typing
+  const filteredGroups: Record<string, ComponentSignal[]> = {};
+  Object.entries(groups).forEach(([fam, sigs]) => {
+    const filteredSigs = sigs.filter(
+      (s) =>
+        s.signal_code.toLowerCase().includes(search.toLowerCase()) ||
+        s.description.toLowerCase().includes(search.toLowerCase())
+    );
+    if (filteredSigs.length > 0) {
+      filteredGroups[fam] = filteredSigs;
+    }
+  });
+
+  const toggleSelect = (code: string) => {
+    const newSel = selected.includes(code)
+      ? selected.filter((c) => c !== code)
+      : [...selected, code];
+    setSelected(newSel);
+    onSelectSignals(newSel);
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" size={16} />
+        <input
+          placeholder="Search signals..."
+          className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-10 py-2 text-sm outline-none focus:border-zinc-600"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+      </div>
+
+      {Object.entries(filteredGroups).map(([family, sigs]) => (
+        <div key={family} className="border border-zinc-800 rounded-lg overflow-hidden">
+          <button
+            onClick={() => toggleFamily(family)}
+            className="w-full flex justify-between items-center px-4 py-3 text-sm font-medium text-zinc-300 bg-zinc-900 hover:bg-zinc-800 transition"
+          >
+            <span>
+              {family} <span className="text-zinc-500">({sigs.length})</span>
+            </span>
+            <span className="text-zinc-500">{openFamilies.has(family) ? 'âˆ’' : '+'}</span>
+          </button>
+
+          {openFamilies.has(family) && (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm min-w-[600px]">
+                <thead className="bg-zinc-950 border-b border-zinc-800 text-zinc-400">
+                  <tr>
+                    <th className="px-4 py-3 text-left w-10">Select</th>
+                    <th className="px-4 py-3 text-left">Signal</th>
+                    <th className="px-4 py-3 text-left">Type</th>
+                    <th className="px-4 py-3 text-left">Unit</th>
+                    <th className="px-4 py-3 text-left">Polarity</th>
+                    <th className="px-4 py-3 text-left">Description</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sigs.map((s) => (
+                    <tr
+                      key={s.signal_code}
+                      className="border-b border-zinc-800 last:border-0 hover:bg-zinc-800/50 transition"
+                    >
+                      <td className="px-4 py-3">
+                        <input
+                          type="checkbox"
+                          checked={selected.includes(s.signal_code)}
+                          onChange={() => toggleSelect(s.signal_code)}
+                          className="rounded border-zinc-700 bg-zinc-950 text-emerald-500 focus:ring-emerald-500"
+                        />
+                      </td>
+                      <td className="px-4 py-3 font-mono text-xs">{s.signal_code}</td>
+                      <td className="px-4 py-3 text-zinc-300">{s.type}</td>
+                      <td className="px-4 py-3 text-zinc-300">{s.unit}</td>
+                      <td className="px-4 py-3 flex items-center gap-1.5">
+                        <span className="text-zinc-300">{s.polarity}</span>
+                        <PolarityIcon polarity={s.polarity} trend="flat" />
+                      </td>
+                      <td className="px-4 py-3 text-zinc-400 max-w-md truncate" title={s.description}>
+                        {s.description}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+
+
+############################################################
+FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\pepsi\components\components\SignalTable.txt
+############################################################
+
+ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\components\components\SignalTable.tsx
+==================================================
+import type { ComponentSignal } from "../../api/components.api";
+
+// src/components/components/SignalTable.tsx
+export function SignalTable({ signals }: { signals: ComponentSignal[] }) {
+  return (
+    <div className="rounded-xl border border-zinc-800 bg-zinc-900">
+      <table className="w-full text-sm">
+        <thead className="border-b border-zinc-800 text-zinc-400">
+          <tr>
+            <th className="px-4 py-3 text-left">Signal</th>
+            <th className="px-4 py-3 text-left">Type</th>
+            <th className="px-4 py-3 text-left">Unit</th>
+            <th className="px-4 py-3 text-left">Polarity</th>
+            <th className="px-4 py-3 text-left">Description</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {signals.map((s) => (
+            <tr
+              key={s.signal_code}
+              className="border-b border-zinc-800 last:border-0"
+            >
+              <td className="px-4 py-3 font-mono text-xs">
+                {s.signal_code}
+              </td>
+              <td className="px-4 py-3">{s.type}</td>
+              <td className="px-4 py-3">{s.unit}</td>
+              <td className="px-4 py-3">{s.polarity}</td>
+              <td className="px-4 py-3 text-zinc-400">
+                {s.description}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+
+
+
+############################################################
+FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\pepsi\components\control-room\ActiveAnomalyCard.txt
+############################################################
+
+ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\components\control-room\ActiveAnomalyCard.tsx
+==================================================
+export function ActiveAnomalyCard({ anomaly }: { anomaly: any }) {
+  if (!anomaly?.active) {
+    return (
+      <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
+        <div className="text-xs uppercase text-zinc-500">Anomaly</div>
+        <div className="mt-2 text-sm text-emerald-400">No active anomaly</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-xl border border-red-900 bg-red-950/40 p-4">
+      <div className="text-xs uppercase text-red-300">Active Anomaly</div>
+      <div className="mt-2 text-sm text-red-200">
+        {anomaly.anomalies?.[0]?.anomaly_type ?? "Unknown"}
+      </div>
+    </div>
+  );
+}
+
+
+
+
+############################################################
+FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\pepsi\components\control-room\ActiveIncidentsCard.txt
+############################################################
+
+ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\components\control-room\ActiveIncidentsCard.tsx
+==================================================
+export function ActiveIncidentsCard({ count }: { count: number }) {
+  return (
+    <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
+      <div className="text-xs uppercase text-zinc-500">Active Incidents</div>
+      <div className="mt-2 text-xl font-semibold">
+        {count === 0 ? (
+          <span className="text-emerald-400">None</span>
+        ) : (
+          <span className="text-red-400">{count}</span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+
+
+
+############################################################
+FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\pepsi\components\control-room\AlertSummary.txt
+############################################################
+
+ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\components\control-room\AlertSummary.tsx
+==================================================
+// src/components/control-room/AlertSummary.tsx
+import { useQuery } from '@tanstack/react-query';
+import { fetchAlertSummary } from '../../api/controlRoom.api';
+
+export function AlertSummary() {
+  const { data } = useQuery({
+    queryKey: ['alertSummary'],
+    queryFn: fetchAlertSummary,
+  });
+
+  return (
+    <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
+      <div className="text-xs uppercase text-zinc-500">Alert Summary</div>
+      <div className="mt-2 grid grid-cols-3 gap-2">
+        <div className="text-sm">Critical: <span className="text-red-400">{data?.critical ?? 0}</span></div>
+        <div className="text-sm">Warning: <span className="text-yellow-400">{data?.warning ?? 0}</span></div>
+        <div className="text-sm">Info: <span className="text-zinc-400">{data?.info ?? 0}</span></div>
+      </div>
+    </div>
+  );
+}
+
+
+
+############################################################
+FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\pepsi\components\control-room\AnomalyStatus.txt
+############################################################
+
+ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\components\control-room\AnomalyStatus.tsx
+==================================================
+// src/components/control-room/AnomalyStatus.tsx
+import { useQuery } from '@tanstack/react-query';
+import { fetchActiveAnomaly, fetchAnomalyImpact, fetchAnomalyAnalysis } from '../../api/controlRoom.api';
+
+export function AnomalyStatus() {
+  const activeQuery = useQuery({ queryKey: ['activeAnomaly'], queryFn: fetchActiveAnomaly });
+  const impactQuery = useQuery({ queryKey: ['anomalyImpact'], queryFn: fetchAnomalyImpact, enabled: !!activeQuery.data?.active });
+  const analysisQuery = useQuery({ queryKey: ['anomalyAnalysis'], queryFn: fetchAnomalyAnalysis, enabled: !!activeQuery.data?.active });
+
+  const active = activeQuery.data;
+
+  if (!active?.active) {
+    return (
+      <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
+        <div className="text-xs uppercase text-zinc-500">Anomaly Status</div>
+        <div className="mt-2 text-sm text-emerald-400">No active anomaly</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-xl border border-red-800 bg-red-950/40 p-4">
+      <div className="text-xs uppercase text-red-300">Active Anomaly</div>
+      <div className="mt-2 text-sm text-red-200">{active.anomalies[0]?.anomaly_type ?? 'Unknown'}</div>
+      <div className="mt-4 text-xs">
+        <div className="font-semibold">Impact:</div>
+        {impactQuery.data && (
+          <ul className="list-disc pl-4">
+            <li>Alerts: {impactQuery.data.simulated_alerts_count} (Critical: {impactQuery.data.by_severity?.critical ?? 0})</li>
+            <li>Impacted Components: {impactQuery.data.most_impacted_components.join(', ')}</li>
+            <li>Health Shift: {impactQuery.data.global_health_during_anomaly.toFixed(1)}%</li>
+          </ul>
+        )}
+      </div>
+      <div className="mt-4 text-xs">
+        <div className="font-semibold">Analysis:</div>
+        {analysisQuery.data && (
+          <div className="space-y-1">
+            <p>What changed: {analysisQuery.data.what_changed}</p>
+            <p>Propagation: {analysisQuery.data.where_propagated}</p>
+            <p>Degraded: {analysisQuery.data.degraded_components.join(', ')}</p>
+            {/* Add charts if needed, e.g., Recharts for deviation summaries */}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+
+
+############################################################
+FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\pepsi\components\control-room\GlobalHealthCard.txt
+############################################################
+
+ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\components\control-room\GlobalHealthCard.tsx
+==================================================
+export function GlobalHealthCard({ status }: { status: "OK" | "DEGRADED" | "CRITICAL" }) {
+  const color =
+    status === "CRITICAL"
+      ? "text-red-400"
+      : status === "DEGRADED"
+      ? "text-yellow-400"
+      : "text-emerald-400";
+
+  return (
+    <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
+      <div className="text-xs uppercase text-zinc-500">Global Health</div>
+      <div className={`mt-2 text-xl font-semibold ${color}`}>{status}</div>
+    </div>
+  );
+}
+
+
+
+
+############################################################
+FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\pepsi\components\control-room\HealthBadge.txt
+############################################################
+
+ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\components\control-room\HealthBadge.tsx
+==================================================
+// src/components/control-room/HealthBadge.tsx
+import { Badge } from 'lucide-react'; // Assuming we add shadcn or similar; if not, use div with classes
+
+type Props = { status: 'OK' | 'DEGRADED' | 'CRITICAL' };
+
+export function HealthBadge({ status }: Props) {
+  const color = 
+    status === 'OK' ? 'bg-emerald-950 text-emerald-400 border-emerald-800' :
+    status === 'DEGRADED' ? 'bg-yellow-950 text-yellow-400 border-yellow-800' :
+    'bg-red-950 text-red-400 border-red-800';
+
+  return (
+    <span className={`rounded-full px-2 py-1 text-xs font-medium border ${color}`}>
+      {status}
+    </span>
+  );
+}
+
+
+
+############################################################
+FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\pepsi\components\control-room\IncidentCard.txt
+############################################################
+
+ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\components\control-room\IncidentCard.tsx
+==================================================
+// src/components/control-room/IncidentCard.tsx
+import { useQuery } from '@tanstack/react-query';
+import { fetchIncidents } from '../../api/controlRoom.api';
+import { HealthBadge } from './HealthBadge'; // Reuse for severity
+
+export function IncidentCard() {
+  const { data } = useQuery({
+    queryKey: ['incidents'],
+    queryFn: fetchIncidents,
+  });
+
+  const active = data?.filter((i: any) => i.status === 'OPEN') ?? [];
+  const count = active.length;
+
+  return (
+    <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
+      <div className="text-xs uppercase text-zinc-500">Active Incidents</div>
+      <div className="mt-2 text-xl font-semibold text-red-400">{count}</div>
+      {count > 0 && (
+        <div className="mt-4 space-y-2">
+          {active.slice(0, 3).map((inc: any) => (
+            <div key={inc.id} className="text-xs">
+              <HealthBadge status={inc.severity.toUpperCase()} /> {inc.summary} (Ticks: {inc.start_tick}-{inc.end_tick ?? 'Ongoing'})
+            </div>
+          ))}
+          {count > 3 && <div className="text-zinc-400">+{count - 3} more</div>}
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+
+############################################################
+FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\pepsi\components\control-room\MiniLaneMap.txt
+############################################################
+
+ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\components\control-room\MiniLaneMap.tsx
+==================================================
+// src/components/control-room/MiniLaneMap.tsx
+import { useQuery } from '@tanstack/react-query';
+import { fetchSystemOverview } from '../../api/controlRoom.api';
+import { HealthBadge } from './HealthBadge';
+
+// Static chains from cloud docs (real-time lane: C1â†’C2â†’C3â†’C6â†’C8)
+const lanes = [
+  { name: 'Real-Time Lane', components: ['C1', 'C2', 'C3', 'C6', 'C8'] },
+  { name: 'Hourly Batch Lane', components: ['C1', 'C4', 'C5', 'C6', 'C7'] },
+  // Add others if needed
+];
+
+export function MiniLaneMap() {
+  const { data } = useQuery({ queryKey: ['systemOverview'], queryFn: fetchSystemOverview });
+
+  const getStatus = (code: string) => data?.find((c: any) => c.component_code === code)?.status ?? 'UNKNOWN';
+
+  return (
+    <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
+      <div className="text-xs uppercase text-zinc-500">System Lanes (Causality Map)</div>
+      <div className="mt-4 space-y-4">
+        {lanes.map(lane => (
+          <div key={lane.name}>
+            <div className="text-sm text-zinc-300">{lane.name}</div>
+            <div className="flex items-center gap-2 mt-1">
+              {lane.components.map((code, i) => (
+                <>
+                  <div key={code} className="flex items-center gap-1">
+                    <span className="font-mono text-xs">{code}</span>
+                    <HealthBadge status={getStatus(code)} />
+                  </div>
+                  {i < lane.components.length - 1 && <span className="text-zinc-500">â†’</span>}
+                </>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+
+
+############################################################
+FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\pepsi\components\control-room\QuickActions.txt
+############################################################
+
+ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\components\control-room\QuickActions.tsx
+==================================================
+export function QuickActions({
+  onEvaluateAlerts,
+  onEvaluateIncidents,
+  onRollbackAnomaly,
+}: {
+  onEvaluateAlerts: () => void;
+  onEvaluateIncidents: () => void;
+  onRollbackAnomaly: () => void;
+}) {
+  return (
+    <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4 space-y-2">
+      <div className="text-xs uppercase text-zinc-500">Quick Actions</div>
+
+      <button className="w-full rounded bg-zinc-800 py-2 text-sm" onClick={onEvaluateAlerts}>
+        Evaluate Alerts
+      </button>
+
+      <button className="w-full rounded bg-zinc-800 py-2 text-sm" onClick={onEvaluateIncidents}>
+        Evaluate Incidents
+      </button>
+
+      <button className="w-full rounded bg-red-800 py-2 text-sm" onClick={onRollbackAnomaly}>
+        Rollback Anomaly
+      </button>
+    </div>
+  );
+}
+
+
+
+
+############################################################
+FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\pepsi\components\control-room\QuickActionsPanel.txt
+############################################################
+
+ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\components\control-room\QuickActionsPanel.tsx
+==================================================
+// src/components/control-room/QuickActionsPanel.tsx
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { evaluateAlerts, evaluateIncidents, rollbackAnomaly } from '../../api/controlRoom.api';
+
+export function QuickActionsPanel() {
+  const queryClient = useQueryClient();
+
+  const evalAlertsMut = useMutation({
+    mutationFn: evaluateAlerts,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['alertSummary', 'incidents', 'systemOverview'] }),
+  });
+
+  const evalIncidentsMut = useMutation({
+    mutationFn: evaluateIncidents,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['incidents', 'systemOverview'] }),
+  });
+
+  const rollbackMut = useMutation({
+    mutationFn: rollbackAnomaly,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['activeAnomaly', 'anomalyImpact', 'anomalyAnalysis', 'systemOverview'] }),
+  });
+
+  return (
+    <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4 space-y-2">
+      <div className="text-xs uppercase text-zinc-500">Quick Actions</div>
+      <button
+        className="w-full rounded bg-zinc-800 py-2 text-sm disabled:opacity-50"
+        onClick={() => evalAlertsMut.mutate()}
+        disabled={evalAlertsMut.isPending}
+      >
+        {evalAlertsMut.isPending ? 'Evaluating...' : 'Evaluate Alerts'}
+      </button>
+      <button
+        className="w-full rounded bg-zinc-800 py-2 text-sm disabled:opacity-50"
+        onClick={() => evalIncidentsMut.mutate()}
+        disabled={evalIncidentsMut.isPending}
+      >
+        {evalIncidentsMut.isPending ? 'Evaluating...' : 'Evaluate Incidents'}
+      </button>
+      <button
+        className="w-full rounded bg-red-800 py-2 text-sm disabled:opacity-50"
+        onClick={() => rollbackMut.mutate()}
+        disabled={rollbackMut.isPending}
+      >
+        {rollbackMut.isPending ? 'Rolling back...' : 'Rollback Anomaly'}
+      </button>
+    </div>
+  );
+}
+
+
+
+############################################################
+FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\pepsi\components\control-room\SystemGrid.txt
+############################################################
+
+ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\components\control-room\SystemGrid.tsx
+==================================================
+// src/components/control-room/SystemGrid.tsx
+import { useQuery } from '@tanstack/react-query';
+import { fetchSystemOverview } from '../../api/controlRoom.api';
+import { HealthBadge } from './HealthBadge';
+import { Link } from 'react-router-dom';
+
+export function SystemGrid() {
+  const { data, isLoading } = useQuery({
+    queryKey: ['systemOverview'],
+    queryFn: fetchSystemOverview,
+  });
+
+  if (isLoading) return <div className="text-zinc-400">Loading system...</div>;
+  if (!data) return <div className="text-red-400">No system data</div>;
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {data.map((comp: any) => (
+        <Link
+          key={comp.component_code}
+          to={`/components/${comp.component_code}`}
+          className="rounded-xl border border-zinc-800 bg-zinc-900 p-4 hover:border-zinc-600 transition"
+        >
+          <div className="flex items-center justify-between">
+            <div className="font-mono text-sm text-zinc-200">{comp.component_code}</div>
+            <HealthBadge status={comp.status} />
+          </div>
+          <div className="mt-2 text-xs text-zinc-400">
+            Health: {comp.health_score.toFixed(1)}% | Active Alerts: {comp.active_alerts}
+          </div>
+        </Link>
+      ))}
+    </div>
+  );
+}
+
+
+
+############################################################
+FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\pepsi\components\icons\PolarityIcon.txt
+############################################################
+
+ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\components\icons\PolarityIcon.tsx
+==================================================
+// src/components/icons/PolarityIcon.tsx
+import { ArrowUp, ArrowDown } from 'lucide-react';
+
+type Props = { polarity: string; trend: 'up' | 'down' | 'flat' }; // Trend from slope
+
+export function PolarityIcon({ polarity, trend }: Props) {
+  const isBad = 
+    (polarity === 'higher_is_worse' && trend === 'up') ||
+    (polarity === 'lower_is_worse' && trend === 'down');
+  const color = isBad ? 'text-red-400' : 'text-emerald-400';
+  const Icon = trend === 'up' ? ArrowUp : trend === 'down' ? ArrowDown : null;
+
+  return Icon ? <Icon size={16} className={color} /> : <span className="text-zinc-400">-</span>;
+}
+
+
+
+############################################################
+FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\pepsi\components\incidents\IncidentActions.txt
+############################################################
+
+ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\components\incidents\IncidentActions.tsx
+==================================================
+// src/components/incidents/IncidentActions.tsx
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { groupAlertsIntoIncidents } from '../../api/incidents.api';
+
+export function IncidentActions() {
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation({
+    mutationFn: groupAlertsIntoIncidents,
+    onSuccess: (groupedCount) => {
+      queryClient.invalidateQueries({ queryKey: ['incidents'] });
+      alert(`Grouped ${groupedCount} new incidents!`); // or use toast later
+    },
+    onError: (error) => {
+      alert(`Grouping failed: ${error.message}`);
+    },
+  });
+
+  return (
+    <button
+      onClick={() => mutation.mutate()}
+      disabled={mutation.isPending}
+      className="rounded bg-zinc-700 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-600 disabled:opacity-50 transition-colors"
+    >
+      {mutation.isPending ? 'Grouping...' : 'Group Open Alerts'}
+    </button>
+  );
+}
+
+
+
+############################################################
+FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\pepsi\components\incidents\IncidentList.txt
+############################################################
+
+ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\components\incidents\IncidentList.tsx
+==================================================
+// src/components/incidents/IncidentList.tsx
+import { useQuery } from '@tanstack/react-query';
+import { fetchIncidents } from '../../api/incidents.api';
+import { Link } from 'react-router-dom';
+
+type Props = {
+  status: string;
+};
+
+export function IncidentList({ status }: Props) {
+  const { data: incidents = [], isLoading, isError } = useQuery({
+    queryKey: ['incidents', status],
+    queryFn: () => fetchIncidents(status),
+  });
+
+  if (isLoading) {
+    return (
+      <div className="text-center text-zinc-400 py-12 animate-pulse">
+        Loading {status.toLowerCase()} incidents...
+      </div>
+    );
+  }
+
+  if (isError || !incidents) {
+    return (
+      <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-10 text-center text-zinc-500">
+        Failed to load incidents. Try refreshing.
+      </div>
+    );
+  }
+
+  if (incidents.length === 0) {
+    return (
+      <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-10 text-center text-zinc-500">
+        No {status.toLowerCase()} incidents at the moment.
+      </div>
+    );
+  }
+
+  return (
+    <div className="overflow-x-auto rounded-xl border border-zinc-800 bg-zinc-900 shadow-sm">
+      <table className="min-w-full divide-y divide-zinc-800">
+        <thead className="bg-zinc-950">
+          <tr>
+            <th className="px-6 py-4 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">ID</th>
+            <th className="px-6 py-4 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">Title</th>
+            <th className="px-6 py-4 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">Severity</th>
+            <th className="px-6 py-4 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">Status</th>
+            <th className="px-6 py-4 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">Linked Alerts</th>
+            <th className="px-6 py-4 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">Opened</th>
+            <th className="px-6 py-4 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">Risk</th>
+            <th className="px-6 py-4 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">Actions</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-zinc-800">
+          {incidents.map((inc) => (
+            <tr key={inc.id} className="hover:bg-zinc-800/50 transition-colors">
+              <td className="whitespace-nowrap px-6 py-4 text-sm font-mono text-zinc-300">#{inc.id}</td>
+              <td className="px-6 py-4 text-sm font-medium text-zinc-200">{inc.title}</td>
+              <td className="whitespace-nowrap px-6 py-4">
+                <span
+                  className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                    inc.severity === 'CRITICAL' ? 'bg-red-900/60 text-red-300 ring-1 ring-red-500/30' :
+                    inc.severity === 'WARNING' ? 'bg-yellow-900/60 text-yellow-300 ring-1 ring-yellow-500/30' :
+                    'bg-zinc-800 text-zinc-300'
+                  }`}
+                >
+                  {inc.severity}
+                </span>
+              </td>
+              <td className="whitespace-nowrap px-6 py-4">
+                <span
+                  className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                    inc.status === 'OPEN' ? 'bg-red-900/60 text-red-300 ring-1 ring-red-500/30' :
+                    inc.status === 'ACKNOWLEDGED' ? 'bg-yellow-900/60 text-yellow-300 ring-1 ring-yellow-500/30' :
+                    'bg-emerald-900/60 text-emerald-300 ring-1 ring-emerald-500/30'
+                  }`}
+                >
+                  {inc.status}
+                </span>
+              </td>
+              <td className="whitespace-nowrap px-6 py-4 text-sm text-center text-zinc-300">
+                {inc.linked_alerts?.length ?? 0}
+              </td>
+              <td className="whitespace-nowrap px-6 py-4 text-sm text-zinc-300">
+                {new Date(inc.opened_at).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}
+              </td>
+              <td className="whitespace-nowrap px-6 py-4 text-sm text-center text-zinc-300">
+                {inc.collapse_risk ? inc.collapse_risk.toFixed(2) : 'â€”'}
+              </td>
+              <td className="whitespace-nowrap px-6 py-4 text-sm">
+                <Link
+                  to={`/incidents/${inc.id}`}
+                  className="inline-flex items-center gap-1 text-indigo-400 hover:text-indigo-300 transition-colors"
+                >
+                  Details â†’
+                </Link>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+
+
+############################################################
+FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\pepsi\components\layout\AppShell.txt
+############################################################
+
+ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\components\layout\AppShell.tsx
+==================================================
+// src/components/layout/AppShell.tsx
+import { Outlet } from "react-router-dom";
+import { Sidebar } from "./Sidebar";
+import { TopBar } from "./TopBar";
+
+export function AppShell() {
+  return (
+    <div className="h-full w-full bg-zinc-950 text-zinc-100">
+      <div className="flex h-full">
+        <Sidebar />
+        <div className="flex flex-1 flex-col overflow-hidden">
+          <TopBar />
+          <main className="flex-1 overflow-auto p-6">
+            <Outlet />
+          </main>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+
+
+############################################################
+FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\pepsi\components\layout\Sidebar.txt
+############################################################
+
+ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\components\layout\Sidebar.tsx
+==================================================
+// src/components/layout/Sidebar.tsx
+import { NavLink } from "react-router-dom";
+import { LayoutDashboard, Boxes, Activity, Bell, Flame, Beaker, BarChart3, Shield } from "lucide-react";
+import { useAuth } from "../../auth/auth.store";
+
+const navItems = [
+  { to: "/home", label: "Overview", icon: LayoutDashboard },
+  { to: "/components", label: "Components", icon: Boxes },
+  { to: "/metrics", label: "Metrics", icon: Activity },
+  { to: "/alerts", label: "Alerts", icon: Bell },
+  { to: "/incidents", label: "Incidents", icon: Flame },
+  { to: "/anomalies", label: "Anomalies", icon: Beaker },
+  { to: "/analytics", label: "Analytics", icon: BarChart3 },
+];
+
+export function Sidebar() {
+  const { user } = useAuth();
+  const isAdmin = user?.roles?.includes("admin");
+
+  return (
+    <aside className="w-64 border-r border-zinc-800 bg-zinc-950 p-4">
+      <div className="mb-6 text-lg font-semibold tracking-tight">
+        PlatformOPS
+      </div>
+
+      <nav className="flex flex-col gap-1 text-sm">
+        {navItems.map(({ to, label, icon: Icon }) => (
+          <NavLink
+            key={to}
+            to={to}
+            className={({ isActive }) =>
+              `flex items-center gap-2 rounded-lg px-3 py-2 ${
+                isActive
+                  ? "bg-zinc-800 text-zinc-100"
+                  : "text-zinc-400 hover:bg-zinc-900 hover:text-zinc-100"
+              }`
+            }
+          >
+            <Icon size={16} />
+            {label}
+          </NavLink>
+        ))}
+
+        {isAdmin && (
+          <NavLink
+            to="/admin"
+            className={({ isActive }) =>
+              `mt-4 flex items-center gap-2 rounded-lg px-3 py-2 ${
+                isActive
+                  ? "bg-zinc-800 text-zinc-100"
+                  : "text-zinc-400 hover:bg-zinc-900 hover:text-zinc-100"
+              }`
+            }
+          >
+            <Shield size={16} />
+            Admin
+          </NavLink>
+        )}
+      </nav>
+    </aside>
+  );
+}
+
+
+
+
+############################################################
+FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\pepsi\components\layout\TopBar.txt
+############################################################
+
+ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\components\layout\TopBar.tsx
+==================================================
+import { useAuth } from "../../auth/auth.store";
+import { useTimeWindow } from "../../context/TimeContext";
+
+export function TopBar() {
+  const { user, clearSession } = useAuth();
+  const { window } = useTimeWindow();
+
+  return (
+    <header className="flex h-14 items-center justify-between border-b border-zinc-800 px-6">
+      <div className="text-sm text-zinc-400">
+        Ticks:{" "}
+        <span className="text-zinc-200">
+          {window.fromTick} â†’ {window.toTick}
+        </span>
+      </div>
+
+      <div className="flex items-center gap-4 text-sm">
+        {/* placeholders â€“ wired later */}
+        <span className="rounded-md bg-emerald-950/40 px-2 py-1 text-emerald-400">
+          HEALTH: OK
+        </span>
+
+        <span className="text-zinc-400">
+          {user?.username} ({user?.roles?.join(", ")})
+        </span>
+
+        <button
+          onClick={clearSession}
+          className="text-zinc-400 hover:text-zinc-100"
+        >
+          Logout
+        </button>
+      </div>
+    </header>
+  );
+}
+
+
+
+
+############################################################
+FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\pepsi\context\TimeContext.txt
+############################################################
+
+ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\context\TimeContext.tsx
+==================================================
+// src/context/TimeContext.tsx
+import { createContext, useContext, useState, useMemo } from "react";
+
+export type TimeWindow = {
+  fromTick: number;
+  toTick: number;
+};
+
+type TimeContextValue = {
+  window: TimeWindow;
+  setWindow: (w: TimeWindow) => void;
+};
+
+const TimeContext = createContext<TimeContextValue | null>(null);
+
+export function TimeProvider({ children }: { children: React.ReactNode }) {
+  // default: last N ticks (placeholder, backend-driven later)
+  const [window, setWindow] = useState<TimeWindow>({
+    fromTick: 0,
+    toTick: 500,
+  });
+
+  const value = useMemo(
+    () => ({ window, setWindow }),
+    [window]
+  );
+
+  return (
+    <TimeContext.Provider value={value}>
+      {children}
+    </TimeContext.Provider>
+  );
+}
+
+export function useTimeWindow() {
+  const ctx = useContext(TimeContext);
+  if (!ctx) {
+    throw new Error("useTimeWindow must be used inside TimeProvider");
+  }
+  return ctx;
+}
+
+
+
+
+############################################################
+FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\pepsi\pages\alerts\ActiveAlertsPage.txt
+############################################################
+
+ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\pages\alerts\ActiveAlertsPage.tsx
+==================================================
+// src/pages/alerts/ActiveAlertsPage.tsx (updated)
+import { useQuery } from '@tanstack/react-query';
+import { fetchAlertEvents } from '../../api/alerts.api';
+import { AlertEventsTable } from '../../components/alerts/AlertEventsTable';
+
+type Props = { filter: { component: string; signal: string; severity: string; origin: string } };
+
+export function ActiveAlertsPage({ filter }: Props) {
+  const { data: activeAlerts, isLoading } = useQuery({
+    queryKey: ['activeAlerts', filter],
+    queryFn: () => fetchAlertEvents(filter.signal, 'OPEN', 100),
+  });
+
+  return (
+    <div className="space-y-4">
+      <h2 className="text-lg font-medium">Active Alerts ({activeAlerts?.length ?? 0})</h2>
+      <AlertEventsTable alerts={activeAlerts ?? []} filter={filter} />
+    </div>
+  );
+}
+
+// Similar for AlertHistoryPage.tsx
+export function AlertHistoryPage({ filter }: Props) {
+  const { data: history, isLoading } = useQuery({
+    queryKey: ['alertHistory', filter],
+    queryFn: () => fetchAlertEvents(filter.signal, undefined, 200),
+  });
+
+  return (
+    <div className="space-y-4">
+      <h2 className="text-lg font-medium">Alert History ({history?.length ?? 0})</h2>
+      <AlertEventsTable alerts={history ?? []} filter={filter} />
+    </div>
+  );
+}
+
+
+
+############################################################
+FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\pepsi\pages\alerts\AlertsPage.txt
+############################################################
+
+ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\pages\alerts\AlertsPage.tsx
+==================================================
+// src/pages/alerts/AlertsPage.tsx
+import { useState } from 'react';
+import { AlertTimelineGraph } from '../../components/alerts/AlertTimelineGraph';
+import { ActiveAlertsPage, AlertHistoryPage } from './ActiveAlertsPage';
+import { RulesPage } from './RulesPage';
+import { AlertActions } from '../../components/alerts/AlertActions';
+import { AlertSummaryCard } from '../../components/alerts/AlertSummaryCard';
+
+
+export function AlertsPage() {
+  const [activeTab, setActiveTab] = useState<'active' | 'history' | 'rules'>('active');
+  const [globalFilter, setGlobalFilter] = useState({
+    component: '',
+    signal: '',
+    severity: '',
+    origin: '',
+  });
+
+  return (
+    <div className="space-y-6 p-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold tracking-tight">Alerts Console</h1>
+        <AlertActions />
+      </div>
+
+      <AlertSummaryCard />
+
+      {/* Global Filter */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <input
+          placeholder="Filter by Component"
+          className="rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm placeholder-zinc-500 focus:border-zinc-500 focus:outline-none"
+          value={globalFilter.component}
+          onChange={(e) => setGlobalFilter({ ...globalFilter, component: e.target.value })}
+        />
+        <input
+          placeholder="Filter by Signal"
+          className="rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm placeholder-zinc-500 focus:border-zinc-500 focus:outline-none"
+          value={globalFilter.signal}
+          onChange={(e) => setGlobalFilter({ ...globalFilter, signal: e.target.value })}
+        />
+        <select
+          className="rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none"
+          value={globalFilter.severity}
+          onChange={(e) => setGlobalFilter({ ...globalFilter, severity: e.target.value })}
+        >
+          <option value="">All Severities</option>
+          <option value="critical">Critical</option>
+          <option value="warning">Warning</option>
+          <option value="info">Info</option>
+        </select>
+        <select
+          className="rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none"
+          value={globalFilter.origin}
+          onChange={(e) => setGlobalFilter({ ...globalFilter, origin: e.target.value })}
+        >
+          <option value="">All Origins</option>
+          <option value="REAL">Real</option>
+          <option value="SIMULATED">Simulated</option>
+        </select>
+      </div>
+
+      <AlertTimelineGraph filter={globalFilter} />
+
+      {/* Tabs */}
+      <div className="border-b border-zinc-800">
+        <nav className="-mb-px flex space-x-8">
+          {(['active', 'history', 'rules'] as const).map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`
+                whitespace-nowrap border-b-2 px-1 pb-4 text-sm font-medium
+                ${activeTab === tab
+                  ? 'border-zinc-200 text-zinc-100'
+                  : 'border-transparent text-zinc-400 hover:border-zinc-600 hover:text-zinc-200'}
+              `}
+            >
+              {tab.charAt(0).toUpperCase() + tab.slice(1)}
+            </button>
+          ))}
+        </nav>
+      </div>
+
+      <div className="mt-6">
+        {activeTab === 'active' && <ActiveAlertsPage filter={globalFilter} />}
+        {activeTab === 'history' && <AlertHistoryPage filter={globalFilter} />}
+        {activeTab === 'rules' && <RulesPage />}
+      </div>
+    </div>
+  );
+}
+
+
+
+############################################################
+FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\pepsi\pages\alerts\RulesPage.txt
+############################################################
+
+ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\pages\alerts\RulesPage.tsx
+==================================================
+// src/pages/alerts/RulesPage.tsx
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { fetchAlertRules, generateAllRules } from '../../api/alerts.api';
+
+export function RulesPage() {
+  const queryClient = useQueryClient();
+
+  const { data: rules, isLoading } = useQuery({
+    queryKey: ['alertRules'],
+    queryFn: fetchAlertRules,
+  });
+
+  const generateMutation = useMutation({
+    mutationFn: generateAllRules,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['alertRules'] }),
+  });
+
+  if (isLoading) {
+    return <div className="text-center text-zinc-400 animate-pulse">Loading rules...</div>;
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-end">
+        <button
+          onClick={() => generateMutation.mutate()}
+          disabled={generateMutation.isPending}
+          className="rounded-md bg-zinc-700 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-600 disabled:opacity-50 transition-colors"
+        >
+          {generateMutation.isPending ? 'Generating...' : 'Generate All Rules'}
+        </button>
+      </div>
+
+      {rules?.length === 0 ? (
+        <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-8 text-center text-zinc-500">
+          No alert rules yet. Click "Generate All Rules" to create them based on your signals.
+        </div>
+      ) : (
+        <div className="overflow-x-auto rounded-xl border border-zinc-800 bg-zinc-900">
+          <table className="min-w-full divide-y divide-zinc-800">
+            <thead className="bg-zinc-950">
+              <tr>
+                <th className="px-6 py-4 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">Signal</th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">Operator</th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">Threshold</th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">Duration (ticks)</th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">Severity</th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">Enabled</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-zinc-800">
+              {rules?.map((rule) => (
+                <tr key={rule.id} className="hover:bg-zinc-800/50 transition-colors">
+                  <td className="whitespace-nowrap px-6 py-4 text-sm font-mono text-zinc-300">{rule.signal_code}</td>
+                  <td className="whitespace-nowrap px-6 py-4 text-sm text-zinc-300">{rule.operator}</td>
+                  <td className="whitespace-nowrap px-6 py-4 text-sm text-zinc-300">{rule.threshold}</td>
+                  <td className="whitespace-nowrap px-6 py-4 text-sm text-zinc-300">{rule.min_duration_ticks}</td>
+                  <td className="whitespace-nowrap px-6 py-4">
+                    <span
+                      className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                        rule.severity === 'critical'
+                          ? 'bg-red-950 text-red-400'
+                          : rule.severity === 'warning'
+                          ? 'bg-yellow-950 text-yellow-400'
+                          : 'bg-zinc-800 text-zinc-300'
+                      }`}
+                    >
+                      {rule.severity.toUpperCase()}
+                    </span>
+                  </td>
+                  <td className="whitespace-nowrap px-6 py-4 text-sm text-zinc-300">
+                    {rule.enabled ? 'Yes' : 'No'}
+                  </td>
+                </tr>
+              )) ?? null}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+
+############################################################
+FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\pepsi\pages\analytics\AnalyticsPage.txt
+############################################################
+
+ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\pages\analytics\AnalyticsPage.tsx
+==================================================
+// src/pages/analytics/AnalyticsPage.tsx
+import { useState } from 'react';
+
+import { useTimeWindow } from '../../context/TimeContext';
+import { HealthSection } from '../../components/analytics/HealthSection';
+import { VolatilitySection } from '../../components/analytics/VolatilitySection';
+import { ForecastSection } from '../../components/analytics/ForecastSection';
+import { RegimesSection } from '../../components/analytics/RegimesSection';
+import { StressSection } from '../../components/analytics/StressSection';
+import { ChangeImpactSection } from '../../components/analytics/ChangeImpactSection';
+
+export function AnalyticsPage() {
+  const { window } = useTimeWindow(); // Global time control
+  const [activeTab, setActiveTab] = useState('health');
+
+  return (
+    <div className="space-y-8">
+      <h1 className="text-3xl font-bold text-zinc-100">Analytics Console</h1>
+
+      <p className="text-sm text-zinc-400 max-w-2xl">
+        Advanced insights: health trends, volatility, forecasts, regime detection, stress curves, change impact. Use time controls for analysis.
+      </p>
+
+      {/* Tabs */}
+      <div className="border-b border-zinc-800">
+        <div className="flex space-x-4 overflow-x-auto pb-2">
+          {['health', 'volatility', 'forecast', 'regimes', 'stress', 'change-impact'].map(tab => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`px-5 py-2 text-sm font-medium transition-colors ${
+                activeTab === tab
+                  ? 'border-b-2 border-zinc-200 text-zinc-100'
+                  : 'text-zinc-400 hover:text-zinc-200'
+              }`}
+            >
+              {tab.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Sections */}
+      {activeTab === 'health' && <HealthSection />}
+      {activeTab === 'volatility' && <VolatilitySection />}
+      {activeTab === 'forecast' && <ForecastSection />}
+      {activeTab === 'regimes' && <RegimesSection />}
+      {activeTab === 'stress' && <StressSection />}
+      {activeTab === 'change-impact' && <ChangeImpactSection />}
+    </div>
+  );
+}
+
+
+
+############################################################
+FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\pepsi\pages\anomalies\AnomaliesPage.txt
+############################################################
+
+ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\pages\anomalies\AnomaliesPage.tsx
+==================================================
+// src/pages/anomalies/AnomaliesPage.tsx
+import { useState } from 'react';
+import { AnomalyActions } from '../../components/anomalies/AnomalyActions';
+import { InjectionForm } from '../../components/anomalies/InjectionForm';
+import { ActiveAnomalyCard } from '../../components/anomalies/ActiveAnomalyCard';
+import { ImpactSummaryTable } from '../../components/anomalies/ImpactSummaryTable';
+import { AnalysisNarrative } from '../../components/anomalies/AnalysisNarrative';
+import { HealthRankingTable } from '../../components/anomalies/HealthRankingTable';
+import { DeviationChart } from '../../components/anomalies/DeviationChart';
+
+
+export function AnomaliesPage() {
+  const [activeTab, setActiveTab] = useState('active');
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-semibold">Anomalies Lab</h1>
+        <AnomalyActions />
+      </div>
+
+      <p className="text-sm text-zinc-400">Inject, monitor, analyze anomalies in a controlled environment. Observe propagation, impacts, and system resilience.</p>
+
+      {/* Tabs */}
+      <div className="border-b border-zinc-800">
+        <div className="flex space-x-1">
+          {['injection', 'active', 'impact', 'analysis'].map(tab => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`px-4 py-2 text-sm font-medium transition-colors ${
+                activeTab === tab
+                  ? 'border-b-2 border-zinc-200 text-zinc-100'
+                  : 'text-zinc-400 hover:text-zinc-200'
+              }`}
+            >
+              {tab.charAt(0).toUpperCase() + tab.slice(1)}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {activeTab === 'injection' && <InjectionForm />}
+      {activeTab === 'active' && <ActiveAnomalyCard />}
+      {activeTab === 'impact' && <ImpactSummaryTable />}
+      {activeTab === 'analysis' && (
+        <div className="space-y-8">
+          <AnalysisNarrative />
+          <DeviationChart />
+          <HealthRankingTable />
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+
+############################################################
+FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\pepsi\pages\auth\AuthLayout.txt
+############################################################
+
+ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\pages\auth\AuthLayout.tsx
+==================================================
+// src/pages/auth/AuthLayout.tsx
+import type { ReactNode } from "react";
+
+export function AuthLayout({ children }: { children: ReactNode }) {
+  return (
+    <div className="min-h-screen bg-zinc-950 text-zinc-100 grid grid-cols-1 lg:grid-cols-2">
+      {/* Left branding / context */}
+      <div className="hidden lg:flex flex-col justify-between border-r border-zinc-800 p-10">
+        <div>
+          <div className="text-2xl font-semibold tracking-tight">
+            PlatformOPS
+          </div>
+          <div className="mt-2 text-sm text-zinc-400 max-w-md">
+            Operational observability platform for cloud systems.
+            <br />
+            Alerts, incidents, anomalies, analytics â€” unified.
+          </div>
+        </div>
+
+        <div className="text-xs text-zinc-500">
+          Â© {new Date().getFullYear()} PlatformOPS â€” Internal Systems Console
+        </div>
+      </div>
+
+      {/* Right auth panel */}
+      <div className="flex items-center justify-center p-6">
+        <div className="w-full max-w-md">{children}</div>
+      </div>
+    </div>
+  );
+}
+
+
+
+
+############################################################
+FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\pepsi\pages\auth\LoginPage.txt
+############################################################
+
+ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\pages\auth\LoginPage.tsx
+==================================================
+// src/pages/auth/LoginPage.tsx
+import { useMutation } from "@tanstack/react-query";
+import { useNavigate, Link } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useAuth } from "../../auth/auth.store";
+import { login, me } from "../../auth/auth.api";
+import { AuthLayout } from "./AuthLayout";
+
+const schema = z.object({
+  username: z.string().min(3),
+  password: z.string().min(3),
+});
+
+type FormValues = z.infer<typeof schema>;
+
+export function LoginPage() {
+  const nav = useNavigate();
+  const { setSession } = useAuth();
+
+  const form = useForm<FormValues>({
+    resolver: zodResolver(schema),
+  });
+
+  const mutation = useMutation({
+    mutationFn: async (values: FormValues) => {
+      const tokenRes = await login(values.username, values.password);
+      localStorage.setItem("access_token", tokenRes.access_token);
+      const user = await me();
+      return { token: tokenRes.access_token, user };
+    },
+    onSuccess: ({ token, user }) => {
+      setSession(token, user);
+      nav("/home", { replace: true });
+    },
+  });
+
+  return (
+    <AuthLayout>
+      <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-8 shadow-lg">
+        <div className="mb-6">
+          <div className="text-xl font-semibold tracking-tight">
+            Sign in to PlatformOPS
+          </div>
+          <div className="mt-1 text-sm text-zinc-400">
+            Access the operational control plane.
+          </div>
+        </div>
+
+        <form
+          className="space-y-4"
+          onSubmit={form.handleSubmit((v) => mutation.mutate(v))}
+        >
+          <div>
+            <label className="text-xs uppercase tracking-wide text-zinc-400">
+              Username / Email
+            </label>
+            <input
+              className="mt-2 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm outline-none focus:border-zinc-600"
+              {...form.register("username")}
+            />
+          </div>
+
+          <div>
+            <label className="text-xs uppercase tracking-wide text-zinc-400">
+              Password
+            </label>
+            <input
+              type="password"
+              className="mt-2 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm outline-none focus:border-zinc-600"
+              {...form.register("password")}
+            />
+          </div>
+
+          {mutation.isError && (
+            <div className="rounded-lg border border-red-900/50 bg-red-950/30 p-3 text-sm text-red-300">
+              Authentication failed. Check credentials.
+            </div>
+          )}
+
+          <button
+            type="submit"
+            disabled={mutation.isPending}
+            className="mt-2 w-full rounded-lg bg-white/90 py-2 text-sm font-semibold text-zinc-950 hover:bg-white disabled:opacity-60"
+          >
+            {mutation.isPending ? "Authenticatingâ€¦" : "Sign in"}
+          </button>
+        </form>
+
+        <div className="mt-6 flex justify-between text-sm text-zinc-400">
+          <span>
+            No account?{" "}
+            <Link className="text-zinc-100 underline" to="/signup">
+              Create one
+            </Link>
+          </span>
+        </div>
+
+        <div className="mt-4 text-xs text-zinc-500">
+          Email verification required after signup.
+        </div>
+      </div>
+    </AuthLayout>
+  );
+}
+
+
+
+
+############################################################
+FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\pepsi\pages\auth\SignupPage.txt
+############################################################
+
+ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\pages\auth\SignupPage.tsx
+==================================================
+// src/pages/auth/SignupPage.tsx
+import { useMutation } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { signup } from "../../auth/auth.api";
+import { AuthLayout } from "./AuthLayout";
+
+const schema = z
+  .object({
+    username: z.string().min(3),
+    password: z.string().min(6),
+    confirm: z.string().min(6),
+  })
+  .refine((v) => v.password === v.confirm, {
+    message: "Passwords do not match",
+    path: ["confirm"],
+  });
+
+type FormValues = z.infer<typeof schema>;
+
+export function SignupPage() {
+  const form = useForm<FormValues>({ resolver: zodResolver(schema) });
+
+  const mutation = useMutation({
+    mutationFn: (v: FormValues) => signup(v.username, v.password),
+  });
+
+  return (
+    <AuthLayout>
+      <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-8 shadow-lg">
+        <div className="mb-6">
+          <div className="text-xl font-semibold">Create PlatformOPS account</div>
+          <div className="mt-1 text-sm text-zinc-400">
+            Verification email will be sent.
+          </div>
+        </div>
+
+        <form
+          className="space-y-4"
+          onSubmit={form.handleSubmit((v) => mutation.mutate(v))}
+        >
+          {["username", "password", "confirm"].map((field) => (
+            <div key={field}>
+              <label className="text-xs uppercase tracking-wide text-zinc-400">
+                {field === "confirm" ? "Confirm password" : field}
+              </label>
+              <input
+                type={field.includes("password") ? "password" : "text"}
+                className="mt-2 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm outline-none focus:border-zinc-600"
+                {...form.register(field as any)}
+              />
+            </div>
+          ))}
+
+          {mutation.isSuccess && (
+            <div className="rounded-lg border border-emerald-900/40 bg-emerald-950/30 p-3 text-sm text-emerald-300">
+              Account created. Check your email.
+            </div>
+          )}
+
+          <button className="w-full rounded-lg bg-white/90 py-2 text-sm font-semibold text-zinc-950 hover:bg-white">
+            Create account
+          </button>
+        </form>
+
+        <div className="mt-6 text-sm text-zinc-400">
+          Already registered?{" "}
+          <Link className="text-zinc-100 underline" to="/login">
+            Sign in
+          </Link>
+        </div>
+      </div>
+    </AuthLayout>
+  );
+}
+
+
+
+
+############################################################
+FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\pepsi\pages\auth\VerifyEmailPage.txt
+############################################################
+
+ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\pages\auth\VerifyEmailPage.tsx
+==================================================
+// src/pages/auth/VerifyEmailPage.tsx
+import { useEffect } from "react";
+import { useSearchParams, Link } from "react-router-dom";
+import { useMutation } from "@tanstack/react-query";
+import { verifyEmail } from "../../auth/auth.api";
+import { AuthLayout } from "./AuthLayout";
+
+export function VerifyEmailPage() {
+  const [params] = useSearchParams();
+  const token = params.get("token");
+
+  const mutation = useMutation({
+    mutationFn: () => {
+      if (!token) throw new Error("Missing token");
+      return verifyEmail(token);
+    },
+  });
+
+  useEffect(() => {
+    mutation.mutate();
+  }, []);
+
+  return (
+    <AuthLayout>
+      <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-8 shadow-lg">
+        <div className="text-xl font-semibold">Email verification</div>
+        <div className="mt-1 text-sm text-zinc-400">
+          Validating your account.
+        </div>
+
+        <div className="mt-6 text-sm">
+          {mutation.isPending && "Verifyingâ€¦"}
+          {mutation.isError && "Verification failed."}
+          {mutation.isSuccess && mutation.data.message}
+        </div>
+
+        <Link
+          to="/login"
+          className="mt-6 inline-flex rounded-lg bg-white/90 px-4 py-2 text-sm font-semibold text-zinc-950 hover:bg-white"
+        >
+          Go to login
+        </Link>
+      </div>
+    </AuthLayout>
+  );
+}
+
+
+
+
+############################################################
+FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\pepsi\pages\components\ComponentDetailsPage.txt
+############################################################
+
+ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\pages\components\ComponentDetailsPage.tsx
+==================================================
+// src/pages/components/ComponentDetailsPage.tsx
+import { useParams } from 'react-router-dom';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { fetchComponentDetails, fetchAlertsByComponent, fetchComponentTimeAnalysis, fetchActiveAnomaly, fetchComponentRegimes, fetchComponentStress } from '../../api/components.api';
+import { SignalGroupTable } from '../../components/components/SignalGroupTable';
+import { TimeseriesChart } from '../../components/charts/TimeseriesChart';
+import { AlertList } from '../../components/alerts/AlertList';
+import { useState } from 'react';
+import { RotateCcw } from 'lucide-react';
+
+// Define SignalMeta here (mirrors TimeseriesChart)
+interface SignalMeta {
+  unit: string;
+  description: string;
+  polarity: string;
+  threshold?: number;
+}
+
+export function ComponentDetailsPage() {
+  const { code } = useParams<{ code: string }>();
+  const [selectedSignals, setSelectedSignals] = useState<string[]>([]);
+  const [transform, setTransform] = useState<'raw' | 'aggregate' | 'derivative' | 'normalized'>('raw');
+  const [activeTab, setActiveTab] = useState('signals'); // Native tab state
+  const queryClient = useQueryClient();
+
+  const detailsQuery = useQuery({ queryKey: ['componentDetails', code], queryFn: () => fetchComponentDetails(code!) });
+  const alertsQuery = useQuery({ queryKey: ['alertsByComponent', code], queryFn: () => fetchAlertsByComponent(code!) });
+  const timeAnalysisQuery = useQuery({ queryKey: ['componentTimeAnalysis', code], queryFn: () => fetchComponentTimeAnalysis(code!) });
+  const regimesQuery = useQuery({ queryKey: ['componentRegimes', code], queryFn: () => fetchComponentRegimes(code!) });
+  const stressQuery = useQuery({ queryKey: ['componentStress', code], queryFn: () => fetchComponentStress(code!) });
+  const anomalyQuery = useQuery({ queryKey: ['activeAnomaly'], queryFn: fetchActiveAnomaly });
+
+  const data = detailsQuery.data;
+  const anomalyWindow = anomalyQuery.data?.active 
+    ? { from: anomalyQuery.data.anomalies?.[0]?.from_tick ?? 0, to: anomalyQuery.data.anomalies?.[0]?.to_tick ?? 0 } 
+    : undefined;
+
+  const metas: Record<string, SignalMeta> = (data?.signals ?? []).reduce(
+    (acc, s) => ({ ...acc, [s.signal_code]: { unit: s.unit, description: s.description, polarity: s.polarity } }),
+    {}
+  );
+
+  const refresh = () => {
+    queryClient.invalidateQueries({ queryKey: ['componentDetails', code] });
+    queryClient.invalidateQueries({ queryKey: ['alertsByComponent', code] });
+    queryClient.invalidateQueries({ queryKey: ['componentTimeAnalysis', code] });
+    queryClient.invalidateQueries({ queryKey: ['componentRegimes', code] });
+    queryClient.invalidateQueries({ queryKey: ['componentStress', code] });
+  };
+
+  if (detailsQuery.isLoading) return <div className="text-zinc-400">Loading {code}...</div>;
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-semibold">{code} Details</h1>
+        <button onClick={refresh} className="flex items-center gap-1 text-sm text-zinc-400 hover:text-zinc-200">
+          <RotateCcw size={16} /> Refresh
+        </button>
+      </div>
+      <p className="text-sm text-zinc-400">
+        Health: {(data?.health_score?.toFixed(1) ?? 'N/A')}% | Signals: {data?.signals?.length ?? 0}
+      </p>
+
+      {/* Native Tabs */}
+      <div className="border-b border-zinc-800">
+        <div className="flex space-x-1">
+          {['signals', 'charts', 'alerts', 'timeline'].map(tab => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`px-4 py-2 text-sm font-medium transition-colors ${
+                activeTab === tab
+                  ? 'border-b-2 border-zinc-200 text-zinc-100'
+                  : 'text-zinc-400 hover:text-zinc-200'
+              }`}
+            >
+              {tab.charAt(0).toUpperCase() + tab.slice(1)}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {activeTab === 'signals' && (
+        <SignalGroupTable 
+          signals={data?.signals ?? []} 
+          onSelectSignals={setSelectedSignals} 
+        />
+      )}
+
+      {activeTab === 'charts' && (
+        <>
+          <div className="flex gap-2 mb-4">
+            <select 
+              className="rounded border border-zinc-800 bg-zinc-950 px-2 py-1 text-sm"
+              value={transform}
+              onChange={e => setTransform(e.target.value as 'raw' | 'aggregate' | 'derivative' | 'normalized')}
+            >
+              <option value="raw">Raw</option>
+              <option value="aggregate">Aggregate (Avg)</option>
+              <option value="derivative">Derivative</option>
+              <option value="normalized">Normalized</option>
+            </select>
+          </div>
+          {selectedSignals.length > 0 && (
+            <TimeseriesChart 
+              signalCodes={selectedSignals} 
+              transform={transform} 
+              anomalyWindow={anomalyWindow} 
+              metas={metas}
+            />
+          )}
+        </>
+      )}
+
+      {activeTab === 'alerts' && (
+        <AlertList alerts={alertsQuery.data ?? []} componentCode={code!} />
+      )}
+
+      {activeTab === 'timeline' && (
+        <>
+          <TimeseriesChart 
+            signalCodes={['health_score']} 
+            transform="raw" 
+            anomalyWindow={anomalyWindow} 
+            data={timeAnalysisQuery.data?.series ?? []} 
+            metas={{ health_score: { unit: '%', description: 'Component health', polarity: 'higher_is_better' } }}
+          />
+          <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="border border-zinc-800 rounded-lg p-4">
+              <h3 className="text-sm font-medium mb-2">Regimes</h3>
+              <ul className="text-xs space-y-2">
+                {regimesQuery.data?.regimes?.map((r: any) => (
+                  <li 
+                    key={r.from_tick} 
+                    className={`p-2 rounded ${r.regime === 'STABLE' ? 'bg-emerald-950/50' : r.regime === 'DEGRADED' ? 'bg-yellow-950/50' : 'bg-red-950/50'}`}
+                  >
+                    <span className="font-medium">{r.regime}</span> ({r.from_tick}â€“{r.to_tick})  
+                    <br />Alerts: {r.alert_count} | Volatility: {r.avg_volatility?.toFixed(3)}
+                  </li>
+                )) ?? <li className="text-zinc-500">No regime data</li>}
+              </ul>
+            </div>
+            <div className="border border-zinc-800 rounded-lg p-4">
+              <h3 className="text-sm font-medium mb-2">Stress Curve</h3>
+              <TimeseriesChart 
+                signalCodes={['stress_score']} 
+                transform="raw" 
+                data={stressQuery.data?.series ?? []} 
+                metas={{ stress_score: { unit: '', description: 'Stress level', polarity: 'higher_is_worse' } }}
+              />
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+
+
+############################################################
+FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\pepsi\pages\components\ComponentsPage.txt
+############################################################
+
+ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\pages\components\ComponentsPage.tsx
+==================================================
+// src/pages/components/ComponentsPage.tsx
+import { useQuery } from '@tanstack/react-query';
+import { fetchComponents } from '../../api/components.api';
+import { Link } from 'react-router-dom';
+import { ComponentCard } from '../../components/components/ComponentCard'; // Existing, but update if needed for health
+
+export function ComponentsPage() {
+  const { data, isLoading } = useQuery({
+    queryKey: ['components'],
+    queryFn: fetchComponents,
+  });
+
+  if (isLoading) return <div className="text-zinc-400">Loading components...</div>;
+
+  return (
+    <div className="space-y-6">
+      <h1 className="text-2xl font-semibold">Components Explorer</h1>
+      <p className="text-sm text-zinc-400">Inventory of monitored cloud services. Select for details.</p>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {data?.map(comp => (
+          <ComponentCard key={comp.component_code} componentCode={comp.component_code} signalCount={comp.signal_count} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+
+
+############################################################
+FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\pepsi\pages\components\SignalGroupTable.txt
+############################################################
+
+ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\pages\components\SignalGroupTable.tsx
+==================================================
+// src/pages/components/SignalGroupTable.tsx
+import { useState } from 'react';
+import type { ComponentSignal } from '../../api/components.api';
+
+export function SignalGroupTable({ signals, onSelectSignals }: { signals: ComponentSignal[]; onSelectSignals: (codes: string[]) => void }) {
+  const groups = signals.reduce((acc: Record<string, ComponentSignal[]>, s) => {
+    const fam = s.family ?? 'unknown';
+    acc[fam] = [...(acc[fam] || []), s];
+    return acc;
+  }, {});
+
+  const [selected, setSelected] = useState<string[]>([]);
+
+  const toggleSelect = (code: string) => {
+    const newSel = selected.includes(code) ? selected.filter(c => c !== code) : [...selected, code];
+    setSelected(newSel);
+    onSelectSignals(newSel);
+  };
+
+  return (
+    <div className="space-y-4">
+      {Object.entries(groups).map(([family, sigs]) => (
+        <div key={family}>
+          <h3 className="text-sm font-medium uppercase text-zinc-500">{family}</h3>
+          <table className="w-full text-sm mt-2 rounded-xl border border-zinc-800 bg-zinc-900">
+            <thead className="border-b border-zinc-800 text-zinc-400">
+              <tr>
+                <th className="px-4 py-2 text-left">Select</th>
+                <th className="px-4 py-2 text-left">Signal</th>
+                <th className="px-4 py-2 text-left">Type</th>
+                <th className="px-4 py-2 text-left">Unit</th>
+                <th className="px-4 py-2 text-left">Polarity</th>
+                <th className="px-4 py-2 text-left">Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              {sigs.map(s => (
+                <tr key={s.signal_code} className="border-b border-zinc-800 last:border-0">
+                  <td className="px-4 py-2">
+                    <input type="checkbox" checked={selected.includes(s.signal_code)} onChange={() => toggleSelect(s.signal_code)} />
+                  </td>
+                  <td className="px-4 py-2 font-mono text-xs">{s.signal_code}</td>
+                  <td className="px-4 py-2">{s.type}</td>
+                  <td className="px-4 py-2">{s.unit}</td>
+                  <td className="px-4 py-2">{s.polarity}</td>
+                  <td className="px-4 py-2 text-zinc-400">{s.description}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+
+
+############################################################
+FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\pepsi\pages\home\HomePage.txt
+############################################################
+
+ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\pages\home\HomePage.tsx
+==================================================
+// src/pages/home/HomePage.tsx (updated full file)
+import { useTimeWindow } from '../../context/TimeContext'; // For time context
+import { SystemGrid } from '../../components/control-room/SystemGrid';
+import { AlertSummary } from '../../components/control-room/AlertSummary';
+import { IncidentCard } from '../../components/control-room/IncidentCard';
+import { AnomalyStatus } from '../../components/control-room/AnomalyStatus';
+import { QuickActionsPanel } from '../../components/control-room/QuickActionsPanel';
+import { MiniLaneMap } from '../../components/control-room/MiniLaneMap';
+
+export function HomePage() {
+  const { window, setWindow } = useTimeWindow(); // Example enrichment: Time selector
+
+  return (
+    <div className="space-y-6">
+      <h1 className="text-2xl font-semibold tracking-tight">Control Room</h1>
+      <p className="text-sm text-zinc-400 max-w-xl">
+        System status at a glance. Monitor health, alerts, incidents, anomalies. Triage and act.
+      </p>
+
+      {/* Time Selector - Enrichment */}
+      <div className="flex items-center gap-4 text-sm">
+        <label className="text-zinc-500">Time Window:</label>
+        <input
+          type="number"
+          value={window.fromTick}
+          onChange={e => setWindow({ ...window, fromTick: +e.target.value })}
+          className="w-20 rounded border border-zinc-800 bg-zinc-950 px-2 py-1"
+        />
+        <span>â†’</span>
+        <input
+          type="number"
+          value={window.toTick}
+          onChange={e => setWindow({ ...window, toTick: +e.target.value })}
+          className="w-20 rounded border border-zinc-800 bg-zinc-950 px-2 py-1"
+        />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <AlertSummary />
+        <IncidentCard />
+        <AnomalyStatus />
+        <QuickActionsPanel />
+      </div>
+
+      <SystemGrid />
+
+      <MiniLaneMap />
+    </div>
+  );
+}
+
+
+
+############################################################
+FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\pepsi\pages\incidents\IncidentDetailsPage.txt
+############################################################
+
+ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\pages\incidents\IncidentDetailsPage.tsx
+==================================================
+// src/pages/incidents/IncidentDetailsPage.tsx
+import { useParams } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { fetchIncident, resolveIncident } from '../../api/incidents.api';
+import { useState } from 'react';
+import { AlertCircle, CheckCircle, Clock } from 'lucide-react';
+
+export function IncidentDetailsPage() {
+  const { id } = useParams<{ id: string }>();
+  const incidentId = Number(id);
+  const queryClient = useQueryClient();
+
+  const { data: incident, isLoading, isError } = useQuery({
+    queryKey: ['incident', incidentId],
+    queryFn: () => fetchIncident(incidentId),
+  });
+
+  const [note, setNote] = useState('');
+
+  const resolveMutation = useMutation({
+    mutationFn: () => resolveIncident(incidentId, note),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['incident', incidentId] });
+      queryClient.invalidateQueries({ queryKey: ['incidents'] });
+      setNote('');
+    },
+  });
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-zinc-400"></div>
+      </div>
+    );
+  }
+
+  if (isError || !incident) {
+    return (
+      <div className="rounded-xl border border-red-800 bg-red-950/20 p-10 text-center">
+        <AlertCircle className="mx-auto h-12 w-12 text-red-400 mb-4" />
+        <h2 className="text-xl font-bold text-red-300 mb-2">Incident Not Found</h2>
+        <p className="text-zinc-400">ID {id} doesn't exist or failed to load.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-8 pb-20">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row justify-between items-start gap-6">
+        <div>
+          <h1 className="text-3xl font-bold text-zinc-100 mb-2">{incident.title}</h1>
+          <p className="text-lg text-zinc-300">{incident.description || 'No description'}</p>
+        </div>
+        <div className="flex flex-wrap gap-3">
+          <span className={`px-4 py-1.5 rounded-full text-sm font-semibold ${
+            incident.severity === 'CRITICAL' ? 'bg-red-900/80 text-red-200 ring-1 ring-red-500/50' :
+            incident.severity === 'WARNING' ? 'bg-yellow-900/80 text-yellow-200 ring-1 ring-yellow-500/50' :
+            'bg-zinc-800 text-zinc-300'
+          }`}>
+            {incident.severity}
+          </span>
+          <span className={`px-4 py-1.5 rounded-full text-sm font-semibold ${
+            incident.status === 'OPEN' ? 'bg-red-900/80 text-red-200 ring-1 ring-red-500/50' :
+            incident.status === 'ACKNOWLEDGED' ? 'bg-yellow-900/80 text-yellow-200 ring-1 ring-yellow-500/50' :
+            'bg-emerald-900/80 text-emerald-200 ring-1 ring-emerald-500/50'
+          }`}>
+            {incident.status}
+          </span>
+        </div>
+      </div>
+
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="rounded-xl border border-zinc-800 bg-zinc-900/70 p-6 text-center">
+          <Clock className="mx-auto h-8 w-8 text-zinc-400 mb-2" />
+          <p className="text-sm text-zinc-400">Opened</p>
+          <p className="text-xl font-medium text-zinc-200 mt-1">
+            {new Date(incident.opened_at).toLocaleDateString()}
+          </p>
+        </div>
+
+        <div className="rounded-xl border border-zinc-800 bg-zinc-900/70 p-6 text-center">
+          <AlertCircle className="mx-auto h-8 w-8 text-amber-400 mb-2" />
+          <p className="text-sm text-zinc-400">Collapse Risk</p>
+          <p className="text-2xl font-bold text-amber-400 mt-1">
+            {incident.collapse_risk?.toFixed(2) ?? 'â€”'}
+          </p>
+        </div>
+
+        <div className="rounded-xl border border-zinc-800 bg-zinc-900/70 p-6 text-center">
+          <p className="text-sm text-zinc-400 mb-1">Affected Components</p>
+          <p className="text-lg font-medium text-zinc-300">
+            {incident.affected_components?.length 
+              ? incident.affected_components.join(', ') 
+              : 'None detected'}
+          </p>
+        </div>
+
+        <div className="rounded-xl border border-zinc-800 bg-zinc-900/70 p-6 text-center">
+          <p className="text-sm text-zinc-400 mb-1">Linked Alerts</p>
+          <p className="text-2xl font-bold text-zinc-200">
+            {incident.linked_alerts?.length ?? 0}
+          </p>
+        </div>
+      </div>
+
+      {/* Resolution */}
+      <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-6">
+        <h3 className="text-xl font-semibold text-zinc-100 mb-4 flex items-center gap-2">
+          <CheckCircle className="h-5 w-5 text-emerald-400" />
+          Resolution
+        </h3>
+
+        {incident.resolved_at ? (
+          <div className="p-6 rounded-lg bg-emerald-950/30 border border-emerald-800">
+            <p className="text-sm text-emerald-300 mb-2 font-medium">
+              Resolved on {new Date(incident.resolved_at).toLocaleString()}
+            </p>
+            <p className="text-zinc-300">{incident.resolution_note || 'No resolution note provided'}</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <textarea
+              className="w-full rounded-md border border-zinc-700 bg-zinc-950 p-4 text-sm text-zinc-300 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 min-h-[140px] resize-y"
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              placeholder="Enter resolution details, root cause, actions taken, lessons learned..."
+            />
+            <button
+              onClick={() => resolveMutation.mutate()}
+              disabled={resolveMutation.isPending || !note.trim()}
+              className="rounded-md bg-emerald-700 px-6 py-3 text-sm font-medium text-white hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+            >
+              {resolveMutation.isPending ? 'Resolving...' : 'Resolve & Close Incident'}
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Placeholders for upcoming features */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-6">
+          <h3 className="text-xl font-semibold text-zinc-100 mb-4">Timeline</h3>
+          <div className="h-64 bg-zinc-950/50 rounded-lg flex items-center justify-center text-zinc-500">
+            Timeline chart (Recharts) coming soon â€“ needs backend /timeline endpoint
+          </div>
+        </div>
+
+        <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-6">
+          <h3 className="text-xl font-semibold text-zinc-100 mb-4">Linked Alerts</h3>
+          <div className="h-64 bg-zinc-950/50 rounded-lg flex items-center justify-center text-zinc-500">
+            Full table with sparklines â€“ needs backend linked_alerts array
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+
+############################################################
+FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\pepsi\pages\incidents\IncidentsPage.txt
+############################################################
+
+ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\pages\incidents\IncidentsPage.tsx
+==================================================
+// src/pages/incidents/IncidentsPage.tsx
+import { useState, useEffect } from 'react';
+import { IncidentList } from '../../components/incidents/IncidentList';
+import { IncidentActions } from '../../components/incidents/IncidentActions';
+import { useQueryClient } from '@tanstack/react-query';
+
+export function IncidentsPage() {
+  const [activeTab, setActiveTab] = useState<'active' | 'history'>('active');
+  const queryClient = useQueryClient();
+
+  // Poll active incidents every 30s
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (activeTab === 'active') {
+        queryClient.invalidateQueries({ queryKey: ['incidents', 'OPEN'] });
+      }
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [activeTab, queryClient]);
+
+  return (
+    <div className="space-y-8">
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-bold text-zinc-100">Incidents Console</h1>
+        <IncidentActions />
+      </div>
+
+      <p className="text-sm text-zinc-400 max-w-xl">
+        Escalation layer for alerts. Group, triage, analyze propagation, resolve with notes. Real-time updates.
+      </p>
+
+      {/* Tabs */}
+      <div className="border-b border-zinc-800">
+        <div className="flex space-x-4">
+          <button
+            onClick={() => setActiveTab('active')}
+            className={`px-4 py-2 text-sm font-medium transition-colors ${
+              activeTab === 'active' ? 'border-b-2 border-zinc-200 text-zinc-100' : 'text-zinc-400 hover:text-zinc-200'
+            }`}
+          >
+            Active
+          </button>
+          <button
+            onClick={() => setActiveTab('history')}
+            className={`px-4 py-2 text-sm font-medium transition-colors ${
+              activeTab === 'history' ? 'border-b-2 border-zinc-200 text-zinc-100' : 'text-zinc-400 hover:text-zinc-200'
+            }`}
+          >
+            History
+          </button>
+        </div>
+      </div>
+
+      <IncidentList status={activeTab === 'active' ? 'OPEN' : 'RESOLVED'} />
+    </div>
+  );
+}
+
+
+

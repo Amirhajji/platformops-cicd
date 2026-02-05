@@ -1,0 +1,14 @@
+﻿ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\hooks\useGlobalHealth.ts
+==================================================
+// src/hooks/useGlobalHealth.ts
+import { useQuery } from "@tanstack/react-query";
+import { fetchGlobalHealth } from "../api/analytics.api";
+
+export function useGlobalHealth() {
+  return useQuery({
+    queryKey: ["global-health"],
+    queryFn: fetchGlobalHealth,
+    refetchInterval: 5000,
+  });
+}
+

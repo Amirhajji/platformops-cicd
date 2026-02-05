@@ -1,0 +1,81 @@
+// src/components/alerts/AlertList.tsx
+import { useQuery } from '@tanstack/react-query';
+import { fetchTimeseries } from '../../api/components.api';
+import { HealthBadge } from '../control-room/HealthBadge';
+import { LineChart, Line, ResponsiveContainer } from 'recharts';
+
+interface Alert {
+  id: number;
+  signal_code: string;
+  tick_start: number;
+  tick_end?: number;
+  peak_value: number;
+  severity: string;
+  status: string;
+  origin: string;
+}
+
+interface TimeseriesPoint {
+  tick: number;
+  value: number;
+}
+
+export function AlertList({ alerts, componentCode }: { alerts: Alert[]; componentCode: string }) {
+  const mapSeverityToStatus = (severity: string): 'OK' | 'DEGRADED' | 'CRITICAL' => {
+    const upper = severity.toUpperCase();
+    if (upper === 'CRITICAL') return 'CRITICAL';
+    if (upper === 'WARNING') return 'DEGRADED';
+    return 'OK';
+  };
+
+  const getSparkline = (alert: Alert) => {
+    const start = alert.tick_start - 10;
+    const end = alert.tick_end !== undefined ? alert.tick_end + 10 : alert.tick_start + 10;
+
+    return useQuery<TimeseriesPoint[]>({
+      queryKey: ['sparkline', alert.id],
+      queryFn: async () => {
+        const res = await fetchTimeseries(alert.signal_code, start, end);
+        return res; // Assume backend returns [{tick, value}]
+      },
+    });
+  };
+
+  return (
+    <table className="w-full text-sm rounded-xl border border-zinc-800 bg-zinc-900">
+      <thead className="border-b border-zinc-800 text-zinc-400">
+        <tr>
+          <th className="px-4 py-2 text-left">Signal</th>
+          <th className="px-4 py-2 text-left">Severity</th>
+          <th className="px-4 py-2 text-left">Status</th>
+          <th className="px-4 py-2 text-left">Origin</th>
+          <th className="px-4 py-2 text-left">Ticks</th>
+          <th className="px-4 py-2 text-left">Peak</th>
+          <th className="px-4 py-2 text-left">Sparkline</th>
+        </tr>
+      </thead>
+      <tbody>
+        {alerts.map(a => {
+          const { data: sparkData } = getSparkline(a);
+          return (
+            <tr key={a.id} className="border-b border-zinc-800 last:border-0">
+              <td className="px-4 py-2 font-mono text-xs">{a.signal_code}</td>
+              <td className="px-4 py-2"><HealthBadge status={mapSeverityToStatus(a.severity)} /></td>
+              <td className="px-4 py-2"><span className={`px-2 py-1 rounded text-xs ${a.status === 'OPEN' ? 'bg-red-950 text-red-400' : 'bg-emerald-950 text-emerald-400'}`}>{a.status}</span></td>
+              <td className="px-4 py-2"><span className={`px-2 py-1 rounded text-xs ${a.origin === 'SIMULATED' ? 'bg-yellow-950 text-yellow-400' : 'bg-zinc-800 text-zinc-200'}`}>{a.origin}</span></td>
+              <td className="px-4 py-2">{a.tick_start}-{a.tick_end ?? 'Ongoing'}</td>
+              <td className="px-4 py-2">{a.peak_value.toFixed(2)}</td>
+              <td className="px-4 py-2">
+                <ResponsiveContainer width={80} height={24}>
+                  <LineChart data={sparkData ?? []} margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
+                    <Line type="monotone" dataKey="value" stroke="#10b981" dot={false} strokeWidth={1} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </td>
+            </tr>
+          );
+        })}
+      </tbody>
+    </table>
+  );
+}

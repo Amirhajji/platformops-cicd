@@ -1,0 +1,20 @@
+// src/auth/guards.tsx
+import { Navigate, Outlet } from "react-router-dom";
+import { useAuth } from "./auth.store";
+
+export function ProtectedRoute() {
+  const { token } = useAuth();
+  if (!token) return <Navigate to="/login" replace />;
+  return <Outlet />;
+}
+
+export function AdminRoute() {
+  const { token, user } = useAuth();
+  if (!token) return <Navigate to="/login" replace />;
+
+  // backend sets is_admin based on roles containing "admin"
+  const isAdmin = user?.roles?.includes("admin") ?? false;
+  if (!isAdmin) return <Navigate to="/dashboard" replace />;
+
+  return <Outlet />;
+}

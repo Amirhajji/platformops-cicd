@@ -1,0 +1,377 @@
+FIRST — CORE TRUTH ABOUT YOUR BACKEND
+
+Your backend is not a generic monitoring backend.
+It has three unique properties that define everything:
+
+🔴 1. Timeseries is JSONB-payload based (wide metrics)
+
+One row = one tick per component
+
+Payload = all xi / yi / zi metrics
+
+Signals are metadata views over payload keys
+
+👉 UI must be signal-centric, not table-centric.
+
+🔴 2. Health is NOT a metric — it is COMPUTED
+
+Component health = aggregation of yi signals
+
+Global health = GLOBAL.z9_collapse_risk
+
+👉 UI must never fake health curves
+Only show what backend computes.
+
+🔴 3. Anomalies are FIRST-CLASS OPERATIONS
+
+They physically modify timeseries payload
+
+They create SIMULATED alerts
+
+They affect health and incidents downstream
+
+👉 This is not observability only
+👉 This is control + experimentation
+
+NOW — RE-LOCKING THE 7 MODULES (BACKEND-FAITHFUL)
+
+Below is the corrected, exact, feasible interpretation of:
+
+0 → 6 narrative stack
+
+
+Every feature below is backed by real endpoints you pasted.
+
+🟢 MODULE 0 — GLOBAL CONTROL ROOM (Mission View)
+WHAT IT IS (re-defined precisely)
+
+A read-only, global operational snapshot built from analytics + system + alerts + anomalies.
+
+BACKEND INPUTS (ONLY THESE)
+
+/api/analytics/global-health
+
+/api/analytics/system-stats
+
+/api/analytics/alerts-stats
+
+/api/analytics/active-hotspots
+
+/api/anomalies/active
+
+/api/anomalies/impact
+
+WHAT IT SHOWS (NO INVENTION)
+A. Global Health State
+
+collapse_risk
+
+status: STABLE / DEGRADED / CRITICAL
+
+B. System Ingestion Reality
+
+(from system-stats)
+
+total ingested rows
+
+components count
+
+tick range
+
+latest tick per component
+
+👉 This proves simulator + ingestion health
+
+C. Operational Pressure
+
+(from alerts-stats)
+
+open alerts by severity
+
+longest open alerts
+
+top components by alert count
+
+D. Active Anomaly Banner
+
+(from anomalies/active)
+
+simulation ON/OFF
+
+affected components
+
+total modified points
+
+E. Hotspots
+
+(from active-hotspots)
+
+signals currently driving instability
+
+📌 NO charts for beauty
+📌 Only counters, rankings, timelines
+
+🧭 MODULE 1 — SYSTEM TOPOLOGY & CHAINS VIEW
+WHAT IT IS
+
+A structural health map, not metrics.
+
+BACKEND INPUTS
+
+/api/system/overview
+
+/api/system/components
+
+/api/alerts/by-component/{component}
+
+/api/analytics/component-health/{component}
+
+WHAT IT SHOWS
+
+For each component node:
+
+health_score
+
+status (OK / DEGRADED / CRITICAL)
+
+active_alerts count
+
+👉 Topology is STATIC
+👉 Health & alert density are DYNAMIC
+
+No propagation arrows here — just structure + state
+
+🧠 MODULE 2 — COMPONENT INTELLIGENCE LAYER
+WHAT IT IS
+
+A deep diagnostic page per component
+
+BACKEND INPUTS
+
+/api/system/components/{component}
+
+/api/analytics/component-health/{component}
+
+/api/analytics/component-time-analysis/{component}
+
+/api/analytics/component-regimes/{component}
+
+/api/analytics/component-stress/{component}
+
+/api/alerts/by-component/{component}
+
+WHAT IT SHOWS
+A. Component Identity
+
+role
+
+health score
+
+number of signals
+
+open alerts
+
+B. Time Behavior
+
+(from component-time-analysis)
+
+health evolution over time
+
+degradation windows
+
+C. Regimes
+
+(from component-regimes)
+
+stable vs stressed vs recovery periods
+
+D. Stress Curve
+
+(from component-stress)
+
+response under load accumulation
+
+📌 This page is ENGINEERING-LEVEL
+📌 No raw xi spam here — this is interpretation
+
+📈 MODULE 3 — METRICS EXPLORER (Grafana-grade)
+WHAT IT IS
+
+The ONLY place where raw metrics are explored
+
+BACKEND INPUTS
+
+/api/signals?role=
+
+/api/timeseries
+
+/api/timeseries/multi
+
+/api/timeseries/aggregate
+
+/api/timeseries/derivative
+
+/api/timeseries/normalized
+
+WHAT IT DOES
+
+Select signals by:
+
+component
+
+family
+
+type (xi / yi)
+
+Plot:
+
+raw
+
+aggregated
+
+derivative
+
+normalized
+
+Overlay multiple signals
+
+📌 This is your Grafana replacement
+📌 BUT semantic (signal metadata aware)
+
+🚨 MODULE 4 — ALERTS & INCIDENTS (Operations Core)
+WHAT IT IS
+
+The operational truth layer
+
+BACKEND INPUTS
+
+/api/alerts/events
+
+/api/alerts/summary
+
+/api/incidents
+
+/api/incidents/{id}
+
+/api/alerts/evaluate
+
+/api/incidents/evaluate
+
+ALERTS VIEW
+
+OPEN / CLOSED
+
+REAL vs SIMULATED
+
+severity
+
+duration
+
+signal → metric context link
+
+INCIDENTS VIEW
+
+incident lifecycle
+
+component affected
+
+contributing alerts
+
+severity logic (density + duration)
+
+📌 This is PagerDuty-grade logic, not UI fluff
+
+🧪 MODULE 5 — ANOMALIES & IMPACT CONTROL
+WHAT IT IS
+
+A controlled chaos engineering panel
+
+BACKEND INPUTS
+
+/api/anomalies/inject
+
+/api/anomalies/active
+
+/api/anomalies/impact
+
+/api/anomalies/analysis
+
+/api/anomalies/rollback
+
+WHAT IT SHOWS
+A. Injection Control
+
+pipeline
+
+anomaly type
+
+tick window
+
+strength
+
+B. Active Anomaly Monitor
+
+affected components
+
+affected signals
+
+duration
+
+modified points
+
+C. Impact Analysis
+
+(from anomaly-impact)
+
+alert explosion
+
+component health drops
+
+metric deviation %
+
+📌 This is unique
+📌 Very few platforms do this correctly
+
+🧠 MODULE 6 — ANALYTICS, PROPAGATION, NARRATIVES
+WHAT IT IS
+
+The explainability layer
+
+BACKEND INPUTS
+
+/api/analytics/volatility
+
+/api/analytics/degradation
+
+/api/analytics/top-risk
+
+/api/analytics/forecast/*
+
+/api/analytics/signal-envelope
+
+/api/analytics/signal-change-impact
+
+/api/propagation
+
+WHAT IT SHOWS
+
+“Why this metric matters”
+
+Change impact before/after pivot
+
+Signal-to-signal propagation evidence
+
+Forecast stress continuation
+
+📌 This is system reasoning, not monitoring
+
+FINAL VERDICT (IMPORTANT)
+
+✅ The 7-layer narrative is VALID
+✅ It is 100% compatible with your backend
+✅ No fake APIs
+✅ No assumptions
+✅ No over-promising
+
+What you have is not a toy backend —
+it is already stronger than many real internal tools.

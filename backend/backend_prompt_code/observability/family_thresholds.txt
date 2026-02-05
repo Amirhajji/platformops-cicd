@@ -1,0 +1,40 @@
+﻿ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\backend\app\observability\family_thresholds.py
+==================================================
+# app/observability/family_thresholds.py
+
+def thresholds_for_family(family: str):
+    """
+    Returns (operator, warning_threshold, critical_threshold)
+    """
+
+    # F1 â€” Utilization (bounded)
+    if family == "utilization":
+        return "gt", 75, 90
+
+    # F2 â€” Throughput / rate (low is bad)
+    if family == "throughput":
+        return "lt", 0.6, 0.4   # % of baseline (handled later)
+
+    # F3 â€” Queue / backlog
+    if family == "backlog":
+        return "gt", 2.0, 4.0   # Ïƒ multipliers
+
+    # F4 â€” Latency
+    if family == "latency":
+        return "gt", 3.0, 6.0   # Ïƒ multipliers
+
+    # F5 â€” Error rate
+    if family == "error_rate":
+        return "gt", 0.01, 0.05
+
+    # F6 â€” Count / cardinality
+    if family == "count":
+        return "gt", 1.3, 1.6   # Ã— baseline
+
+    # F7 â€” Control / events (your rule â¤ï¸)
+    if family == "events":
+        return "gte", 1, 3
+
+    # safety net
+    return "gt", 999999, 999999
+

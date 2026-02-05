@@ -1,0 +1,46 @@
+﻿ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\router.tsx
+==================================================
+// src/router.tsx
+import { createBrowserRouter } from "react-router-dom";
+import { LoginPage } from "./pages/auth/LoginPage";
+import { SignupPage } from "./pages/auth/SignupPage";
+import { VerifyEmailPage } from "./pages/auth/VerifyEmailPage";
+import { ProtectedRoute } from "./auth/guards";
+import { AppShell } from "./components/layout/AppShell";
+import { HomePage } from "./pages/home/HomePage";
+import { ComponentsPage } from "./pages/components/ComponentsPage";
+import { ComponentDetailsPage } from "./pages/components/ComponentDetailsPage";
+import { AlertsPage } from "./pages/alerts/AlertsPage";
+import { AnomaliesPage } from "./pages/anomalies/AnomaliesPage";
+import { IncidentsPage } from "./pages/incidents/IncidentsPage";
+import { IncidentDetailsPage } from "./pages/incidents/IncidentDetailsPage";
+import { AnalyticsPage } from "./pages/analytics/AnalyticsPage";
+
+export const router = createBrowserRouter([
+  { path: "/login", element: <LoginPage /> },
+  { path: "/signup", element: <SignupPage /> },
+  { path: "/verify-email", element: <VerifyEmailPage /> },
+
+
+  {
+    element: <ProtectedRoute />,
+    children: [
+      {
+        element: <AppShell />,
+        children: [
+          { path: "/home", element: <HomePage /> },
+          { path: "/components", element: <ComponentsPage /> }, // New: List
+          { path: "/components/:code", element: <ComponentDetailsPage /> }, // New: Details
+          { path: "/alerts", element: <AlertsPage /> },
+          { path: "/anomalies", element: <AnomaliesPage /> },
+          { path: "/incidents", element: <IncidentsPage /> },
+          { path: "/incidents/:id", element: <IncidentDetailsPage /> },
+          { path: "/analytics", element: <AnalyticsPage /> },
+
+          
+        ],
+      },
+    ],
+  },
+]);
+

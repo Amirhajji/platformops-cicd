@@ -1,0 +1,32 @@
+﻿ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\backend\app\api\incidents.py
+==================================================
+# app/api/incidents.py
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+
+from app.db.session import get_db
+from app.db.models.incidents import Incident
+from app.services.incident_service import evaluate_incidents
+
+
+router = APIRouter(prefix="/api/incidents", tags=["Incidents"])
+
+
+@router.post("/evaluate")
+def evaluate(db: Session = Depends(get_db)):
+    return evaluate_incidents(db)
+
+
+@router.get("/")
+def list_incidents(db: Session = Depends(get_db)):
+    return db.query(Incident).order_by(Incident.id.desc()).all()
+
+
+@router.get("/{incident_id}")
+def get_incident(incident_id: int, db: Session = Depends(get_db)):
+    return (
+        db.query(Incident)
+        .filter(Incident.id == incident_id)
+        .one_or_none()
+    )
+

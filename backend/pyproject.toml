@@ -1,0 +1,20 @@
+[project]
+name = "platformops-backend"
+version = "0.1.0"
+description = "Monitoring & analytics backend for PlatformOPS simulator"
+requires-python = ">=3.11"
+
+dependencies = [
+    "fastapi",
+    "uvicorn[standard]",
+    "sqlalchemy>=2.0",
+    "psycopg[binary]",
+    "pydantic",
+    "pydantic-settings",
+    "python-jose[cryptography]",
+    "passlib[bcrypt]",
+    "pandas",
+    "alembic",
+    "pytest",
+    "httpx"
+]

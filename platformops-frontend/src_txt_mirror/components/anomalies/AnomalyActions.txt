@@ -1,0 +1,24 @@
+﻿ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\components\anomalies\AnomalyActions.tsx
+==================================================
+// src/components/anomalies/AnomalyActions.tsx
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { rollbackAnomaly } from '../../api/anomalies.api';
+
+export function AnomalyActions() {
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation({
+    mutationFn: rollbackAnomaly,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['activeAnomaly', 'anomalyImpact', 'anomalyAnalysis'] }),
+  });
+
+  return (
+    <button
+      onClick={() => mutation.mutate()}
+      disabled={mutation.isPending}
+      className="rounded bg-red-700 px-4 py-2 text-sm hover:bg-red-600 disabled:opacity-50"
+    >
+      {mutation.isPending ? 'Rolling back...' : 'Rollback Anomaly'}
+    </button>
+  );
+}

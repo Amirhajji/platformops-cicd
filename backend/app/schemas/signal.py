@@ -1,0 +1,14 @@
+# app/schemas/signal.py
+from pydantic import BaseModel
+
+class SignalOut(BaseModel):
+    signal_code: str
+    component_code: str
+    signal_type: str
+    unit: str | None
+    polarity: str | None
+    family: str | None
+    description: str | None
+
+    class Config:
+        from_attributes = True

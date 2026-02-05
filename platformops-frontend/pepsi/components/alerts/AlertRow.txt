@@ -1,0 +1,81 @@
+﻿ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\components\alerts\AlertRow.tsx
+==================================================
+// src/components/alerts/AlertRow.tsx
+import { useQuery } from '@tanstack/react-query';
+import { fetchTimeseries } from '../../api/components.api';
+import { ResponsiveContainer, LineChart, Line } from 'recharts';
+import { Link } from 'react-router-dom';
+import { LinkIcon } from 'lucide-react';
+import type { AlertEvent } from '../../api/alerts.api';
+
+type Props = {
+  alert: AlertEvent;
+};
+
+export function AlertRow({ alert }: Props) {
+  const start = alert.tick_start - 10;
+  const end = alert.tick_end ?? alert.tick_start + 10;
+
+  const { data: sparkData = [] } = useQuery({
+    queryKey: ['sparkline', alert.id],
+    queryFn: () => fetchTimeseries(alert.signal_code, start, end),
+  });
+
+  const color =
+    alert.severity === 'critical' ? '#ef4444' :
+    alert.severity === 'warning' ? '#eab308' :
+    '#6b7280';
+
+  return (
+    <tr className="hover:bg-zinc-800/50 transition-colors">
+      <td className="whitespace-nowrap px-6 py-4 font-mono text-xs text-zinc-300">{alert.signal_code}</td>
+      <td className="whitespace-nowrap px-6 py-4">
+        <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${
+          alert.severity === 'critical' ? 'bg-red-950 text-red-400' :
+          alert.severity === 'warning' ? 'bg-yellow-950 text-yellow-400' :
+          'bg-zinc-800 text-zinc-300'
+        }`}>
+          {alert.severity.toUpperCase()}
+        </span>
+      </td>
+      <td className="whitespace-nowrap px-6 py-4">
+        <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${
+          alert.status === 'OPEN' ? 'bg-red-950 text-red-400' : 'bg-emerald-950 text-emerald-400'
+        }`}>
+          {alert.status}
+        </span>
+      </td>
+      <td className="whitespace-nowrap px-6 py-4">
+        <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${
+          alert.origin === 'SIMULATED' ? 'bg-purple-950 text-purple-400' : 'bg-zinc-800 text-zinc-300'
+        }`}>
+          {alert.origin}
+        </span>
+      </td>
+      <td className="whitespace-nowrap px-6 py-4 text-sm text-zinc-300">
+        {alert.tick_start} â€“ {alert.tick_end ?? 'Ongoing'}
+      </td>
+      <td className="whitespace-nowrap px-6 py-4 text-sm text-zinc-300">
+        {alert.peak_value?.toFixed(2) ?? 'N/A'}
+      </td>
+      <td className="px-6 py-4">
+        <div className="h-8 w-28">
+          <ResponsiveContainer>
+            <LineChart data={sparkData} margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
+              <Line type="monotone" dataKey="value" stroke={color} dot={false} strokeWidth={1.5} />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      </td>
+      <td className="whitespace-nowrap px-6 py-4 text-right text-sm">
+        <Link
+          to={`/components/${alert.component_code}`}
+          className="inline-flex items-center text-zinc-400 hover:text-zinc-200"
+        >
+          <LinkIcon size={16} className="mr-1" />
+          View
+        </Link>
+      </td>
+    </tr>
+  );
+}

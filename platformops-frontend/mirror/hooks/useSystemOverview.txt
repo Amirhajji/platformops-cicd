@@ -1,0 +1,14 @@
+﻿ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\hooks\useSystemOverview.ts
+==================================================
+// src/hooks/useSystemOverview.ts
+import { useQuery } from "@tanstack/react-query";
+import { fetchSystemOverview } from "../api/system.api";
+
+export function useSystemOverview() {
+  return useQuery({
+    queryKey: ["system", "overview"],
+    queryFn: fetchSystemOverview,
+    refetchInterval: 5000,
+  });
+}
+

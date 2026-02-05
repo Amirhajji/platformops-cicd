@@ -1,0 +1,23 @@
+﻿ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\api\alerts.api.ts
+==================================================
+import { http } from "./http";
+
+export function evaluateAlerts(simulation = false, lookback = 200) {
+  return http.post("/api/alerts/evaluate", null, {
+    params: {
+      lookback_ticks: lookback,
+      simulation_mode: simulation,
+    },
+  });
+}
+
+export function resetAndEvaluate(lookback = 200) {
+  return http.post("/api/alerts/reset-and-evaluate", null, {
+    params: { lookback_ticks: lookback },
+  });
+}
+
+export function fetchAlertSummary() {
+  return http.get("/api/alerts/summary").then(r => r.data);
+}
+

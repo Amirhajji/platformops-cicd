@@ -1,0 +1,8 @@
+﻿ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\api\incidents.api.ts
+==================================================
+import { http } from "./http";
+
+export function evaluateIncidents() {
+  return http.post("/api/incidents/evaluate");
+}
+

@@ -1,0 +1,79 @@
+﻿ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\api\analytics.api.ts
+==================================================
+// src/api/analytics.api.ts
+import { http } from "./http";
+
+// Global health (returns number or { health: number })
+export async function fetchGlobalHealth() {
+  const { data } = await http.get<number | { health: number }>("/api/analytics/global-health");
+  return typeof data === 'object' ? data.health : data;
+}
+
+// Component health
+export async function fetchComponentHealth(code: string) {
+  const { data } = await http.get<number>(`/api/analytics/component-health/${code}`);
+  return data;
+}
+
+// Volatility (returns number)
+export async function fetchVolatility(signal: string, window = 10) {
+  const { data } = await http.get<number>(`/api/analytics/volatility`, {
+    params: { signal_code: signal, window },
+  });
+  return data;
+}
+
+// Forecast (array of points)
+export async function fetchForecast(signal: string, horizon = 50) {
+  const { data } = await http.get<ForecastPoint[]>(`/api/analytics/forecast/signal`, {
+    params: { signal_code: signal, horizon_ticks: horizon },
+  });
+  return data;
+}
+
+export type ForecastPoint = {
+  tick: number;
+  value: number;
+  upper: number;
+  lower: number;
+};
+
+// Regimes
+export async function fetchRegimes(component: string) {
+  const { data } = await http.get<Regime[]>(`/api/analytics/component-regimes/${component}`, {
+    params: { window: 1440, bucket_size: 60 },
+  });
+  return data;
+}
+
+export type Regime = {
+  start_tick: number;
+  end_tick: number;
+  type: string;
+};
+
+// Stress curve
+export async function fetchStressCurve(component: string) {
+  const { data } = await http.get<StressCurve[]>(`/api/analytics/component-stress/${component}`, {
+    params: { window: 600, bucket: 20 },
+  });
+  return data;
+}
+
+export type StressCurve = {
+  tick: number;
+  stress_level: number;
+};
+
+// Change impact
+export async function fetchChangeImpact(signal?: string) {
+  const params = signal ? { signal_code: signal } : {};
+  const { data } = await http.get<ChangeImpact[]>(`/api/analytics/signal-change-impact`, { params });
+  return data;
+}
+
+export type ChangeImpact = {
+  change_tick: number;
+  impact_score: number;
+  affected_signals: string[];
+};

@@ -1,0 +1,28 @@
+﻿ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\pages\components\ComponentsPage.tsx
+==================================================
+// src/pages/components/ComponentsPage.tsx
+import { useQuery } from '@tanstack/react-query';
+import { fetchComponents } from '../../api/components.api';
+import { Link } from 'react-router-dom';
+import { ComponentCard } from '../../components/components/ComponentCard'; // Existing, but update if needed for health
+
+export function ComponentsPage() {
+  const { data, isLoading } = useQuery({
+    queryKey: ['components'],
+    queryFn: fetchComponents,
+  });
+
+  if (isLoading) return <div className="text-zinc-400">Loading components...</div>;
+
+  return (
+    <div className="space-y-6">
+      <h1 className="text-2xl font-semibold">Components Explorer</h1>
+      <p className="text-sm text-zinc-400">Inventory of monitored cloud services. Select for details.</p>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {data?.map(comp => (
+          <ComponentCard key={comp.component_code} componentCode={comp.component_code} signalCount={comp.signal_count} />
+        ))}
+      </div>
+    </div>
+  );
+}

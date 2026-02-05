@@ -1,0 +1,84 @@
+﻿ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\pages\alerts\RulesPage.tsx
+==================================================
+// src/pages/alerts/RulesPage.tsx
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { fetchAlertRules, generateAllRules } from '../../api/alerts.api';
+
+export function RulesPage() {
+  const queryClient = useQueryClient();
+
+  const { data: rules, isLoading } = useQuery({
+    queryKey: ['alertRules'],
+    queryFn: fetchAlertRules,
+  });
+
+  const generateMutation = useMutation({
+    mutationFn: generateAllRules,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['alertRules'] }),
+  });
+
+  if (isLoading) {
+    return <div className="text-center text-zinc-400 animate-pulse">Loading rules...</div>;
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-end">
+        <button
+          onClick={() => generateMutation.mutate()}
+          disabled={generateMutation.isPending}
+          className="rounded-md bg-zinc-700 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-600 disabled:opacity-50 transition-colors"
+        >
+          {generateMutation.isPending ? 'Generating...' : 'Generate All Rules'}
+        </button>
+      </div>
+
+      {rules?.length === 0 ? (
+        <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-8 text-center text-zinc-500">
+          No alert rules yet. Click "Generate All Rules" to create them based on your signals.
+        </div>
+      ) : (
+        <div className="overflow-x-auto rounded-xl border border-zinc-800 bg-zinc-900">
+          <table className="min-w-full divide-y divide-zinc-800">
+            <thead className="bg-zinc-950">
+              <tr>
+                <th className="px-6 py-4 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">Signal</th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">Operator</th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">Threshold</th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">Duration (ticks)</th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">Severity</th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">Enabled</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-zinc-800">
+              {rules?.map((rule) => (
+                <tr key={rule.id} className="hover:bg-zinc-800/50 transition-colors">
+                  <td className="whitespace-nowrap px-6 py-4 text-sm font-mono text-zinc-300">{rule.signal_code}</td>
+                  <td className="whitespace-nowrap px-6 py-4 text-sm text-zinc-300">{rule.operator}</td>
+                  <td className="whitespace-nowrap px-6 py-4 text-sm text-zinc-300">{rule.threshold}</td>
+                  <td className="whitespace-nowrap px-6 py-4 text-sm text-zinc-300">{rule.min_duration_ticks}</td>
+                  <td className="whitespace-nowrap px-6 py-4">
+                    <span
+                      className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                        rule.severity === 'critical'
+                          ? 'bg-red-950 text-red-400'
+                          : rule.severity === 'warning'
+                          ? 'bg-yellow-950 text-yellow-400'
+                          : 'bg-zinc-800 text-zinc-300'
+                      }`}
+                    >
+                      {rule.severity.toUpperCase()}
+                    </span>
+                  </td>
+                  <td className="whitespace-nowrap px-6 py-4 text-sm text-zinc-300">
+                    {rule.enabled ? 'Yes' : 'No'}
+                  </td>
+                </tr>
+              )) ?? null}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}

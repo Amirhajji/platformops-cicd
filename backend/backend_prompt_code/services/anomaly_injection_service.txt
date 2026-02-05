@@ -1,0 +1,144 @@
+﻿ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\backend\app\services\anomaly_injection_service.py
+==================================================
+# app/services/anomaly_injection_service.py
+from __future__ import annotations
+
+import json
+import random
+from typing import Dict, Any, List
+
+from sqlalchemy.orm import Session
+from sqlalchemy import text
+
+from app.db.models.signals import Signal
+from app.db.models.anomalies import InjectedAnomaly
+from app.observability.metric_families import detect_family
+
+
+PIPELINES = {
+    "stream_lane": ["C2", "C3", "C6", "C8"],
+    "rail": ["C1", "C6"],
+}
+
+ANOMALY_DEFINITIONS = {
+    "cpu_saturation": {"families": ["utilization"], "base_factor": 1.4},
+    "error_spike": {"families": ["error_rate"], "base_factor": 5.0},
+    "latency_regression": {"families": ["latency"], "base_factor": 2.5},
+    "event_storm": {"families": ["events"], "base_factor": 3.0},
+    "backlog_growth": {
+        "families": ["backlog", "latency"],
+        "base_factor": 3.0,
+        "propagates": True,
+    },
+}
+
+
+def _guard_single_anomaly(db: Session):
+    active = db.query(InjectedAnomaly.id).first()
+    if active:
+        raise RuntimeError("An anomaly is already active. Rollback first.")
+
+
+def _apply_shift(value: float, factor: float) -> float:
+    jitter = 1.0 + random.uniform(-0.02, 0.02)
+    return float(value * factor * jitter)
+
+
+def inject_anomaly(
+    db: Session,
+    pipeline: str,
+    anomaly_type: str,
+    from_tick: int,
+    to_tick: int,
+    strength: float = 1.0,
+) -> int:
+
+    _guard_single_anomaly(db)
+
+    if pipeline not in PIPELINES:
+        raise ValueError(f"Unknown pipeline '{pipeline}'")
+
+    if anomaly_type not in ANOMALY_DEFINITIONS:
+        raise ValueError(f"Unknown anomaly '{anomaly_type}'")
+
+    definition = ANOMALY_DEFINITIONS[anomaly_type]
+    families = definition["families"]
+    base_factor = definition["base_factor"]
+    propagates = definition.get("propagates", False)
+
+    components = PIPELINES[pipeline]
+
+    signals = db.query(Signal).filter(
+        Signal.component_code.in_(components)
+    ).all()
+
+    affected = 0
+    anomaly_rows: List[InjectedAnomaly] = []
+
+    for idx, component in enumerate(components):
+        decay = 1.0 / (1 + idx) if propagates else 1.0
+        factor = 1.0 + (base_factor * strength * decay)
+
+        rows = db.execute(
+            text("""
+                SELECT id, tick, payload
+                FROM timeseries_points
+                WHERE component_code = :component
+                  AND tick BETWEEN :from_tick AND :to_tick
+                ORDER BY tick
+            """),
+            {
+                "component": component,
+                "from_tick": from_tick,
+                "to_tick": to_tick,
+            },
+        ).fetchall()
+
+        if not rows:
+            continue
+
+        component_signals = [s for s in signals if s.component_code == component]
+
+        for row in rows:
+            payload = dict(row.payload)
+            changed = False
+
+            for s in component_signals:
+                family = detect_family(s.column_name)
+                if family not in families:
+                    continue
+
+                old_val = payload.get(s.column_name)
+                if not isinstance(old_val, (int, float)):
+                    continue
+
+                new_val = _apply_shift(old_val, factor)
+                payload[s.column_name] = new_val
+
+                anomaly_rows.append(
+                    InjectedAnomaly(
+                        signal_code=s.signal_code,
+                        component_code=component,
+                        tick=row.tick,
+                        original_value=old_val,
+                        anomaly_type=anomaly_type,
+                    )
+                )
+
+                affected += 1
+                changed = True
+
+            if changed:
+                db.execute(
+                    text("""
+                        UPDATE timeseries_points
+                        SET payload = CAST(:payload AS jsonb)
+                        WHERE id = :id
+                    """),
+                    {"payload": json.dumps(payload), "id": row.id},
+                )
+
+    db.add_all(anomaly_rows)
+    db.commit()
+    return affected
+

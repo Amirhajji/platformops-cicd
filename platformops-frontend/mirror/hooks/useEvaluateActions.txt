@@ -1,0 +1,82 @@
+﻿ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\hooks\useEvaluateActions.ts
+==================================================
+// src/hooks/useEvaluateActions.ts
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { evaluateAlerts, resetAndEvaluate } from "../api/alerts.api";
+import { evaluateIncidents } from "../api/incidents.api";
+
+export function useEvaluateActions() {
+  const qc = useQueryClient();
+
+  const invalidate = async (label: string) => {
+    console.group(`ðŸ”„ INVALIDATE AFTER ${label}`);
+    await qc.invalidateQueries();
+    console.log("Queries invalidated, UI will refetch");
+    console.groupEnd();
+  };
+
+  const evalAlerts = useMutation({
+    mutationFn: async () => {
+      console.group("ðŸš¨ EVALUATE ALERTS (REAL)");
+      console.log("Sending request to /api/alerts/evaluate");
+      const res = await evaluateAlerts(false, 500);
+      console.log("Backend response:", res.data ?? res);
+      console.groupEnd();
+      return res;
+    },
+    onSuccess: async () => {
+      console.log("âœ… Alert evaluation completed");
+      await invalidate("ALERT EVAL");
+    },
+    onError: (err) => {
+      console.error("âŒ Alert evaluation failed", err);
+    },
+  });
+
+  const resetEval = useMutation({
+    mutationFn: async () => {
+      console.group("â™»ï¸ RESET + EVALUATE ALERTS");
+      console.log("Sending request to /api/alerts/reset-and-evaluate");
+      const res = await resetAndEvaluate(500);
+      console.log("Backend response:", res.data ?? res);
+      console.groupEnd();
+      return res;
+    },
+    onSuccess: async () => {
+      console.log("âœ… Reset + evaluation completed");
+      await invalidate("RESET + EVAL");
+    },
+    onError: (err) => {
+      console.error("âŒ Reset + evaluation failed", err);
+    },
+  });
+
+  const evalIncidents = useMutation({
+    mutationFn: async () => {
+      console.group("ðŸ”¥ EVALUATE INCIDENTS");
+      console.log("Sending request to /api/incidents/evaluate");
+      const res = await evaluateIncidents();
+      console.log("Backend response:", res.data ?? res);
+      console.groupEnd();
+      return res;
+    },
+    onSuccess: async () => {
+      console.log("âœ… Incident evaluation completed");
+      await invalidate("INCIDENT EVAL");
+    },
+    onError: (err) => {
+      console.error("âŒ Incident evaluation failed", err);
+    },
+  });
+
+  return {
+    evalAlerts,
+    resetEval,
+    evalIncidents,
+    isBusy:
+      evalAlerts.isPending ||
+      resetEval.isPending ||
+      evalIncidents.isPending,
+  };
+}
+

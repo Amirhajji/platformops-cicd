@@ -1,0 +1,39 @@
+﻿ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\auth\auth.api.ts
+==================================================
+// src/auth/auth.api.ts
+import { http } from "../api/http";
+
+export type TokenResponse = { access_token: string; token_type?: string };
+
+export type UserInfo = {
+  id: string;
+  username: string;
+  roles: string[];
+  is_active: boolean;
+};
+
+export async function signup(username: string, password: string) {
+  const { data } = await http.post("/api/auth/signup", { username, password });
+  return data as { id: string; username: string };
+}
+
+export async function login(username: string, password: string) {
+  const { data } = await http.post<TokenResponse>("/api/auth/login", {
+    username,
+    password,
+  });
+  return data;
+}
+
+export async function me() {
+  const { data } = await http.get<UserInfo>("/api/auth/me");
+  return data;
+}
+
+export async function verifyEmail(token: string) {
+  const { data } = await http.get("/api/auth/verify-email", {
+    params: { token },
+  });
+  return data as { message: string };
+}
+
