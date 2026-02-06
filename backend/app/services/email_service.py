@@ -2,6 +2,7 @@
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from typing import Optional
 
 from app.core.config import settings
 
@@ -10,7 +11,7 @@ def send_email(
     to_email: str,
     subject: str,
     text: str,
-    html: str | None = None,
+    html: Optional[str] = None,
 ):
     msg = MIMEMultipart("alternative")
     msg["From"] = settings.SMTP_FROM_EMAIL
