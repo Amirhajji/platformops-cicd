@@ -26,8 +26,8 @@ class ComponentHealth(BaseModel):
 # New: System stats
 # -------------------------
 class TickRange(BaseModel):
-    min_tick: int | None = None
-    max_tick: int | None = None
+    min_tick: Optional[int] = None
+    max_tick: Optional[int] = None
 
 
 class SystemIngestionStats(BaseModel):
@@ -39,9 +39,9 @@ class SystemIngestionStats(BaseModel):
 
 class SignalInventoryStats(BaseModel):
     total_signals: int
-    by_type: Dict[str, int] = Field(default_factory=dict)      # xi/yi/zi
-    by_family: Dict[str, int] = Field(default_factory=dict)    # AUTO_Cx or your families
-    by_role_visibility: Dict[str, int] = Field(default_factory=dict)  # how many signals visible to each role
+    by_type: Dict[str, int] = Field(default_factory=dict)
+    by_family: Dict[str, int] = Field(default_factory=dict)
+    by_role_visibility: Dict[str, int] = Field(default_factory=dict)
 
 
 class RuleCoverageStats(BaseModel):
@@ -82,7 +82,7 @@ class LongestOpenAlert(BaseModel):
 
 
 class AlertsStatsResponse(BaseModel):
-    window: Dict[str, int | None]  # from_tick/to_tick
+    window: Dict[str, Optional[int]]  # FIXED
     totals: Dict[str, int]
     by_severity: Dict[str, int]
     by_status: Dict[str, int]
@@ -100,7 +100,7 @@ class ComponentRanking(BaseModel):
     open_alerts: int
     critical_open_alerts: int
     warning_open_alerts: int
-    risk_score: float  # composite score used for ranking
+    risk_score: float
 
 
 class ComponentRankingsResponse(BaseModel):
