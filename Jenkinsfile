@@ -27,15 +27,14 @@ pipeline {
     stage('Backend: build + package') {
       steps {
         dir('backend') {
-          sh '''
+          sh '''#!/bin/bash
             set -euxo pipefail
 
             python3 -m venv .venv
-            . .venv/bin/activate
+            source .venv/bin/activate
             python -m pip install --upgrade pip
             pip install -r requirements.txt
 
-            # CI-safe import test (DB disabled via CI=true)
             python -c "import app.main; print('Backend import OK')"
 
             ART="backend-${GIT_SHA}.zip"
@@ -55,7 +54,7 @@ pipeline {
     stage('Frontend: build + package') {
       steps {
         dir('platformops-frontend') {
-          sh '''
+          sh '''#!/bin/bash
             set -euxo pipefail
 
             npm ci
@@ -76,7 +75,7 @@ pipeline {
 
     stage('Verify + archive artifacts') {
       steps {
-        sh '''
+        sh '''#!/bin/bash
           set -euxo pipefail
 
           test -f "backend/backend-${GIT_SHA}.zip"
