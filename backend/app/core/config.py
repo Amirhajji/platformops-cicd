@@ -1,7 +1,7 @@
 # app/core/config.py
 from datetime import timedelta
+from typing import Optional
 from pydantic_settings import BaseSettings, SettingsConfigDict
-
 
 
 class Settings(BaseSettings):
@@ -11,7 +11,6 @@ class Settings(BaseSettings):
     APP_NAME: str = "PlatformOPS Backend"
     DEBUG: bool = True
     APP_PUBLIC_BASE_URL: str = "http://127.0.0.1:8000"
-
 
     # --------------------
     # Database
@@ -28,13 +27,14 @@ class Settings(BaseSettings):
     SECRET_KEY: str = "CHANGE_ME_SUPER_SECRET"
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24  # 24 hours
+
     # --------------------
     # SMTP (NEW)
     # --------------------
     SMTP_HOST: str = "localhost"
     SMTP_PORT: int = 1025
-    SMTP_USERNAME: str | None = None
-    SMTP_PASSWORD: str | None = None
+    SMTP_USERNAME: Optional[str] = None
+    SMTP_PASSWORD: Optional[str] = None
     SMTP_FROM_EMAIL: str = "platformops@local.test"
 
     # --------------------
@@ -56,5 +56,3 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
-
-
