@@ -2,7 +2,6 @@ pipeline {
   agent any
 
   options {
-    timestamps()
     skipDefaultCheckout(true)
     disableConcurrentBuilds()
   }
@@ -12,6 +11,7 @@ pipeline {
   }
 
   stages {
+
     stage('Checkout') {
       steps {
         deleteDir()
@@ -35,13 +35,16 @@ pipeline {
             python -m pip install --upgrade pip
             pip install -r requirements.txt
 
-            # Import-safety check (CI=true prevents DB init)
+            # CI-safe import test (DB disabled via CI=true)
             python -c "import app.main; print('Backend import OK')"
 
             ART="backend-${GIT_SHA}.zip"
             rm -f "$ART"
+
             zip -r "$ART" app requirements.txt \
-              -x "*.pyc" -x "__pycache__/*" -x ".venv/*"
+              -x "*.pyc" \
+              -x "__pycache__/*" \
+              -x ".venv/*"
 
             ls -lh "$ART"
           '''
@@ -62,6 +65,7 @@ pipeline {
 
             ART="frontend-${GIT_SHA}.zip"
             rm -f "$ART"
+
             (cd dist && zip -r "../$ART" .)
 
             ls -lh "$ART"
@@ -84,8 +88,10 @@ pipeline {
           mkdir -p artifacts
           cp "backend/backend-${GIT_SHA}.zip" artifacts/
           cp "platformops-frontend/frontend-${GIT_SHA}.zip" artifacts/
+
           ls -lh artifacts
         '''
+
         archiveArtifacts artifacts: 'artifacts/*.zip', fingerprint: true
       }
     }
