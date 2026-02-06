@@ -1,6 +1,6 @@
-# app/api/alerts.py
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
+from typing import Optional
 
 from app.db.models.incidents import IncidentAlert
 from app.db.session import get_db
@@ -9,7 +9,6 @@ from app.db.models.signals import Signal
 
 from app.services.alerts_insight_service import alert_summary, alerts_by_component
 from app.services.alert_service import evaluate_alerts
-
 
 
 router = APIRouter(prefix="/api/alerts", tags=["Alerts"])
@@ -60,7 +59,6 @@ def evaluate(
     )
 
 
-
 @router.post("/reset-and-evaluate")
 def reset_and_evaluate(
     lookback_ticks: int = 200,
@@ -77,15 +75,14 @@ def reset_and_evaluate(
     )
 
 
-
 # ------------------------------------------------------------------
 # EVENTS & INSIGHTS
 # ------------------------------------------------------------------
 
 @router.get("/events")
 def list_events(
-    signal_code: str | None = None,
-    status: str | None = None,
+    signal_code: Optional[str] = None,
+    status: Optional[str] = None,
     limit: int = 100,
     db: Session = Depends(get_db),
 ):
