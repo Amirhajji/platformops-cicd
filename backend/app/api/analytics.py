@@ -1,3 +1,5 @@
+from typing import Optional
+
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
@@ -31,22 +33,11 @@ from app.services.analytics_service import component_stress_curve
 from app.services.analytics_service import signal_change_impact
 
 
-
-
-
-
-
-
-
-
-
-
-
 router = APIRouter(prefix="/api/analytics", tags=["Analytics"])
 
 
 # -------------------------
-# Existing endpoints (kept) 
+# Existing endpoints (kept)
 # -------------------------
 @router.get("/volatility")
 def volatility(
@@ -97,8 +88,8 @@ def system_stats_api(db: Session = Depends(get_db)):
 
 @router.get("/alerts-stats")
 def alerts_stats_api(
-    from_tick: int | None = None,
-    to_tick: int | None = None,
+    from_tick: Optional[int] = None,
+    to_tick: Optional[int] = None,
     limit: int = 10,
     db: Session = Depends(get_db),
 ):
@@ -137,9 +128,6 @@ def component_time_analysis_api(
     db: Session = Depends(get_db),
 ):
     return component_time_analysis(db, component_code, max_ticks)
-  
-
-
 
 
 @router.get("/forecast/signal")
@@ -166,7 +154,6 @@ def forecast_component_api(
         component_code=component_code,
         horizon_ticks=horizon_ticks,
     )
-
 
 
 @router.get("/component-regimes/{component_code}")
