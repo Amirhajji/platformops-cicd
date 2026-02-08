@@ -7,4 +7,5 @@ python-dotenv
 python-jose[cryptography]
 passlib[bcrypt]
 pydantic-settings
+numpy
 
