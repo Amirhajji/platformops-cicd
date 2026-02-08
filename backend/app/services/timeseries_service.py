@@ -1,18 +1,19 @@
-# app/services/timeseries_service.py
 import statistics
+import math
+from typing import Optional
+
 from sqlalchemy.orm import Session
 from sqlalchemy import Float, text
+
 from app.db.models.signals import Signal
-from sqlalchemy.orm import Session
 from app.db.models.timeseries import TimeSeriesPoint
-import math
 
 
 def get_timeseries(
     db: Session,
     signal_code: str,
-    from_tick: int | None,
-    to_tick: int | None,
+    from_tick: Optional[int],
+    to_tick: Optional[int],
 ):
     # 1️⃣ Load signal metadata
     signal = (
@@ -64,6 +65,7 @@ def get_timeseries(
         }
         for r in rows
     ]
+
 
 def _extract_series(db, component_code, column_name, limit=30):
     rows = (
@@ -141,9 +143,11 @@ def component_health(db: Session, component_code: str):
 
 # ---------- GLOBAL HEALTH ----------
 def global_health(db: Session):
-    signal = db.query(Signal).filter(Signal.signal_code == "GLOBAL.z9_collapse_risk").first()
-    values = _extract_series(db, "GLOBAL", signal.column_name, limit=1)
+    signal = db.query(Signal).filter(
+        Signal.signal_code == "GLOBAL.z9_collapse_risk"
+    ).first()
 
+    values = _extract_series(db, "GLOBAL", signal.column_name, limit=1)
     risk = values[0] if values else 0.0
 
     return {
@@ -164,11 +168,11 @@ def multi_signal(db, signal_codes):
                 to_tick=None,
             )
         except Exception as e:
-            result[code] = {
-                "error": str(e)
-            }
+            result[code] = {"error": str(e)}
 
-    return result #
+    return result
+
+
 def aggregate_signal(db, signal_code: str, window: int = 10, agg_type: str = "avg"):
     points = get_timeseries(db, signal_code, None, None)
 
@@ -206,15 +210,14 @@ def aggregate_signal(db, signal_code: str, window: int = 10, agg_type: str = "av
 
 def derivative_signal(db, signal_code: str):
     signal_code = signal_code.strip()
-
     points = get_timeseries(db, signal_code, None, None)
 
     if len(points) < 2:
         return []
 
     derivatives = []
-
     prev = points[0]
+
     for curr in points[1:]:
         derivatives.append({
             "tick": curr["tick"],
@@ -228,7 +231,6 @@ def derivative_signal(db, signal_code: str):
 
 def normalize_signal(db, signal_code: str):
     signal_code = signal_code.strip()
-
     points = get_timeseries(db, signal_code, None, None)
 
     if not points:
@@ -238,7 +240,6 @@ def normalize_signal(db, signal_code: str):
     min_v = min(values)
     max_v = max(values)
 
-    # avoid division by zero
     if max_v == min_v:
         return [
             {
