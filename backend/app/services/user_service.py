@@ -1,10 +1,11 @@
-# app/services/user_service.py
+from typing import List
 from sqlalchemy.orm import Session
-from app.db.models.users import User, Role
 from fastapi import HTTPException
 
+from app.db.models.users import User, Role
 
-def assign_roles(db: Session, user_id: str, roles: list[str]):
+
+def assign_roles(db: Session, user_id: str, roles: List[str]):
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
