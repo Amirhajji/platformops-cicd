@@ -96,59 +96,59 @@ pipeline {
     }
 
     stage('Publish artifacts to Nexus') {
-    steps {
-        script {
-            def sha = env.GIT_SHA
+  steps {
+    script {
+      def sha = env.GIT_SHA
 
-            def backendFile = "backend/backend-${sha}.zip"
-            def frontendFile = "platformops-frontend/frontend-${sha}.zip"
+      def backendFile = "backend/backend-${sha}.zip"
+      def frontendFile = "platformops-frontend/frontend-${sha}.zip"
 
-            sh """
-                test -f ${backendFile}
-                test -f ${frontendFile}
-            """
+      sh """
+        test -f ${backendFile}
+        test -f ${frontendFile}
+      """
 
-            withCredentials([usernamePassword(
-                credentialsId: 'nexus-credentials',
-                usernameVariable: 'NEXUS_USER',
-                passwordVariable: 'NEXUS_PASS'
-            )]) {
+      withCredentials([usernamePassword(
+        credentialsId: 'nexus-credentials',
+        usernameVariable: 'NEXUS_USER',
+        passwordVariable: 'NEXUS_PASS'
+      )]) {
 
-                sh """
-                set -e
+        sh '''
+        set -e
 
-                BACKEND_URL="http://192.168.21.132:8081/repository/backend-releases/backend/${sha}/backend-${sha}.zip"
-                FRONTEND_URL="http://192.168.21.132:8081/repository/frontend-releases/frontend/${sha}/frontend-${sha}.zip"
+        BACKEND_URL="http://192.168.21.132:8081/repository/backend-releases/backend/'"${GIT_SHA}"'/backend-'"${GIT_SHA}"'.zip"
+        FRONTEND_URL="http://192.168.21.132:8081/repository/frontend-releases/frontend/'"${GIT_SHA}"'/frontend-'"${GIT_SHA}"'.zip"
 
-                echo "Uploading backend artifact..."
-                curl -u "$NEXUS_USER:$NEXUS_PASS" --fail --upload-file ${backendFile} "$BACKEND_URL"
+        echo "Uploading backend artifact..."
+        curl -u "$NEXUS_USER:$NEXUS_PASS" --fail --upload-file backend/backend-${GIT_SHA}.zip "$BACKEND_URL"
 
-                echo "Uploading frontend artifact..."
-                curl -u "$NEXUS_USER:$NEXUS_PASS" --fail --upload-file ${frontendFile} "$FRONTEND_URL"
+        echo "Uploading frontend artifact..."
+        curl -u "$NEXUS_USER:$NEXUS_PASS" --fail --upload-file platformops-frontend/frontend-${GIT_SHA}.zip "$FRONTEND_URL"
 
-                echo "Downloading back for integrity check..."
+        echo "Downloading back for integrity check..."
 
-                curl -u "$NEXUS_USER:$NEXUS_PASS" -o tmp_backend.zip "$BACKEND_URL"
-                curl -u "$NEXUS_USER:$NEXUS_PASS" -o tmp_frontend.zip "$FRONTEND_URL"
+        curl -u "$NEXUS_USER:$NEXUS_PASS" -o tmp_backend.zip "$BACKEND_URL"
+        curl -u "$NEXUS_USER:$NEXUS_PASS" -o tmp_frontend.zip "$FRONTEND_URL"
 
-                echo "Computing checksums..."
+        echo "Computing checksums..."
 
-                sha256sum ${backendFile} > orig_backend.sha
-                sha256sum tmp_backend.zip > dl_backend.sha
+        sha256sum backend/backend-${GIT_SHA}.zip > orig_backend.sha
+        sha256sum tmp_backend.zip > dl_backend.sha
 
-                sha256sum ${frontendFile} > orig_frontend.sha
-                sha256sum tmp_frontend.zip > dl_frontend.sha
+        sha256sum platformops-frontend/frontend-${GIT_SHA}.zip > orig_frontend.sha
+        sha256sum tmp_frontend.zip > dl_frontend.sha
 
-                echo "Verifying integrity..."
+        echo "Verifying integrity..."
 
-                diff orig_backend.sha dl_backend.sha
-                diff orig_frontend.sha dl_frontend.sha
+        diff orig_backend.sha dl_backend.sha
+        diff orig_frontend.sha dl_frontend.sha
 
-                echo "Nexus upload verified successfully."
-                """
-            }
-        }
+        echo "Nexus upload verified successfully."
+        '''
+      }
     }
+  }
 }
 
   }
