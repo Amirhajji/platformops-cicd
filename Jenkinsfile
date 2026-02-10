@@ -117,8 +117,9 @@ pipeline {
         sh '''
         set -e
 
-        BACKEND_URL="http://192.168.21.132:8081/repository/backend-releases/backend/'"${GIT_SHA}"'/backend-'"${GIT_SHA}"'.zip"
-        FRONTEND_URL="http://192.168.21.132:8081/repository/frontend-releases/frontend/'"${GIT_SHA}"'/frontend-'"${GIT_SHA}"'.zip"
+        BACKEND_URL="http://192.168.21.132:8081/repository/backend-releases/backend/${GIT_SHA}/backend-${GIT_SHA}.zip"
+
+        FRONTEND_URL="http://192.168.21.132:8081/repository/frontend-releases/frontend/${GIT_SHA}/frontend-${GIT_SHA}.zip"
 
         echo "Uploading backend artifact..."
         curl -u "$NEXUS_USER:$NEXUS_PASS" --fail --upload-file backend/backend-${GIT_SHA}.zip "$BACKEND_URL"
