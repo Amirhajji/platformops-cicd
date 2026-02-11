@@ -137,45 +137,57 @@ pipeline {
       }
     }
 
-    stage('Deploy Backend') {
-      steps {
-        withCredentials([usernamePassword(
-          credentialsId: 'nexus-credentials',
-          usernameVariable: 'NEXUS_USER',
-          passwordVariable: 'NEXUS_PASS'
-        )]) {
+   stage('Deploy Backend') {
+  steps {
+    withCredentials([usernamePassword(
+      credentialsId: 'nexus-credentials',
+      usernameVariable: 'NEXUS_USER',
+      passwordVariable: 'NEXUS_PASS'
+    )]) {
 
-          sh '''#!/bin/bash
-            set -eux
+      sh '''#!/bin/bash
+        set -eux
 
-            SHA="${GIT_SHA}"
+        SHA="${GIT_SHA}"
 
-            ssh ${SSH_USER}@${BACKEND_HOST} "
-              set -eux
+        ssh ${SSH_USER}@${BACKEND_HOST} "
+          set -eux
 
-              REL=/opt/backend/releases/${SHA}
-              TMP=/tmp/backend-${SHA}.zip
+          REL=/opt/backend/releases/${SHA}
+          TMP=/tmp/backend-${SHA}.zip
 
-              sudo mkdir -p \\$REL
+          sudo mkdir -p \\$REL
 
-              curl -u ${NEXUS_USER}:${NEXUS_PASS} -f -L \
-                -o \\$TMP \
-                ${NEXUS_BASE}/repository/backend-releases/backend/${SHA}/backend-${SHA}.zip
+          curl -u ${NEXUS_USER}:${NEXUS_PASS} -f -L \
+            -o \\$TMP \
+            ${NEXUS_BASE}/repository/backend-releases/backend/${SHA}/backend-${SHA}.zip
 
-              sudo unzip -oq \\$TMP -d \\$REL
+          sudo unzip -oq \\$TMP -d \\$REL
 
-              sudo python3 -m venv \\$REL/venv
-              sudo \\$REL/venv/bin/pip install -r \\$REL/requirements.txt
+          sudo python3 -m venv \\$REL/venv
+          sudo \\$REL/venv/bin/pip install -r \\$REL/requirements.txt
 
-              sudo ln -sfn \\$REL /opt/backend/current
-              sudo systemctl restart backend
-            "
+          sudo ln -sfn \\$REL /opt/backend/current
+          sudo systemctl restart backend
+        "
 
-            curl -f ${BACKEND_HEALTH}
-          '''
-        }
-      }
+        echo "Waiting for backend to become healthy..."
+
+        for i in {1..30}; do
+          if curl -sf ${BACKEND_HEALTH}; then
+            echo "Backend is healthy"
+            exit 0
+          fi
+          sleep 2
+        done
+
+        echo "Backend failed health check"
+        exit 1
+      '''
     }
+  }
+}
+
 
     stage('Deploy Frontend') {
       steps {
