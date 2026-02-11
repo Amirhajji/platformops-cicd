@@ -9,7 +9,7 @@ pipeline {
   environment {
     CI = "true"
 
-    // Infra
+    // Infra : 
     NEXUS_BASE = "http://192.168.21.132:8081"
     BACKEND_HOST = "192.168.21.133"
     FRONTEND_HOST = "192.168.21.134"
