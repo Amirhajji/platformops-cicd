@@ -8,6 +8,15 @@ pipeline {
 
   environment {
     CI = "true"
+
+    // Infra
+    NEXUS_BASE = "http://192.168.21.132:8081"
+    BACKEND_HOST = "192.168.21.133"
+    FRONTEND_HOST = "192.168.21.134"
+    SSH_USER = "devops"
+
+    BACKEND_HEALTH = "http://192.168.21.133:8000/health"
+    FRONTEND_URL = "http://192.168.21.134"
   }
 
   stages {
@@ -97,56 +106,114 @@ pipeline {
 
     stage('Publish artifacts to Nexus') {
       steps {
-        script {
-          def sha = env.GIT_SHA
+        withCredentials([usernamePassword(
+          credentialsId: 'nexus-credentials',
+          usernameVariable: 'NEXUS_USER',
+          passwordVariable: 'NEXUS_PASS'
+        )]) {
 
-          def backendFile = "backend/backend-${sha}.zip"
-          def frontendFile = "platformops-frontend/frontend-${sha}.zip"
+          sh '''
+            set -euxo pipefail
 
-          sh """
-            test -f ${backendFile}
-            test -f ${frontendFile}
-          """
+            BACKEND_URL="${NEXUS_BASE}/repository/backend-releases/backend/${GIT_SHA}/backend-${GIT_SHA}.zip"
+            FRONTEND_URL="${NEXUS_BASE}/repository/frontend-releases/frontend/${GIT_SHA}/frontend-${GIT_SHA}.zip"
 
-          withCredentials([usernamePassword(
-            credentialsId: 'nexus-credentials',
-            usernameVariable: 'NEXUS_USER',
-            passwordVariable: 'NEXUS_PASS'
-          )]) {
+            curl -u "$NEXUS_USER:$NEXUS_PASS" --fail --upload-file backend/backend-${GIT_SHA}.zip "$BACKEND_URL"
+            curl -u "$NEXUS_USER:$NEXUS_PASS" --fail --upload-file platformops-frontend/frontend-${GIT_SHA}.zip "$FRONTEND_URL"
 
-            sh '''
-              set -e
+            curl -u "$NEXUS_USER:$NEXUS_PASS" -o tmp_backend.zip "$BACKEND_URL"
+            curl -u "$NEXUS_USER:$NEXUS_PASS" -o tmp_frontend.zip "$FRONTEND_URL"
 
-              BACKEND_URL="http://192.168.21.132:8081/repository/backend-releases/backend/${GIT_SHA}/backend-${GIT_SHA}.zip"
-              FRONTEND_URL="http://192.168.21.132:8081/repository/frontend-releases/frontend/${GIT_SHA}/frontend-${GIT_SHA}.zip"
+            sha256sum backend/backend-${GIT_SHA}.zip | awk '{print $1}' > orig_backend.sha
+            sha256sum tmp_backend.zip | awk '{print $1}' > dl_backend.sha
 
-              echo "Uploading backend artifact..."
-              curl -u "$NEXUS_USER:$NEXUS_PASS" --fail --upload-file backend/backend-${GIT_SHA}.zip "$BACKEND_URL"
+            sha256sum platformops-frontend/frontend-${GIT_SHA}.zip | awk '{print $1}' > orig_frontend.sha
+            sha256sum tmp_frontend.zip | awk '{print $1}' > dl_frontend.sha
 
-              echo "Uploading frontend artifact..."
-              curl -u "$NEXUS_USER:$NEXUS_PASS" --fail --upload-file platformops-frontend/frontend-${GIT_SHA}.zip "$FRONTEND_URL"
+            diff orig_backend.sha dl_backend.sha
+            diff orig_frontend.sha dl_frontend.sha
+          '''
+        }
+      }
+    }
 
-              echo "Downloading back for integrity check..."
+    // ------------------------
+    // ZONE 8 — DEPLOY BACKEND
+    // ------------------------
+    stage('Deploy Backend') {
+      steps {
+        withCredentials([usernamePassword(
+          credentialsId: 'nexus-credentials',
+          usernameVariable: 'NEXUS_USER',
+          passwordVariable: 'NEXUS_PASS'
+        )]) {
 
-              curl -u "$NEXUS_USER:$NEXUS_PASS" -o tmp_backend.zip "$BACKEND_URL"
-              curl -u "$NEXUS_USER:$NEXUS_PASS" -o tmp_frontend.zip "$FRONTEND_URL"
+          sh '''
+            set -euxo pipefail
 
-              echo "Computing checksums (hash-only comparison)..."
+            ssh ${SSH_USER}@${BACKEND_HOST} bash -s -- <<'EOS'
+              set -euxo pipefail
 
-              sha256sum backend/backend-${GIT_SHA}.zip | awk '{print $1}' > orig_backend.sha
-              sha256sum tmp_backend.zip | awk '{print $1}' > dl_backend.sha
+              SHA="${GIT_SHA}"
+              REL="/opt/backend/releases/${SHA}"
+              TMP="/tmp/backend-${SHA}.zip"
 
-              sha256sum platformops-frontend/frontend-${GIT_SHA}.zip | awk '{print $1}' > orig_frontend.sha
-              sha256sum tmp_frontend.zip | awk '{print $1}' > dl_frontend.sha
+              sudo mkdir -p "$REL"
 
-              echo "Verifying integrity..."
+              curl -u "${NEXUS_USER}:${NEXUS_PASS}" -f -L \
+                -o "$TMP" \
+                "${NEXUS_BASE}/repository/backend-releases/backend/${SHA}/backend-${SHA}.zip"
 
-              diff orig_backend.sha dl_backend.sha
-              diff orig_frontend.sha dl_frontend.sha
+              sudo unzip -oq "$TMP" -d "$REL"
 
-              echo "Nexus upload verified successfully."
-            '''
-          }
+              sudo python3 -m venv "$REL/venv"
+              sudo "$REL/venv/bin/pip" install -r "$REL/requirements.txt"
+
+              sudo ln -sfn "$REL" /opt/backend/current
+              sudo systemctl restart backend
+            EOS
+
+            curl -f ${BACKEND_HEALTH}
+          '''
+        }
+      }
+    }
+
+    // ------------------------
+    // ZONE 8 — DEPLOY FRONTEND
+    // ------------------------
+    stage('Deploy Frontend') {
+      steps {
+        withCredentials([usernamePassword(
+          credentialsId: 'nexus-credentials',
+          usernameVariable: 'NEXUS_USER',
+          passwordVariable: 'NEXUS_PASS'
+        )]) {
+
+          sh '''
+            set -euxo pipefail
+
+            ssh ${SSH_USER}@${FRONTEND_HOST} bash -s -- <<'EOS'
+              set -euxo pipefail
+
+              SHA="${GIT_SHA}"
+              REL="/var/www/frontend/releases/${SHA}"
+              TMP="/tmp/frontend-${SHA}.zip"
+
+              sudo mkdir -p "$REL"
+
+              curl -u "${NEXUS_USER}:${NEXUS_PASS}" -f -L \
+                -o "$TMP" \
+                "${NEXUS_BASE}/repository/frontend-releases/frontend/${SHA}/frontend-${SHA}.zip"
+
+              sudo unzip -oq "$TMP" -d "$REL"
+
+              sudo ln -sfn "$REL" /var/www/frontend/current
+              sudo systemctl reload nginx
+            EOS
+
+            curl -f ${FRONTEND_URL}
+          '''
         }
       }
     }
