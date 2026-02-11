@@ -148,33 +148,34 @@ pipeline {
           passwordVariable: 'NEXUS_PASS'
         )]) {
 
-          sh '''#!/bin/bash
+          sh """
             set -euxo pipefail
 
-            ssh ${SSH_USER}@${BACKEND_HOST} bash -s -- <<'EOS'
+            SHA=${GIT_SHA}
+
+            ssh ${SSH_USER}@${BACKEND_HOST} "
               set -euxo pipefail
 
-              SHA="${GIT_SHA}"
-              REL="/opt/backend/releases/${SHA}"
-              TMP="/tmp/backend-${SHA}.zip"
+              REL=/opt/backend/releases/\$SHA
+              TMP=/tmp/backend-\$SHA.zip
 
-              sudo mkdir -p "$REL"
+              sudo mkdir -p \$REL
 
-              curl -u "${NEXUS_USER}:${NEXUS_PASS}" -f -L \
-                -o "$TMP" \
-                "${NEXUS_BASE}/repository/backend-releases/backend/${SHA}/backend-${SHA}.zip"
+              curl -u ${NEXUS_USER}:${NEXUS_PASS} -f -L \
+                -o \$TMP \
+                ${NEXUS_BASE}/repository/backend-releases/backend/\$SHA/backend-\$SHA.zip
 
-              sudo unzip -oq "$TMP" -d "$REL"
+              sudo unzip -oq \$TMP -d \$REL
 
-              sudo python3 -m venv "$REL/venv"
-              sudo "$REL/venv/bin/pip" install -r "$REL/requirements.txt"
+              sudo python3 -m venv \$REL/venv
+              sudo \$REL/venv/bin/pip install -r \$REL/requirements.txt
 
-              sudo ln -sfn "$REL" /opt/backend/current
+              sudo ln -sfn \$REL /opt/backend/current
               sudo systemctl restart backend
-            EOS
+            "
 
             curl -f ${BACKEND_HEALTH}
-          '''
+          """
         }
       }
     }
@@ -190,30 +191,31 @@ pipeline {
           passwordVariable: 'NEXUS_PASS'
         )]) {
 
-          sh '''#!/bin/bash
+          sh """
             set -euxo pipefail
 
-            ssh ${SSH_USER}@${FRONTEND_HOST} bash -s -- <<'EOS'
+            SHA=${GIT_SHA}
+
+            ssh ${SSH_USER}@${FRONTEND_HOST} "
               set -euxo pipefail
 
-              SHA="${GIT_SHA}"
-              REL="/var/www/frontend/releases/${SHA}"
-              TMP="/tmp/frontend-${SHA}.zip"
+              REL=/var/www/frontend/releases/\$SHA
+              TMP=/tmp/frontend-\$SHA.zip
 
-              sudo mkdir -p "$REL"
+              sudo mkdir -p \$REL
 
-              curl -u "${NEXUS_USER}:${NEXUS_PASS}" -f -L \
-                -o "$TMP" \
-                "${NEXUS_BASE}/repository/frontend-releases/frontend/${SHA}/frontend-${SHA}.zip"
+              curl -u ${NEXUS_USER}:${NEXUS_PASS} -f -L \
+                -o \$TMP \
+                ${NEXUS_BASE}/repository/frontend-releases/frontend/\$SHA/frontend-\$SHA.zip
 
-              sudo unzip -oq "$TMP" -d "$REL"
+              sudo unzip -oq \$TMP -d \$REL
 
-              sudo ln -sfn "$REL" /var/www/frontend/current
+              sudo ln -sfn \$REL /var/www/frontend/current
               sudo systemctl reload nginx
-            EOS
+            "
 
             curl -f ${FRONTEND_URL}
-          '''
+          """
         }
       }
     }
