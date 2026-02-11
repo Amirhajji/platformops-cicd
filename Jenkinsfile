@@ -112,7 +112,7 @@ pipeline {
           passwordVariable: 'NEXUS_PASS'
         )]) {
 
-          sh '''
+          sh '''#!/bin/bash
             set -euxo pipefail
 
             BACKEND_URL="${NEXUS_BASE}/repository/backend-releases/backend/${GIT_SHA}/backend-${GIT_SHA}.zip"
@@ -148,7 +148,7 @@ pipeline {
           passwordVariable: 'NEXUS_PASS'
         )]) {
 
-          sh '''
+          sh '''#!/bin/bash
             set -euxo pipefail
 
             ssh ${SSH_USER}@${BACKEND_HOST} bash -s -- <<'EOS'
@@ -190,7 +190,7 @@ pipeline {
           passwordVariable: 'NEXUS_PASS'
         )]) {
 
-          sh '''
+          sh '''#!/bin/bash
             set -euxo pipefail
 
             ssh ${SSH_USER}@${FRONTEND_HOST} bash -s -- <<'EOS'
