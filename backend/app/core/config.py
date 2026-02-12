@@ -8,7 +8,12 @@ class Settings(BaseSettings):
     DEBUG: bool = True
     APP_PUBLIC_BASE_URL: str = "http://127.0.0.1:8000"
 
-    DB_HOST: str = "localhost"
+    # For VM deployment:
+    DB_HOST: str = "192.168.21.1"
+
+    # For local Windows execution:
+    # DB_HOST: str = "localhost"
+
     DB_PORT: int = 5432
     DB_NAME: str = "platformops"
     DB_USER: str = "platformops"
