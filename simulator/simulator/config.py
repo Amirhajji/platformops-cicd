@@ -28,6 +28,7 @@ class ConfigError(ValueError):
 class Metric:
     id: str
     level: str
+    unit: str
     kind: str
     period_min: int
     decimals: int
@@ -119,6 +120,7 @@ def _load_metric(raw: dict[str, Any], path: Path) -> Metric:
     return Metric(
         id=raw["id"],
         level=raw["level"],
+        unit=raw["unit"],
         kind=kind,
         period_min=raw["period_min"],
         decimals=raw["decimals"],
