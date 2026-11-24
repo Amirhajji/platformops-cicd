@@ -1,4 +1,4 @@
-# PlatformOPS simulator: reference spec (frozen v1.1)
+# PlatformOPS simulator: reference spec (frozen v1.2)
 
 All values are frozen in `simulator/config/` (run.yaml, kpis.yaml, components/*.yaml). The exact algorithm is in section 9 of PlatformOPS_Simulator_Specification.pdf.
 
@@ -92,3 +92,6 @@ Full spec with generation rules, output contract, compatibility and acceptance c
 ## 4. Not in the model
 
 No propagation between components, no hidden states, no daily curve.
+
+## Changelog
+- v1.2: official ranges ">= N" now keep N (3 CCE cpu_limit_core metrics: >= 1); container CPU limit 0.5 -> 1 core, matching the Huawei AOM range.

@@ -17,7 +17,7 @@ metrics:
   level: cluster
   unit: cores
   official_range:
-  - 0.0
+  - 1.0
   - null
   period_min: 1
   decimals: 3
@@ -386,7 +386,7 @@ metrics:
   level: node
   unit: cores
   official_range:
-  - 0.0
+  - 1.0
   - null
   period_min: 1
   decimals: 3
@@ -574,12 +574,12 @@ metrics:
   level: container
   unit: cores
   official_range:
-  - 0.0
+  - 1.0
   - null
   period_min: 1
   decimals: 3
   kind: constant
-  value: 0.5
+  value: 1
 - id: aom_container_cpu_used_core
   name: Used CPU Cores
   namespace: AOM PAAS.CONTAINER

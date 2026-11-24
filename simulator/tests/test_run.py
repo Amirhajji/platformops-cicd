@@ -31,7 +31,7 @@ def test_full_run_passes_validate(output, capsys):
     assert main(["validate", "--output", str(output)]) == 0
     printed = capsys.readouterr().out
     assert "FAIL" not in printed
-    assert "18/18 checks passed" in printed
+    assert "19/19 checks passed" in printed
 
 
 def test_validate_fails_on_wrong_output(output, tmp_path, capsys):
@@ -50,7 +50,7 @@ def test_validate_fails_on_wrong_output(output, tmp_path, capsys):
     assert main(["validate", "--output", str(folder)]) == 1
     failed = [line for line in capsys.readouterr().out.splitlines()
               if line.startswith("FAIL")]
-    for check in ("official_range", "decimals", "only on their period",
+    for check in ("official_range", "catalog value_range", "decimals", "only on their period",
                   "derived columns", "KPI values and health", "recomputed from y",
                   "status matches", "labels match", "manifest"):
         assert any(check in line for line in failed), check

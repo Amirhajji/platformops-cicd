@@ -157,6 +157,27 @@ def check_x_ranges(out: Output) -> Problems:
                 yield f"{component.id} {resource}.{metric.id} tick {tick}: {value}"
 
 
+def _catalog_range(text: str) -> Callable[[float], bool]:
+    """Catalog notation: ">=N", ">N", "A-B" or "0 or 1"."""
+    if text == "0 or 1":
+        return lambda value: value in (0, 1)
+    if match := re.fullmatch(r">(=?)(\d+)", text):
+        low = float(match[2])
+        return (lambda value: value >= low) if match[1] else (lambda value: value > low)
+    low, high = (float(part) for part in text.split("-"))
+    return lambda value: low <= value <= high
+
+
+def check_x_catalog_ranges(out: Output) -> Problems:
+    for component, resource, metric, values in out.series():
+        text = out.catalog_rows(component)[metric.id]["value_range"]
+        in_range = _catalog_range(text)
+        for tick, value in enumerate(values):
+            if not (math.isfinite(value) and in_range(value)):
+                yield f"{component.id} {resource}.{metric.id} tick {tick}: " \
+                      f"{value} is not {text}"
+
+
 def check_x_decimals(out: Output) -> Problems:
     for component in out.run.components:
         yield from out.x[component.id].format_errors
@@ -406,6 +427,7 @@ CHECKS: list[tuple[str, Callable[[Output], Problems]]] = [
     ("x: 8 files, 10,080 rows, ticks and timestamps", check_x_shape),
     ("x: 504 columns, in-scope catalog x resources", check_x_columns),
     ("x: values inside official_range", check_x_ranges),
+    ("x: values inside the catalog value_range", check_x_catalog_ranges),
     ("x: decimals, counts are whole numbers", check_x_decimals),
     ("x: values change only on their period", check_x_periods),
     ("x: random and flag values follow the incidents", check_x_incidents),
