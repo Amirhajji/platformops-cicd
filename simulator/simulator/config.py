@@ -1,4 +1,4 @@
-"""Load and check the frozen configuration (run.yaml + components/*.yaml)."""
+"""Load and check the frozen configuration (run.yaml, kpis.yaml, components/*.yaml)."""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -39,6 +39,7 @@ class Metric:
 @dataclass(frozen=True)
 class Component:
     id: str
+    name: str
     stem: str  # component file name without extension, e.g. "C1_dws"
     resources: dict[str, list[str]]  # level -> resource names
     metrics: list[Metric]
@@ -65,6 +66,8 @@ class RunConfig:
     tick_seconds: int
     ticks: int
     components: list[Component]
+    kpis: list[dict[str, Any]]  # entries of kpis.yaml
+    status_bands: dict[str, list[float]]  # status -> [low, high]
 
     def timestamp(self, tick: int) -> str:
         moment = self.start_utc + timedelta(seconds=tick * self.tick_seconds)
@@ -78,7 +81,9 @@ def load_config(config_dir: Path) -> RunConfig:
         _load_component(config_dir / relative, run["incidents"])
         for relative in run["components"]
     ]
-    return RunConfig(run["seed"], start, run["tick_seconds"], run["ticks"], components)
+    kpi_config = _read_yaml(config_dir / "kpis.yaml")
+    return RunConfig(run["seed"], start, run["tick_seconds"], run["ticks"], components,
+                     kpi_config["kpis"], kpi_config["status_bands"])
 
 
 def _read_yaml(path: Path) -> Any:
@@ -90,6 +95,7 @@ def _load_component(path: Path, incidents: dict[str, Any]) -> Component:
     raw = _read_yaml(path)
     component = Component(
         id=raw["id"],
+        name=raw["name"],
         stem=path.stem,
         resources=raw["resources"],
         metrics=[_load_metric(entry, path) for entry in raw["metrics"]],
