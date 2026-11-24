@@ -1,0 +1,375 @@
+id: C1
+name: GaussDB(DWS)
+resources:
+  cluster:
+  - cluster
+  node:
+  - node1
+  - node2
+  - node3
+metrics:
+- id: dws001_shared_buffer_hit_ratio
+  name: Cache Hit Ratio
+  namespace: SYS.DWS
+  level: cluster
+  unit: '%'
+  official_range:
+  - 0.0
+  - 100.0
+  period_min: 4
+  decimals: 2
+  kind: random
+  normal:
+  - 96
+  - 99.5
+  bad:
+  - 70
+  - 85
+- id: dws002_in_memory_sort_ratio
+  name: In-memory Sort Ratio
+  namespace: SYS.DWS
+  level: cluster
+  unit: '%'
+  official_range:
+  - 0.0
+  - 100.0
+  period_min: 4
+  decimals: 2
+  kind: random
+  normal:
+  - 90
+  - 99
+  bad:
+  - 50
+  - 75
+- id: dws003_physical_reads
+  name: File Reads
+  namespace: SYS.DWS
+  level: cluster
+  unit: count
+  official_range:
+  - 0.0
+  - null
+  period_min: 4
+  decimals: 0
+  kind: random
+  normal:
+  - 16000
+  - 24000
+  bad:
+  - 60000
+  - 120000
+- id: dws004_physical_writes
+  name: File Writes
+  namespace: SYS.DWS
+  level: cluster
+  unit: count
+  official_range:
+  - 0.0
+  - null
+  period_min: 4
+  decimals: 0
+  kind: random
+  normal:
+  - 6400
+  - 9600
+  bad:
+  - 20000
+  - 40000
+- id: dws005_physical_reads_per_second
+  name: File Reads per Second
+  namespace: SYS.DWS
+  level: cluster
+  unit: count/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 4
+  decimals: 2
+  kind: random
+  normal:
+  - 240
+  - 360
+  bad:
+  - 900
+  - 1800
+- id: dws006_physical_writes_per_second
+  name: File Writes per Second
+  namespace: SYS.DWS
+  level: cluster
+  unit: count/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 4
+  decimals: 2
+  kind: random
+  normal:
+  - 96
+  - 144
+  bad:
+  - 300
+  - 600
+- id: dws007_db_size
+  name: Data Volume
+  namespace: SYS.DWS
+  level: cluster
+  unit: MB
+  official_range:
+  - 0.0
+  - null
+  period_min: 4
+  decimals: 3
+  kind: counter
+  start: 51200
+  normal_inc:
+  - 2
+  - 6
+  bad_inc:
+  - 0
+  - 1
+- id: dws008_active_sql_count
+  name: Active SQL Count
+  namespace: SYS.DWS
+  level: cluster
+  unit: count
+  official_range:
+  - 0.0
+  - null
+  period_min: 4
+  decimals: 0
+  kind: random
+  normal:
+  - 5
+  - 40
+  bad:
+  - 210
+  - 260
+- id: dws009_session_count
+  name: Session Count
+  namespace: SYS.DWS
+  level: cluster
+  unit: count
+  official_range:
+  - 0.0
+  - null
+  period_min: 4
+  decimals: 0
+  kind: random
+  normal:
+  - 20
+  - 80
+  bad:
+  - 200
+  - 400
+- id: dws010_cpu_usage
+  name: CPU Usage
+  namespace: SYS.DWS
+  level: node
+  unit: '%'
+  official_range:
+  - 0.0
+  - 100.0
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 20
+  - 66
+  bad:
+  - 92
+  - 98
+- id: dws011_mem_usage
+  name: Memory Usage
+  namespace: SYS.DWS
+  level: node
+  unit: '%'
+  official_range:
+  - 0.0
+  - 100.0
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 35
+  - 60
+  bad:
+  - 88
+  - 97
+- id: dws012_iops
+  name: IOPS
+  namespace: SYS.DWS
+  level: node
+  unit: count/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 800
+  - 1500
+  bad:
+  - 3000
+  - 6000
+- id: dws013_bytes_in
+  name: Network Input Throughput
+  namespace: SYS.DWS
+  level: node
+  unit: byte/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 4000000.0
+  - 6000000.0
+  bad:
+  - 500000.0
+  - 2000000.0
+- id: dws014_bytes_out
+  name: Network Output Throughput
+  namespace: SYS.DWS
+  level: node
+  unit: byte/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 6400000.0
+  - 9600000.0
+  bad:
+  - 800000.0
+  - 3200000.0
+- id: dws015_disk_usage
+  name: Disk Usage
+  namespace: SYS.DWS
+  level: node
+  unit: '%'
+  official_range:
+  - 0.0
+  - 100.0
+  period_min: 1
+  decimals: 2
+  kind: derived
+  expr: dws017_disk_used_size / dws016_disk_total_size * 100
+- id: dws016_disk_total_size
+  name: Total Disk Size
+  namespace: SYS.DWS
+  level: node
+  unit: GB
+  official_range:
+  - 100.0
+  - 2000.0
+  period_min: 1
+  decimals: 3
+  kind: constant
+  value: 1000
+- id: dws017_disk_used_size
+  name: Used Disk Space
+  namespace: SYS.DWS
+  level: node
+  unit: GB
+  official_range:
+  - 0.0
+  - 3600.0
+  period_min: 1
+  decimals: 3
+  kind: random
+  normal:
+  - 450
+  - 600
+  bad:
+  - 920
+  - 960
+- id: dws018_disk_read_throughput
+  name: Disk Read Throughput
+  namespace: SYS.DWS
+  level: node
+  unit: byte/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 16000000.0
+  - 24000000.0
+  bad:
+  - 2000000.0
+  - 8000000.0
+- id: dws019_disk_write_throughput
+  name: Disk Write Throughput
+  namespace: SYS.DWS
+  level: node
+  unit: byte/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 12000000.0
+  - 18000000.0
+  bad:
+  - 1500000.0
+  - 6000000.0
+- id: dws020_avg_disk_sec_per_read
+  name: Average Time per Disk Read
+  namespace: SYS.DWS
+  level: node
+  unit: s
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 4
+  kind: random
+  normal:
+  - 0.002
+  - 0.008
+  bad:
+  - 0.12
+  - 0.25
+- id: dws021_avg_disk_sec_per_write
+  name: Average Time per Disk Write
+  namespace: SYS.DWS
+  level: node
+  unit: s
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 4
+  kind: random
+  normal:
+  - 0.002
+  - 0.008
+  bad:
+  - 0.12
+  - 0.25
+- id: dws022_avg_disk_queue_length
+  name: Average Disk Queue Length
+  namespace: SYS.DWS
+  level: node
+  unit: count
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 0
+  kind: random
+  normal:
+  - 0
+  - 2
+  bad:
+  - 10
+  - 40

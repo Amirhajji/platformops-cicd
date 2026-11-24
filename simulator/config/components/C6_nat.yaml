@@ -1,0 +1,242 @@
+id: C6
+name: NAT gateway
+resources:
+  gateway:
+  - nat
+metrics:
+- id: snat_connection
+  name: SNAT Connections
+  namespace: SYS.NAT
+  level: gateway
+  unit: count
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 0
+  kind: random
+  normal:
+  - 50
+  - 150
+  bad:
+  - 9200
+  - 9800
+- id: inbound_bandwidth
+  name: Inbound Bandwidth
+  namespace: SYS.NAT
+  level: gateway
+  unit: bit/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 2000000.0
+  - 6000000.0
+  bad:
+  - 18400000000.0
+  - 19600000000.0
+- id: outbound_bandwidth
+  name: Outbound Bandwidth
+  namespace: SYS.NAT
+  level: gateway
+  unit: bit/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 1000000.0
+  - 3000000.0
+  bad:
+  - 18400000000.0
+  - 19600000000.0
+- id: inbound_pps
+  name: Inbound PPS
+  namespace: SYS.NAT
+  level: gateway
+  unit: count
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 0
+  kind: random
+  normal:
+  - 320.0
+  - 480.0
+  bad:
+  - 40.0
+  - 160.0
+- id: outbound_pps
+  name: Outbound PPS
+  namespace: SYS.NAT
+  level: gateway
+  unit: count
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 0
+  kind: random
+  normal:
+  - 320.0
+  - 480.0
+  bad:
+  - 40.0
+  - 160.0
+- id: inbound_traffic
+  name: Inbound Traffic
+  namespace: SYS.NAT
+  level: gateway
+  unit: byte
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: derived
+  expr: inbound_bandwidth * 60 / 8
+- id: outbound_traffic
+  name: Outbound Traffic
+  namespace: SYS.NAT
+  level: gateway
+  unit: byte
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: derived
+  expr: outbound_bandwidth * 60 / 8
+- id: snat_connection_ratio
+  name: SNAT Connection Usage Rate
+  namespace: SYS.NAT
+  level: gateway
+  unit: '%'
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: derived
+  expr: snat_connection / 10000 * 100
+- id: inbound_bandwidth_ratio
+  name: Inbound Bandwidth Usage Rate
+  namespace: SYS.NAT
+  level: gateway
+  unit: '%'
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: derived
+  expr: inbound_bandwidth / 2e10 * 100
+- id: outbound_bandwidth_ratio
+  name: Outbound Bandwidth Usage Rate
+  namespace: SYS.NAT
+  level: gateway
+  unit: '%'
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: derived
+  expr: outbound_bandwidth / 2e10 * 100
+- id: total_inbound_udp_bandwidth
+  name: Total Inbound Bandwidth (UDP)
+  namespace: SYS.NAT
+  level: gateway
+  unit: bit/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: derived
+  expr: inbound_bandwidth * 0.05
+- id: total_outbound_udp_bandwidth
+  name: Total Outbound Bandwidth (UDP)
+  namespace: SYS.NAT
+  level: gateway
+  unit: bit/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: derived
+  expr: outbound_bandwidth * 0.05
+- id: total_inbound_tcp_bandwidth
+  name: Total Inbound Bandwidth (TCP)
+  namespace: SYS.NAT
+  level: gateway
+  unit: bit/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: derived
+  expr: inbound_bandwidth * 0.95
+- id: total_outbound_tcp_bandwidth
+  name: Total Outbound Bandwidth (TCP)
+  namespace: SYS.NAT
+  level: gateway
+  unit: bit/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: derived
+  expr: outbound_bandwidth * 0.95
+- id: packets_drop_count_snat_connection_beyond
+  name: Packets Dropped (Excessive SNAT Connections)
+  namespace: SYS.NAT
+  level: gateway
+  unit: count
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 0
+  kind: random
+  normal: &id001
+  - 0
+  - 0
+  bad: &id002
+  - 50
+  - 500
+- id: packets_drop_count_pps_beyond
+  name: Packets Dropped (Excessive PPS)
+  namespace: SYS.NAT
+  level: gateway
+  unit: count
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 0
+  kind: random
+  normal: *id001
+  bad: *id002
+- id: packets_drop_count_eip_port_alloc_beyond
+  name: Packets Dropped (All EIP Ports Allocated)
+  namespace: SYS.NAT
+  level: gateway
+  unit: count
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 0
+  kind: random
+  normal: *id001
+  bad: *id002

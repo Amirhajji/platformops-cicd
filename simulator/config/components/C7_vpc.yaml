@@ -1,0 +1,148 @@
+id: C7
+name: VPC network
+resources:
+  EIP / bandwidth:
+  - eip_nat
+  - eip_bastion
+  subnet:
+  - subnet_public
+  - subnet_app
+  - subnet_kafka
+  - subnet_data
+  - subnet_reserved
+metrics:
+- id: upstream_bandwidth
+  name: Outbound Bandwidth
+  namespace: SYS.VPC
+  level: EIP / bandwidth
+  unit: bit/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 200000.0
+  - 1500000.0
+  bad:
+  - 4700000.0
+  - 4950000.0
+- id: downstream_bandwidth
+  name: Inbound Bandwidth
+  namespace: SYS.VPC
+  level: EIP / bandwidth
+  unit: bit/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 200000.0
+  - 1500000.0
+  bad:
+  - 4700000.0
+  - 4950000.0
+- id: upstream_bandwidth_usage
+  name: Outbound Bandwidth Usage
+  namespace: SYS.VPC
+  level: EIP / bandwidth
+  unit: '%'
+  official_range:
+  - 0.0
+  - 100.0
+  period_min: 1
+  decimals: 2
+  kind: derived
+  expr: upstream_bandwidth / 5e6 * 100
+- id: downstream_bandwidth_usage
+  name: Inbound Bandwidth Usage
+  namespace: SYS.VPC
+  level: EIP / bandwidth
+  unit: '%'
+  official_range:
+  - 0.0
+  - 100.0
+  period_min: 1
+  decimals: 2
+  kind: derived
+  expr: downstream_bandwidth / 5e6 * 100
+- id: up_stream
+  name: Outbound Traffic
+  namespace: SYS.VPC
+  level: EIP / bandwidth
+  unit: byte
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: derived
+  expr: upstream_bandwidth * 60 / 8
+- id: down_stream
+  name: Inbound Traffic
+  namespace: SYS.VPC
+  level: EIP / bandwidth
+  unit: byte
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: derived
+  expr: downstream_bandwidth * 60 / 8
+- id: subnet_ipv4_availability_used_number
+  name: Used IPv4 Addresses
+  namespace: SYS.VPC
+  level: subnet
+  unit: count
+  official_range:
+  - 0.0
+  - null
+  period_min: 30
+  decimals: 0
+  kind: random
+  normal:
+  - 4
+  - 30
+  bad:
+  - 232
+  - 245
+- id: subnet_ipv4_availability_remain_number
+  name: Available IPv4 Addresses
+  namespace: SYS.VPC
+  level: subnet
+  unit: count
+  official_range:
+  - 0.0
+  - null
+  period_min: 30
+  decimals: 0
+  kind: derived
+  expr: subnet_ipv4_availability_total_number - subnet_ipv4_availability_used_number
+- id: subnet_ipv4_availability_total_number
+  name: Total IPv4 Addresses
+  namespace: SYS.VPC
+  level: subnet
+  unit: count
+  official_range:
+  - 0.0
+  - null
+  period_min: 30
+  decimals: 0
+  kind: constant
+  value: 251
+- id: subnet_ipv4_availability_usage_percentage
+  name: IPv4 Address Usage
+  namespace: SYS.VPC
+  level: subnet
+  unit: '%'
+  official_range:
+  - 0.0
+  - 100.0
+  period_min: 30
+  decimals: 2
+  kind: derived
+  expr: subnet_ipv4_availability_used_number / subnet_ipv4_availability_total_number * 100
