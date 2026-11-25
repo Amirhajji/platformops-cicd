@@ -1,25 +1,38 @@
-# app/schemas/auth.py
-from pydantic import BaseModel
-from typing import List
+from datetime import datetime
 
+from pydantic import BaseModel, Field, field_serializer
+from typing_extensions import Literal
 
-class SignupRequest(BaseModel):
-    username: str
-    password: str
+from app.services.timeline import iso
+
+Role = Literal["admin", "viewer"]
+NO_NUL = r"^[^\x00]+$"  # PostgreSQL text cannot contain NUL
 
 
 class LoginRequest(BaseModel):
+    username: str = Field(max_length=64, pattern=NO_NUL)
+    password: str = Field(max_length=128)
+
+
+class LoginResponse(BaseModel):
+    token: str
+    role: Role
+
+
+class UserCreate(BaseModel):
+    username: str = Field(min_length=3, max_length=64, pattern=r"^[A-Za-z0-9._-]+$")
+    password: str = Field(min_length=8, max_length=128)
+    role: Role
+
+
+class UserOut(BaseModel):
+    model_config = {"from_attributes": True}
+
+    id: int
     username: str
-    password: str
+    role: Role
+    created_at: datetime
 
-
-class TokenResponse(BaseModel):
-    access_token: str
-    token_type: str = "bearer"
-
-
-class UserInfo(BaseModel):
-    id: str
-    username: str
-    roles: List[str]
-    is_active: bool = False
+    @field_serializer("created_at")
+    def _created_at(self, value: datetime) -> str:
+        return iso(value)

@@ -1,0 +1,664 @@
+id: C2
+name: DMS for Kafka
+resources:
+  instance:
+  - instance
+  broker:
+  - broker1
+  - broker2
+  - broker3
+  topic:
+  - telemetry.metrics.dws.v1
+  consumer group:
+  - telemetry-metrics-consumer
+metrics:
+- id: current_partitions
+  name: Partitions
+  namespace: SYS.DMS
+  level: instance
+  unit: count
+  official_range:
+  - 0.0
+  - 100000.0
+  period_min: 1
+  decimals: 0
+  kind: constant
+  value: 6
+- id: current_topics
+  name: Topics
+  namespace: SYS.DMS
+  level: instance
+  unit: count
+  official_range:
+  - 0.0
+  - 100000.0
+  period_min: 1
+  decimals: 0
+  kind: constant
+  value: 1
+- id: group_msgs
+  name: Accumulated Messages
+  namespace: SYS.DMS
+  level: instance
+  unit: count
+  official_range:
+  - 0.0
+  - 1000000000.0
+  period_min: 1
+  decimals: 0
+  kind: derived
+  expr: ref('consumer group', 'consumer_messages_remained')
+- id: instance_bytes_in_rate
+  name: Message Production
+  namespace: SYS.DMS
+  level: instance
+  unit: byte/s
+  official_range:
+  - 0.0
+  - 1000000.0
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 2000.0
+  - 3000.0
+  bad:
+  - 250.0
+  - 1000.0
+- id: instance_bytes_out_rate
+  name: Message Consumption
+  namespace: SYS.DMS
+  level: instance
+  unit: byte/s
+  official_range:
+  - 0.0
+  - 1000000.0
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 2000.0
+  - 3000.0
+  bad:
+  - 250.0
+  - 1000.0
+- id: current_partitions_usage
+  name: Current Partitions Usage
+  namespace: SYS.DMS
+  level: instance
+  unit: '%'
+  official_range:
+  - 0.0
+  - 100.0
+  period_min: 1
+  decimals: 2
+  kind: constant
+  value: 0.6
+- id: instance_disk_usage
+  name: Instance Disk Usage
+  namespace: SYS.DMS
+  level: instance
+  unit: '%'
+  official_range:
+  - 0.0
+  - 100.0
+  period_min: 1
+  decimals: 2
+  kind: derived
+  expr: avg('broker', 'broker_disk_usage')
+- id: broker_data_size
+  name: Message Size
+  namespace: SYS.DMS
+  level: broker
+  unit: byte
+  official_range:
+  - 0.0
+  - 5000000000000.0
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 100000000.0
+  - 300000000.0
+  bad:
+  - 4000000000.0
+  - 6000000000.0
+- id: broker_messages_in_rate
+  name: Message Creation Rate
+  namespace: SYS.DMS
+  level: broker
+  unit: count/s
+  official_range:
+  - 0.0
+  - 500000.0
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 1.6
+  - 2.4
+  bad:
+  - 0.2
+  - 0.8
+- id: broker_bytes_out_rate
+  name: Message Retrieval
+  namespace: SYS.DMS
+  level: broker
+  unit: byte/s
+  official_range:
+  - 0.0
+  - 500000000.0
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 640.0
+  - 960.0
+  bad:
+  - 80.0
+  - 320.0
+- id: broker_bytes_in_rate
+  name: Message Creation
+  namespace: SYS.DMS
+  level: broker
+  unit: byte/s
+  official_range:
+  - 0.0
+  - 500000000.0
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 640.0
+  - 960.0
+  bad:
+  - 80.0
+  - 320.0
+- id: broker_fetch_mean
+  name: Average Message Retrieval Processing Duration
+  namespace: SYS.DMS
+  level: broker
+  unit: ms
+  official_range:
+  - 0.0
+  - 10000.0
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 3
+  - 8
+  bad:
+  - 120
+  - 300
+- id: broker_produce_mean
+  name: Average Message Creation Processing Duration
+  namespace: SYS.DMS
+  level: broker
+  unit: ms
+  official_range:
+  - 0.0
+  - 10000.0
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 2
+  - 6
+  bad:
+  - 120
+  - 300
+- id: broker_cpu_core_load
+  name: Average Load per CPU Core
+  namespace: SYS.DMS
+  level: broker
+  unit: N/A
+  official_range:
+  - 0.0
+  - 20.0
+  period_min: 1
+  decimals: 3
+  kind: random
+  normal:
+  - 0.1
+  - 0.5
+  bad:
+  - 2
+  - 6
+- id: broker_disk_usage
+  name: Disk Capacity Usage
+  namespace: SYS.DMS
+  level: broker
+  unit: '%'
+  official_range:
+  - 0.0
+  - 100.0
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 5
+  - 15
+  bad:
+  - 91
+  - 97
+- id: broker_memory_usage
+  name: Memory Usage
+  namespace: SYS.DMS
+  level: broker
+  unit: '%'
+  official_range:
+  - 0.0
+  - 100.0
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 40
+  - 60
+  bad:
+  - 88
+  - 97
+- id: broker_heap_usage
+  name: JVM Heap Memory Usage
+  namespace: SYS.DMS
+  level: broker
+  unit: '%'
+  official_range:
+  - 0.0
+  - 100.0
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 30
+  - 55
+  bad:
+  - 85
+  - 97
+- id: broker_alive
+  name: Broker Alive
+  namespace: SYS.DMS
+  level: broker
+  unit: N/A
+  official_range:
+  - 0.0
+  - 1.0
+  period_min: 1
+  decimals: 3
+  kind: flag
+  healthy: 1
+  unhealthy: 0
+  bad_resource: broker3
+- id: broker_connections
+  name: Connections
+  namespace: SYS.DMS
+  level: broker
+  unit: count
+  official_range:
+  - 0.0
+  - 65535.0
+  period_min: 1
+  decimals: 0
+  kind: random
+  normal:
+  - 10
+  - 30
+  bad:
+  - 100
+  - 300
+- id: broker_cpu_usage
+  name: CPU Usage
+  namespace: SYS.DMS
+  level: broker
+  unit: '%'
+  official_range:
+  - 0.0
+  - 100.0
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 10
+  - 66
+  bad:
+  - 92
+  - 98
+- id: broker_disk_read_await
+  name: Average Disk Read Time
+  namespace: SYS.DMS
+  level: broker
+  unit: ms
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 1
+  - 2
+  bad:
+  - 10
+  - 30
+- id: broker_disk_write_await
+  name: Average Disk Write Time
+  namespace: SYS.DMS
+  level: broker
+  unit: ms
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 2
+  - 4
+  bad:
+  - 20
+  - 60
+- id: broker_total_bytes_in_rate
+  name: Inbound Traffic
+  namespace: SYS.DMS
+  level: broker
+  unit: byte/s
+  official_range:
+  - 0.0
+  - 1000000000.0
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 1200.0
+  - 1800.0
+  bad:
+  - 150.0
+  - 600.0
+- id: broker_total_bytes_out_rate
+  name: Outbound Traffic
+  namespace: SYS.DMS
+  level: broker
+  unit: byte/s
+  official_range:
+  - 0.0
+  - 1000000000.0
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 1200.0
+  - 1800.0
+  bad:
+  - 150.0
+  - 600.0
+- id: broker_disk_read_rate
+  name: Disk Read Speed
+  namespace: SYS.DMS
+  level: broker
+  unit: byte/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 160000.0
+  - 240000.0
+  bad:
+  - 20000.0
+  - 80000.0
+- id: broker_disk_write_rate
+  name: Disk Write Speed
+  namespace: SYS.DMS
+  level: broker
+  unit: byte/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 400000.0
+  - 600000.0
+  bad:
+  - 50000.0
+  - 200000.0
+- id: network_bandwidth_usage
+  name: Network Bandwidth Usage
+  namespace: SYS.DMS
+  level: broker
+  unit: '%'
+  official_range:
+  - 0.0
+  - 100.0
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 1
+  - 5
+  bad:
+  - 60
+  - 90
+- id: broker_connections_per_ip_count
+  name: Connections per IP
+  namespace: SYS.DMS
+  level: broker
+  unit: count
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 0
+  kind: random
+  normal:
+  - 2
+  - 8
+  bad:
+  - 30
+  - 80
+- id: broker_disk_bandwidth_usage
+  name: Disk Bandwidth Usage
+  namespace: SYS.DMS
+  level: broker
+  unit: '%'
+  official_range:
+  - 0.0
+  - 100.0
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 1
+  - 10
+  bad:
+  - 70
+  - 95
+- id: broker_offset_commit_rate
+  name: Offset Commit Rate
+  namespace: SYS.DMS
+  level: broker
+  unit: count/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 0.8
+  - 1.2
+  bad:
+  - 0.1
+  - 0.4
+- id: topic_bytes_in_rate
+  name: Message Creation
+  namespace: SYS.DMS
+  level: topic
+  unit: byte/s
+  official_range:
+  - 0.0
+  - 500000000.0
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 2000.0
+  - 3000.0
+  bad:
+  - 250.0
+  - 1000.0
+- id: topic_bytes_out_rate
+  name: Message Retrieval
+  namespace: SYS.DMS
+  level: topic
+  unit: byte/s
+  official_range:
+  - 0.0
+  - 500000000.0
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 2000.0
+  - 3000.0
+  bad:
+  - 250.0
+  - 1000.0
+- id: topic_data_size
+  name: Message Size
+  namespace: SYS.DMS
+  level: topic
+  unit: byte
+  official_range:
+  - 0.0
+  - 5000000000000.0
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 300000000.0
+  - 900000000.0
+  bad:
+  - 900000000.0
+  - 2000000000.0
+- id: topic_messages
+  name: Total Messages
+  namespace: SYS.DMS
+  level: topic
+  unit: count
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 0
+  kind: random
+  normal:
+  - 480000
+  - 520000
+  bad:
+  - 520000
+  - 700000
+- id: topic_messages_in_rate
+  name: Message Creation Rate
+  namespace: SYS.DMS
+  level: topic
+  unit: count/s
+  official_range:
+  - 0.0
+  - 500000.0
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 4.8
+  - 7.2
+  bad:
+  - 0.6
+  - 2.4
+- id: consumer_messages_remained
+  name: Consumer Available Messages
+  namespace: SYS.DMS
+  level: consumer group
+  unit: count
+  official_range:
+  - 0.0
+  - 9.223372036854776e+18
+  period_min: 1
+  decimals: 0
+  kind: random
+  normal:
+  - 0
+  - 800
+  bad:
+  - 120000
+  - 200000
+- id: consumer_messages_consumed
+  name: Consumer Retrieved Messages
+  namespace: SYS.DMS
+  level: consumer group
+  unit: count
+  official_range:
+  - 0.0
+  - 9.223372036854776e+18
+  period_min: 1
+  decimals: 0
+  kind: counter
+  start: 0
+  inc_from: consumer_messages_consumed_per_min
+- id: consumer_messages_consumed_per_min
+  name: Consumer Group Consumption Rate
+  namespace: SYS.DMS
+  level: consumer group
+  unit: count/min
+  official_range:
+  - 0.0
+  - 30000000.0
+  period_min: 1
+  decimals: 0
+  kind: random
+  normal:
+  - 330
+  - 370
+  bad:
+  - 0
+  - 50
+- id: topic_messages_remained
+  name: Topic Available Messages
+  namespace: SYS.DMS
+  level: consumer group
+  unit: count
+  official_range:
+  - 0.0
+  - 9.223372036854776e+18
+  period_min: 1
+  decimals: 0
+  kind: derived
+  expr: consumer_messages_remained
+- id: topic_messages_consumed
+  name: Topic Retrieved Messages
+  namespace: SYS.DMS
+  level: consumer group
+  unit: count
+  official_range:
+  - 0.0
+  - 9.223372036854776e+18
+  period_min: 1
+  decimals: 0
+  kind: derived
+  expr: consumer_messages_consumed
+- id: topic_messages_consumed_per_min
+  name: Topic Consumption Rate
+  namespace: SYS.DMS
+  level: consumer group
+  unit: count/min
+  official_range:
+  - 0.0
+  - 30000000.0
+  period_min: 1
+  decimals: 0
+  kind: derived
+  expr: consumer_messages_consumed_per_min

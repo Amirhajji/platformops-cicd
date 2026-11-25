@@ -1,0 +1,1166 @@
+id: C3
+name: ECS loader host
+resources:
+  server:
+  - loader
+metrics:
+- id: cpu_util
+  name: CPU Usage
+  namespace: SYS.ECS
+  level: server
+  unit: '%'
+  official_range:
+  - 0.0
+  - 100.0
+  period_min: 5
+  decimals: 2
+  kind: derived
+  expr: cpu_usage
+- id: mem_util
+  name: Memory Usage
+  namespace: SYS.ECS
+  level: server
+  unit: '%'
+  official_range:
+  - 0.0
+  - 100.0
+  period_min: 5
+  decimals: 2
+  kind: derived
+  expr: mem_usedPercent
+- id: disk_util_inband
+  name: Disk Usage
+  namespace: SYS.ECS
+  level: server
+  unit: '%'
+  official_range:
+  - 0.0
+  - 100.0
+  period_min: 5
+  decimals: 2
+  kind: derived
+  expr: disk_usedPercent
+- id: disk_read_bytes_rate
+  name: Disk Read Bandwidth
+  namespace: SYS.ECS
+  level: server
+  unit: byte/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 5
+  decimals: 2
+  kind: derived
+  expr: disk_agt_read_bytes_rate
+- id: disk_write_bytes_rate
+  name: Disk Write Bandwidth
+  namespace: SYS.ECS
+  level: server
+  unit: byte/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 5
+  decimals: 2
+  kind: derived
+  expr: disk_agt_write_bytes_rate
+- id: disk_read_requests_rate
+  name: Disk Read IOPS
+  namespace: SYS.ECS
+  level: server
+  unit: request/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 5
+  decimals: 2
+  kind: derived
+  expr: disk_agt_read_requests_rate
+- id: disk_write_requests_rate
+  name: Disk Write IOPS
+  namespace: SYS.ECS
+  level: server
+  unit: request/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 5
+  decimals: 2
+  kind: derived
+  expr: disk_agt_write_requests_rate
+- id: network_incoming_bytes_rate_inband
+  name: Inband Incoming Rate
+  namespace: SYS.ECS
+  level: server
+  unit: byte/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 5
+  decimals: 2
+  kind: derived
+  expr: net_bitSent / 8
+- id: network_outgoing_bytes_rate_inband
+  name: Inband Outgoing Rate
+  namespace: SYS.ECS
+  level: server
+  unit: byte/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 5
+  decimals: 2
+  kind: derived
+  expr: net_bitRecv / 8
+- id: network_incoming_bytes_aggregate_rate
+  name: Outband Incoming Rate
+  namespace: SYS.ECS
+  level: server
+  unit: byte/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 5
+  decimals: 2
+  kind: derived
+  expr: net_bitSent / 8
+- id: network_outgoing_bytes_aggregate_rate
+  name: Outband Outgoing Rate
+  namespace: SYS.ECS
+  level: server
+  unit: byte/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 5
+  decimals: 2
+  kind: derived
+  expr: net_bitRecv / 8
+- id: network_vm_connections
+  name: Network Connections
+  namespace: SYS.ECS
+  level: server
+  unit: count
+  official_range:
+  - 0.0
+  - null
+  period_min: 5
+  decimals: 0
+  kind: derived
+  expr: net_tcp_total
+- id: network_vm_bandwidth_in
+  name: Server Inbound Bandwidth
+  namespace: SYS.ECS
+  level: server
+  unit: byte/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 5
+  decimals: 2
+  kind: derived
+  expr: net_bitSent / 8
+- id: network_vm_bandwidth_out
+  name: Server Outbound Bandwidth
+  namespace: SYS.ECS
+  level: server
+  unit: byte/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 5
+  decimals: 2
+  kind: derived
+  expr: net_bitRecv / 8
+- id: network_vm_pps_in
+  name: Server Inbound PPS
+  namespace: SYS.ECS
+  level: server
+  unit: packet/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 5
+  decimals: 2
+  kind: derived
+  expr: net_packetRecv
+- id: network_vm_pps_out
+  name: Server Outbound PPS
+  namespace: SYS.ECS
+  level: server
+  unit: packet/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 5
+  decimals: 2
+  kind: derived
+  expr: net_packetSent
+- id: network_vm_newconnections
+  name: New Connections
+  namespace: SYS.ECS
+  level: server
+  unit: connect/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 5
+  decimals: 2
+  kind: random
+  normal:
+  - 1
+  - 5
+  bad:
+  - 20
+  - 60
+- id: cpu_usage
+  name: (Agent) CPU Usage
+  namespace: AGT.ECS
+  level: server
+  unit: '%'
+  official_range:
+  - 0.0
+  - 100.0
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 15
+  - 66
+  bad:
+  - 92
+  - 98
+- id: cpu_usage_idle
+  name: (Agent) Idle CPU Usage
+  namespace: AGT.ECS
+  level: server
+  unit: '%'
+  official_range:
+  - 0.0
+  - 100.0
+  period_min: 1
+  decimals: 2
+  kind: derived
+  expr: 100 - cpu_usage
+- id: cpu_usage_user
+  name: (Agent) User Space CPU Usage
+  namespace: AGT.ECS
+  level: server
+  unit: '%'
+  official_range:
+  - 0.0
+  - 100.0
+  period_min: 1
+  decimals: 2
+  kind: derived
+  expr: cpu_usage * 0.55
+- id: cpu_usage_system
+  name: (Agent) Kernel Space CPU Usage
+  namespace: AGT.ECS
+  level: server
+  unit: '%'
+  official_range:
+  - 0.0
+  - 100.0
+  period_min: 1
+  decimals: 2
+  kind: derived
+  expr: cpu_usage * 0.15
+- id: cpu_usage_other
+  name: (Agent) Other Process CPU Usage
+  namespace: AGT.ECS
+  level: server
+  unit: '%'
+  official_range:
+  - 0.0
+  - 100.0
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 0
+  - 0.5
+  bad:
+  - 0
+  - 2
+- id: cpu_usage_nice
+  name: (Agent) Nice Process CPU Usage
+  namespace: AGT.ECS
+  level: server
+  unit: '%'
+  official_range:
+  - 0.0
+  - 100.0
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 0
+  - 0.5
+  bad:
+  - 0
+  - 2
+- id: cpu_usage_iowait
+  name: (Agent) iowait Process CPU Usage
+  namespace: AGT.ECS
+  level: server
+  unit: '%'
+  official_range:
+  - 0.0
+  - 100.0
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 0.5
+  - 3
+  bad:
+  - 30
+  - 40
+- id: cpu_usage_irq
+  name: (Agent) CPU Interrupt Time
+  namespace: AGT.ECS
+  level: server
+  unit: '%'
+  official_range:
+  - 0.0
+  - 100.0
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 0
+  - 0.5
+  bad:
+  - 0
+  - 2
+- id: cpu_usage_softirq
+  name: (Agent) CPU Software Interrupt Time
+  namespace: AGT.ECS
+  level: server
+  unit: '%'
+  official_range:
+  - 0.0
+  - 100.0
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 0
+  - 0.5
+  bad:
+  - 0
+  - 2
+- id: load_average1
+  name: (Agent) 1-Minute Single-Core Load Average
+  namespace: AGT.ECS
+  level: server
+  unit: N/A
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 3
+  kind: random
+  normal:
+  - 0.2
+  - 0.8
+  bad:
+  - 3
+  - 6
+- id: load_average5
+  name: (Agent) 5-Minute Single-Core Load Average
+  namespace: AGT.ECS
+  level: server
+  unit: N/A
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 3
+  kind: random
+  normal:
+  - 0.2
+  - 0.8
+  bad:
+  - 3
+  - 6
+- id: load_average15
+  name: (Agent) 15-Minute Single-Core Load Average
+  namespace: AGT.ECS
+  level: server
+  unit: N/A
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 3
+  kind: random
+  normal:
+  - 0.2
+  - 0.8
+  bad:
+  - 3
+  - 6
+- id: mem_available
+  name: (Agent) Available Memory
+  namespace: AGT.ECS
+  level: server
+  unit: GB
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 3
+  kind: derived
+  expr: 4 * (100 - mem_usedPercent) / 100
+- id: mem_usedPercent
+  name: (Agent) Memory Usage
+  namespace: AGT.ECS
+  level: server
+  unit: '%'
+  official_range:
+  - 0.0
+  - 100.0
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 35
+  - 60
+  bad:
+  - 92
+  - 97
+- id: mem_free
+  name: (Agent) Idle Memory
+  namespace: AGT.ECS
+  level: server
+  unit: GB
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 3
+  kind: derived
+  expr: mem_available * 0.6
+- id: mem_buffers
+  name: (Agent) Buffer
+  namespace: AGT.ECS
+  level: server
+  unit: GB
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 3
+  kind: random
+  normal:
+  - 0.05
+  - 0.15
+  bad:
+  - 0.05
+  - 0.15
+- id: mem_cached
+  name: (Agent) Cache
+  namespace: AGT.ECS
+  level: server
+  unit: GB
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 3
+  kind: random
+  normal:
+  - 0.5
+  - 1.0
+  bad:
+  - 0.5
+  - 1.0
+- id: total_open_files
+  name: (Agent) Total File Handles
+  namespace: AGT.ECS
+  level: server
+  unit: count
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 0
+  kind: random
+  normal:
+  - 800
+  - 1500
+  bad:
+  - 3000
+  - 6000
+- id: disk_free
+  name: (Agent) Available Disk Space
+  namespace: AGT.ECS
+  level: server
+  unit: GB
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 3
+  kind: derived
+  expr: disk_total - disk_used
+- id: disk_total
+  name: (Agent) Disk Storage Capacity
+  namespace: AGT.ECS
+  level: server
+  unit: GB
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 3
+  kind: constant
+  value: 20
+- id: disk_used
+  name: (Agent) Used Disk Space
+  namespace: AGT.ECS
+  level: server
+  unit: GB
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 3
+  kind: derived
+  expr: disk_total * disk_usedPercent / 100
+- id: disk_usedPercent
+  name: (Agent) Disk Usage
+  namespace: AGT.ECS
+  level: server
+  unit: '%'
+  official_range:
+  - 0.0
+  - 100.0
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 40
+  - 60
+  bad:
+  - 92
+  - 96
+- id: disk_agt_read_bytes_rate
+  name: (Agent) Disks Read Rate
+  namespace: AGT.ECS
+  level: server
+  unit: byte/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 160000.0
+  - 240000.0
+  bad:
+  - 20000.0
+  - 80000.0
+- id: disk_agt_read_requests_rate
+  name: (Agent) Disks Read Requests
+  namespace: AGT.ECS
+  level: server
+  unit: request/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 16.0
+  - 24.0
+  bad:
+  - 2.0
+  - 8.0
+- id: disk_agt_write_bytes_rate
+  name: (Agent) Disks Write Rate
+  namespace: AGT.ECS
+  level: server
+  unit: byte/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 800000.0
+  - 1200000.0
+  bad:
+  - 100000.0
+  - 400000.0
+- id: disk_agt_write_requests_rate
+  name: (Agent) Disks Write Requests
+  namespace: AGT.ECS
+  level: server
+  unit: request/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 64.0
+  - 96.0
+  bad:
+  - 8.0
+  - 32.0
+- id: disk_readTime
+  name: (Agent) Average Read Request Time
+  namespace: AGT.ECS
+  level: server
+  unit: ms/count
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 1
+  - 2
+  bad:
+  - 10
+  - 30
+- id: disk_writeTime
+  name: (Agent) Average Write Request Time
+  namespace: AGT.ECS
+  level: server
+  unit: ms/count
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 2
+  - 4
+  bad:
+  - 20
+  - 60
+- id: disk_ioUtils
+  name: (Agent) Disk I/O Usage
+  namespace: AGT.ECS
+  level: server
+  unit: '%'
+  official_range:
+  - 0.0
+  - 100.0
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 5
+  - 25
+  bad:
+  - 85
+  - 98
+- id: disk_queue_length
+  name: (Agent) Disk Queue Length
+  namespace: AGT.ECS
+  level: server
+  unit: count
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 0
+  kind: random
+  normal:
+  - 0
+  - 1
+  bad:
+  - 8
+  - 30
+- id: disk_write_bytes_per_operation
+  name: (Agent) Average Disk Write Size
+  namespace: AGT.ECS
+  level: server
+  unit: byte/op
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 12000
+  - 20000
+  bad:
+  - 12000
+  - 20000
+- id: disk_read_bytes_per_operation
+  name: (Agent) Average Disk Read Size
+  namespace: AGT.ECS
+  level: server
+  unit: byte/op
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 6000
+  - 10000
+  bad:
+  - 6000
+  - 10000
+- id: disk_io_svctm
+  name: (Agent) Disk I/O Service Time
+  namespace: AGT.ECS
+  level: server
+  unit: ms/op
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 0.5
+  - 1.0
+  bad:
+  - 5.0
+  - 15.0
+- id: disk_device_used_percent
+  name: Block Device Usage
+  namespace: AGT.ECS
+  level: server
+  unit: '%'
+  official_range:
+  - 0.0
+  - 100.0
+  period_min: 1
+  decimals: 2
+  kind: derived
+  expr: disk_usedPercent
+- id: disk_fs_rwstate
+  name: (Agent) File System Read/Write Status
+  namespace: AGT.ECS
+  level: server
+  unit: N/A
+  official_range:
+  - 0.0
+  - 1.0
+  period_min: 1
+  decimals: 3
+  kind: constant
+  value: 0
+- id: disk_inodesTotal
+  name: (Agent) Disk inode Total
+  namespace: AGT.ECS
+  level: server
+  unit: count
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 0
+  kind: constant
+  value: 1310720
+- id: disk_inodesUsed
+  name: (Agent) Total inode Used
+  namespace: AGT.ECS
+  level: server
+  unit: count
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 0
+  kind: random
+  normal:
+  - 80000
+  - 120000
+  bad:
+  - 80000
+  - 120000
+- id: disk_inodesUsedPercent
+  name: (Agent) Percentage of Total inode Used
+  namespace: AGT.ECS
+  level: server
+  unit: '%'
+  official_range:
+  - 0.0
+  - 100.0
+  period_min: 1
+  decimals: 2
+  kind: derived
+  expr: disk_inodesUsed / disk_inodesTotal * 100
+- id: net_bitRecv
+  name: (Agent) Outbound Bandwidth
+  namespace: AGT.ECS
+  level: server
+  unit: bit/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 1600000.0
+  - 2400000.0
+  bad:
+  - 200000.0
+  - 800000.0
+- id: net_bitSent
+  name: (Agent) Inbound Bandwidth
+  namespace: AGT.ECS
+  level: server
+  unit: bit/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 1600000.0
+  - 2400000.0
+  bad:
+  - 200000.0
+  - 800000.0
+- id: net_packetRecv
+  name: (Agent) NIC Packet Receive Rate
+  namespace: AGT.ECS
+  level: server
+  unit: count/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 240.0
+  - 360.0
+  bad:
+  - 30.0
+  - 120.0
+- id: net_packetSent
+  name: (Agent) NIC Packet Send Rate
+  namespace: AGT.ECS
+  level: server
+  unit: count/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 240.0
+  - 360.0
+  bad:
+  - 30.0
+  - 120.0
+- id: net_errin
+  name: (Agent) Receive Error Rate
+  namespace: AGT.ECS
+  level: server
+  unit: '%'
+  official_range:
+  - 0.0
+  - 100.0
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 0
+  - 0.05
+  bad:
+  - 1
+  - 5
+- id: net_errout
+  name: (Agent) Transmit Error Rate
+  namespace: AGT.ECS
+  level: server
+  unit: '%'
+  official_range:
+  - 0.0
+  - 100.0
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 0
+  - 0.05
+  bad:
+  - 1
+  - 5
+- id: net_dropin
+  name: (Agent) Received Packet Drop Rate
+  namespace: AGT.ECS
+  level: server
+  unit: '%'
+  official_range:
+  - 0.0
+  - 100.0
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 0
+  - 0.05
+  bad:
+  - 1
+  - 5
+- id: net_dropout
+  name: (Agent) Transmitted Packet Drop Rate
+  namespace: AGT.ECS
+  level: server
+  unit: '%'
+  official_range:
+  - 0.0
+  - 100.0
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 0
+  - 0.05
+  bad:
+  - 1
+  - 5
+- id: ntp_offset
+  name: (Agent) NTP Offset
+  namespace: AGT.ECS
+  level: server
+  unit: ms
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 0
+  - 5
+  bad:
+  - 0
+  - 5
+- id: net_tcp_total
+  name: (Agent) Total TCP Connections
+  namespace: AGT.ECS
+  level: server
+  unit: count
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 0
+  kind: derived
+  expr: net_tcp_established + net_tcp_time_wait + net_tcp_sys_sent + net_tcp_sys_recv + net_tcp_fin_wait1 + net_tcp_fin_wait2 + net_tcp_close + net_tcp_close_wait + net_tcp_last_ack + net_tcp_closing +
+    net_tcp_listen
+- id: net_tcp_established
+  name: (Agent) TCP ESTABLISHED Connections
+  namespace: AGT.ECS
+  level: server
+  unit: count
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 0
+  kind: random
+  normal:
+  - 20
+  - 50
+  bad:
+  - 200
+  - 400
+- id: net_tcp_sys_sent
+  name: (Agent) TCP SYS_SENT Connections
+  namespace: AGT.ECS
+  level: server
+  unit: count
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 0
+  kind: random
+  normal:
+  - 0
+  - 3
+  bad:
+  - 0
+  - 10
+- id: net_tcp_sys_recv
+  name: (Agent) TCP SYS_RECV Connections
+  namespace: AGT.ECS
+  level: server
+  unit: count
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 0
+  kind: random
+  normal:
+  - 0
+  - 3
+  bad:
+  - 0
+  - 10
+- id: net_tcp_fin_wait1
+  name: (Agent) TCP FIN_WAIT1 Connections
+  namespace: AGT.ECS
+  level: server
+  unit: count
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 0
+  kind: random
+  normal:
+  - 0
+  - 3
+  bad:
+  - 0
+  - 10
+- id: net_tcp_fin_wait2
+  name: (Agent) TCP FIN_WAIT2 Connections
+  namespace: AGT.ECS
+  level: server
+  unit: count
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 0
+  kind: random
+  normal:
+  - 0
+  - 3
+  bad:
+  - 0
+  - 10
+- id: net_tcp_time_wait
+  name: (Agent) TCP TIME_WAIT Connections
+  namespace: AGT.ECS
+  level: server
+  unit: count
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 0
+  kind: random
+  normal:
+  - 5
+  - 20
+  bad:
+  - 50
+  - 150
+- id: net_tcp_close
+  name: (Agent) TCP CLOSE Connections
+  namespace: AGT.ECS
+  level: server
+  unit: count
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 0
+  kind: random
+  normal:
+  - 0
+  - 3
+  bad:
+  - 0
+  - 10
+- id: net_tcp_close_wait
+  name: (Agent) TCP CLOSE_WAIT Connections
+  namespace: AGT.ECS
+  level: server
+  unit: count
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 0
+  kind: random
+  normal:
+  - 0
+  - 3
+  bad:
+  - 0
+  - 10
+- id: net_tcp_last_ack
+  name: (Agent) TCP LAST_ACK Connections
+  namespace: AGT.ECS
+  level: server
+  unit: count
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 0
+  kind: random
+  normal:
+  - 0
+  - 3
+  bad:
+  - 0
+  - 10
+- id: net_tcp_listen
+  name: (Agent) TCP LISTEN Connections
+  namespace: AGT.ECS
+  level: server
+  unit: count
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 0
+  kind: constant
+  value: 6
+- id: net_tcp_closing
+  name: (Agent) TCP CLOSING Connections
+  namespace: AGT.ECS
+  level: server
+  unit: count
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 0
+  kind: random
+  normal:
+  - 0
+  - 3
+  bad:
+  - 0
+  - 10
+- id: net_tcp_retrans
+  name: (Agent) TCP Retransmission Rate
+  namespace: AGT.ECS
+  level: server
+  unit: '%'
+  official_range:
+  - 0.0
+  - 100.0
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 0
+  - 0.5
+  bad:
+  - 6
+  - 12

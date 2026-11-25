@@ -1,0 +1,70 @@
+seed: 42
+start_utc: '2026-11-01T00:00:00Z'
+tick_seconds: 60
+ticks: 10080
+components:
+- components/C1_dws.yaml
+- components/C2_kafka.yaml
+- components/C3_ecs_loader.yaml
+- components/C4_ecs_bastion.yaml
+- components/C5_obs.yaml
+- components/C6_nat.yaml
+- components/C7_vpc.yaml
+- components/C8_cce.yaml
+incidents:
+  C1:
+  - start_tick: 300
+    end_tick: 329
+  - start_tick: 3500
+    end_tick: 3544
+  - start_tick: 6700
+    end_tick: 6759
+  C2:
+  - start_tick: 700
+    end_tick: 744
+  - start_tick: 3900
+    end_tick: 3959
+  - start_tick: 7100
+    end_tick: 7129
+  C3:
+  - start_tick: 1100
+    end_tick: 1159
+  - start_tick: 4300
+    end_tick: 4329
+  - start_tick: 7500
+    end_tick: 7544
+  C4:
+  - start_tick: 1500
+    end_tick: 1529
+  - start_tick: 4700
+    end_tick: 4744
+  - start_tick: 7900
+    end_tick: 7959
+  C5:
+  - start_tick: 1900
+    end_tick: 1944
+  - start_tick: 5100
+    end_tick: 5159
+  - start_tick: 8300
+    end_tick: 8329
+  C6:
+  - start_tick: 2300
+    end_tick: 2359
+  - start_tick: 5500
+    end_tick: 5529
+  - start_tick: 8700
+    end_tick: 8744
+  C7:
+  - start_tick: 2700
+    end_tick: 2729
+  - start_tick: 5900
+    end_tick: 5944
+  - start_tick: 9100
+    end_tick: 9159
+  C8:
+  - start_tick: 3100
+    end_tick: 3144
+  - start_tick: 6300
+    end_tick: 6359
+  - start_tick: 9500
+    end_tick: 9529

@@ -1,0 +1,884 @@
+id: C8
+name: CCE
+resources:
+  cluster:
+  - cluster
+  node:
+  - node1
+  - node2
+  container:
+  - metrics-cron
+  - logs-cron
+  - web-app
+metrics:
+- id: aom_cluster_cpu_limit_core
+  name: Total CPU Cores
+  namespace: AOM PAAS.AGGR
+  level: cluster
+  unit: cores
+  official_range:
+  - 1.0
+  - null
+  period_min: 1
+  decimals: 3
+  kind: derived
+  expr: sum('node', 'aom_node_cpu_limit_core')
+- id: aom_cluster_cpu_used_core
+  name: Used CPU Cores
+  namespace: AOM PAAS.AGGR
+  level: cluster
+  unit: cores
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 3
+  kind: derived
+  expr: sum('node', 'aom_node_cpu_used_core')
+- id: aom_cluster_cpu_usage
+  name: CPU Usage
+  namespace: AOM PAAS.AGGR
+  level: cluster
+  unit: '%'
+  official_range:
+  - 0.0
+  - 100.0
+  period_min: 1
+  decimals: 2
+  kind: derived
+  expr: avg('node', 'aom_node_cpu_usage')
+- id: aom_cluster_disk_available_capacity_megabytes
+  name: Available Disk Space
+  namespace: AOM PAAS.AGGR
+  level: cluster
+  unit: MB
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 3
+  kind: derived
+  expr: sum('node', 'aom_node_disk_available_capacity_megabytes')
+- id: aom_cluster_disk_capacity_megabytes
+  name: Total Disk Space
+  namespace: AOM PAAS.AGGR
+  level: cluster
+  unit: MB
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 3
+  kind: derived
+  expr: sum('node', 'aom_node_disk_capacity_megabytes')
+- id: aom_cluster_disk_usage
+  name: Disk Usage
+  namespace: AOM PAAS.AGGR
+  level: cluster
+  unit: '%'
+  official_range:
+  - 0.0
+  - 100.0
+  period_min: 1
+  decimals: 2
+  kind: derived
+  expr: avg('node', 'aom_node_disk_usage')
+- id: aom_cluster_memory_free_megabytes
+  name: Available Physical Memory
+  namespace: AOM PAAS.AGGR
+  level: cluster
+  unit: MB
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 3
+  kind: derived
+  expr: sum('node', 'aom_node_memory_free_megabytes')
+- id: aom_cluster_virtual_memory_free_megabytes
+  name: Available Virtual Memory
+  namespace: AOM PAAS.AGGR
+  level: cluster
+  unit: MB
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 3
+  kind: derived
+  expr: sum('node', 'aom_node_virtual_memory_free_megabytes')
+- id: aom_cluster_memory_usage
+  name: Physical Memory Usage
+  namespace: AOM PAAS.AGGR
+  level: cluster
+  unit: '%'
+  official_range:
+  - 0.0
+  - 100.0
+  period_min: 1
+  decimals: 2
+  kind: derived
+  expr: avg('node', 'aom_node_memory_usage')
+- id: aom_cluster_network_receive_bytes
+  name: Downlink Rate (BPS)
+  namespace: AOM PAAS.AGGR
+  level: cluster
+  unit: byte/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: derived
+  expr: sum('node', 'aom_node_network_receive_bytes')
+- id: aom_cluster_network_transmit_bytes
+  name: Uplink Rate (BPS)
+  namespace: AOM PAAS.AGGR
+  level: cluster
+  unit: byte/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: derived
+  expr: sum('node', 'aom_node_network_transmit_bytes')
+- id: aom_cluster_memory_total_megabytes
+  name: Total Physical Memory
+  namespace: AOM PAAS.AGGR
+  level: cluster
+  unit: MB
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 3
+  kind: derived
+  expr: sum('node', 'aom_node_memory_total_megabytes')
+- id: aom_cluster_virtual_memory_total_megabytes
+  name: Total Virtual Memory
+  namespace: AOM PAAS.AGGR
+  level: cluster
+  unit: MB
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 3
+  kind: derived
+  expr: sum('node', 'aom_node_virtual_memory_total_megabytes')
+- id: aom_cluster_virtual_memory_usage
+  name: Virtual Memory Usage
+  namespace: AOM PAAS.AGGR
+  level: cluster
+  unit: '%'
+  official_range:
+  - 0.0
+  - 100.0
+  period_min: 1
+  decimals: 2
+  kind: derived
+  expr: avg('node', 'aom_node_virtual_memory_usage')
+- id: aom_node_network_receive_bytes
+  name: Downlink Rate (BPS)
+  namespace: AOM PAAS.NODE
+  level: node
+  unit: byte/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 120000.0
+  - 180000.0
+  bad:
+  - 15000.0
+  - 60000.0
+- id: aom_node_network_receive_packets
+  name: Downlink Rate (PPS)
+  namespace: AOM PAAS.NODE
+  level: node
+  unit: packet/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 160.0
+  - 240.0
+  bad:
+  - 20.0
+  - 80.0
+- id: aom_node_network_receive_error_packets
+  name: Downlink Error Rate
+  namespace: AOM PAAS.NODE
+  level: node
+  unit: packet/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 0
+  - 0
+  bad:
+  - 5
+  - 30
+- id: aom_node_network_transmit_bytes
+  name: Uplink Rate (BPS)
+  namespace: AOM PAAS.NODE
+  level: node
+  unit: byte/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 120000.0
+  - 180000.0
+  bad:
+  - 15000.0
+  - 60000.0
+- id: aom_node_network_transmit_error_packets
+  name: Uplink Error Rate
+  namespace: AOM PAAS.NODE
+  level: node
+  unit: packet/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 0
+  - 0
+  bad:
+  - 5
+  - 30
+- id: aom_node_network_transmit_packets
+  name: Uplink Rate (PPS)
+  namespace: AOM PAAS.NODE
+  level: node
+  unit: packet/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 160.0
+  - 240.0
+  bad:
+  - 20.0
+  - 80.0
+- id: aom_node_network_total_bytes
+  name: Total Rate (BPS)
+  namespace: AOM PAAS.NODE
+  level: node
+  unit: byte/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: derived
+  expr: aom_node_network_receive_bytes + aom_node_network_transmit_bytes
+- id: aom_node_disk_read_kilobytes
+  name: Disk Read Rate
+  namespace: AOM PAAS.NODE
+  level: node
+  unit: KB/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 160.0
+  - 240.0
+  bad:
+  - 20.0
+  - 80.0
+- id: aom_node_disk_write_kilobytes
+  name: Disk Write Rate
+  namespace: AOM PAAS.NODE
+  level: node
+  unit: KB/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 640.0
+  - 960.0
+  bad:
+  - 80.0
+  - 320.0
+- id: aom_node_disk_available_capacity_megabytes
+  name: Available Disk Space
+  namespace: AOM PAAS.NODE
+  level: node
+  unit: MB
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 3
+  kind: derived
+  expr: aom_node_disk_capacity_megabytes * (100 - aom_node_disk_usage) / 100
+- id: aom_node_disk_capacity_megabytes
+  name: Total Disk Space
+  namespace: AOM PAAS.NODE
+  level: node
+  unit: MB
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 3
+  kind: constant
+  value: 102400
+- id: aom_node_disk_rw_status
+  name: Disk Read/Write Status
+  namespace: AOM PAAS.NODE
+  level: node
+  unit: N/A
+  official_range:
+  - 0.0
+  - 1.0
+  period_min: 1
+  decimals: 3
+  kind: constant
+  value: 0
+- id: aom_node_disk_usage
+  name: Disk Usage
+  namespace: AOM PAAS.NODE
+  level: node
+  unit: '%'
+  official_range:
+  - 0.0
+  - 100.0
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 30
+  - 45
+  bad:
+  - 92
+  - 96
+- id: aom_node_cpu_limit_core
+  name: Total CPU Cores
+  namespace: AOM PAAS.NODE
+  level: node
+  unit: cores
+  official_range:
+  - 1.0
+  - null
+  period_min: 1
+  decimals: 3
+  kind: constant
+  value: 2
+- id: aom_node_cpu_used_core
+  name: Used CPU Cores
+  namespace: AOM PAAS.NODE
+  level: node
+  unit: cores
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 3
+  kind: derived
+  expr: aom_node_cpu_limit_core * aom_node_cpu_usage / 100
+- id: aom_node_cpu_usage
+  name: CPU Usage
+  namespace: AOM PAAS.NODE
+  level: node
+  unit: '%'
+  official_range:
+  - 0.0
+  - 100.0
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 20
+  - 66
+  bad:
+  - 92
+  - 98
+- id: aom_node_memory_free_megabytes
+  name: Available Physical Memory
+  namespace: AOM PAAS.NODE
+  level: node
+  unit: MB
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 3
+  kind: derived
+  expr: aom_node_memory_total_megabytes * (100 - aom_node_memory_usage) / 100
+- id: aom_node_virtual_memory_free_megabytes
+  name: Available Virtual Memory
+  namespace: AOM PAAS.NODE
+  level: node
+  unit: MB
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 3
+  kind: derived
+  expr: aom_node_memory_free_megabytes
+- id: aom_node_memory_usage
+  name: Physical Memory Usage
+  namespace: AOM PAAS.NODE
+  level: node
+  unit: '%'
+  official_range:
+  - 0.0
+  - 100.0
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 40
+  - 60
+  bad:
+  - 92
+  - 97
+- id: aom_node_memory_total_megabytes
+  name: Total Physical Memory
+  namespace: AOM PAAS.NODE
+  level: node
+  unit: MB
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 3
+  kind: constant
+  value: 4096
+- id: aom_node_virtual_memory_total_megabytes
+  name: Total Virtual Memory
+  namespace: AOM PAAS.NODE
+  level: node
+  unit: MB
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 3
+  kind: derived
+  expr: aom_node_memory_total_megabytes
+- id: aom_node_virtual_memory_usage
+  name: Virtual Memory Usage
+  namespace: AOM PAAS.NODE
+  level: node
+  unit: '%'
+  official_range:
+  - 0.0
+  - 100.0
+  period_min: 1
+  decimals: 2
+  kind: derived
+  expr: aom_node_memory_usage
+- id: aom_node_current_threads_num
+  name: Current Threads
+  namespace: AOM PAAS.NODE
+  level: node
+  unit: count
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 0
+  kind: random
+  normal:
+  - 800
+  - 1200
+  bad:
+  - 3000
+  - 5000
+- id: aom_node_sys_max_threads_num
+  name: Max. Threads
+  namespace: AOM PAAS.NODE
+  level: node
+  unit: count
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 0
+  kind: constant
+  value: 30000
+- id: aom_node_phy_disk_total_capacity_megabytes
+  name: Total Physical Disk Space
+  namespace: AOM PAAS.NODE
+  level: node
+  unit: MB
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 3
+  kind: constant
+  value: 153600
+- id: aom_node_physical_disk_total_used_megabytes
+  name: Used Physical Disk Space
+  namespace: AOM PAAS.NODE
+  level: node
+  unit: MB
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 3
+  kind: derived
+  expr: aom_node_disk_capacity_megabytes - aom_node_disk_available_capacity_megabytes + 15360
+- id: aom_node_process_number
+  name: Processes
+  namespace: AOM PAAS.NODE
+  level: node
+  unit: count
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 0
+  kind: random
+  normal:
+  - 180
+  - 260
+  bad:
+  - 600
+  - 900
+- id: aom_container_cpu_limit_core
+  name: Total CPU Cores
+  namespace: AOM PAAS.CONTAINER
+  level: container
+  unit: cores
+  official_range:
+  - 1.0
+  - null
+  period_min: 1
+  decimals: 3
+  kind: constant
+  value: 1
+- id: aom_container_cpu_used_core
+  name: Used CPU Cores
+  namespace: AOM PAAS.CONTAINER
+  level: container
+  unit: cores
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 3
+  kind: derived
+  expr: aom_container_cpu_limit_core * aom_container_cpu_usage / 100
+- id: aom_container_cpu_usage
+  name: CPU Usage
+  namespace: AOM PAAS.CONTAINER
+  level: container
+  unit: '%'
+  official_range:
+  - 0.0
+  - 100.0
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 5
+  - 30
+  bad:
+  - 92
+  - 98
+- id: aom_container_disk_read_kilobytes
+  name: Disk Read Rate
+  namespace: AOM PAAS.CONTAINER
+  level: container
+  unit: KB/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 16.0
+  - 24.0
+  bad:
+  - 2.0
+  - 8.0
+- id: aom_container_disk_write_kilobytes
+  name: Disk Write Rate
+  namespace: AOM PAAS.CONTAINER
+  level: container
+  unit: KB/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 40.0
+  - 60.0
+  bad:
+  - 5.0
+  - 20.0
+- id: aom_container_filesystem_available_capacity_megabytes
+  name: Available File System Capacity
+  namespace: AOM PAAS.CONTAINER
+  level: container
+  unit: MB
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 3
+  kind: derived
+  expr: aom_container_filesystem_capacity_megabytes * (100 - aom_container_filesystem_usage) / 100
+- id: aom_container_filesystem_capacity_megabytes
+  name: Total File System Capacity
+  namespace: AOM PAAS.CONTAINER
+  level: container
+  unit: MB
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 3
+  kind: constant
+  value: 10240
+- id: aom_container_filesystem_usage
+  name: File System Usage
+  namespace: AOM PAAS.CONTAINER
+  level: container
+  unit: '%'
+  official_range:
+  - 0.0
+  - 100.0
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 5
+  - 15
+  bad:
+  - 85
+  - 95
+- id: aom_container_memory_request_megabytes
+  name: Total Physical Memory
+  namespace: AOM PAAS.CONTAINER
+  level: container
+  unit: MB
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 3
+  kind: constant
+  value: 512
+- id: aom_container_memory_usage
+  name: Physical Memory Usage
+  namespace: AOM PAAS.CONTAINER
+  level: container
+  unit: '%'
+  official_range:
+  - 0.0
+  - 100.0
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 20
+  - 76
+  bad:
+  - 92
+  - 97
+- id: aom_container_memory_used_megabytes
+  name: Used Physical Memory
+  namespace: AOM PAAS.CONTAINER
+  level: container
+  unit: MB
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 3
+  kind: derived
+  expr: aom_container_memory_request_megabytes * aom_container_memory_usage / 100
+- id: aom_container_network_receive_bytes
+  name: Downlink Rate (BPS)
+  namespace: AOM PAAS.CONTAINER
+  level: container
+  unit: byte/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 16000.0
+  - 24000.0
+  bad:
+  - 2000.0
+  - 8000.0
+- id: aom_container_network_receive_packets
+  name: Downlink Rate (PPS)
+  namespace: AOM PAAS.CONTAINER
+  level: container
+  unit: packet/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 24.0
+  - 36.0
+  bad:
+  - 3.0
+  - 12.0
+- id: aom_container_network_receive_error_packets
+  name: Downlink Error Rate
+  namespace: AOM PAAS.CONTAINER
+  level: container
+  unit: count/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 0
+  - 0
+  bad:
+  - 5
+  - 20
+- id: aom_container_network_rx_error_packets
+  name: Error Packets
+  namespace: AOM PAAS.CONTAINER
+  level: container
+  unit: count
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 0
+  kind: random
+  normal:
+  - 0
+  - 0
+  bad:
+  - 10
+  - 50
+- id: aom_container_network_transmit_bytes
+  name: Uplink Rate (BPS)
+  namespace: AOM PAAS.CONTAINER
+  level: container
+  unit: byte/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 16000.0
+  - 24000.0
+  bad:
+  - 2000.0
+  - 8000.0
+- id: aom_container_network_transmit_error_packets
+  name: Uplink Error Rate
+  namespace: AOM PAAS.CONTAINER
+  level: container
+  unit: count/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 0
+  - 0
+  bad:
+  - 5
+  - 20
+- id: aom_container_network_transmit_packets
+  name: Uplink Rate (PPS)
+  namespace: AOM PAAS.CONTAINER
+  level: container
+  unit: packet/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 24.0
+  - 36.0
+  bad:
+  - 3.0
+  - 12.0
+- id: aom_process_status
+  name: Status
+  namespace: AOM PAAS.CONTAINER
+  level: container
+  unit: N/A
+  official_range:
+  - 0.0
+  - 1.0
+  period_min: 1
+  decimals: 3
+  kind: flag
+  healthy: 0
+  unhealthy: 1
+  bad_resource: metrics-cron
+- id: aom_container_memory_workingset_usage
+  name: Working Set Memory Usage
+  namespace: AOM PAAS.CONTAINER
+  level: container
+  unit: '%'
+  official_range:
+  - 0.0
+  - 100.0
+  period_min: 1
+  decimals: 2
+  kind: derived
+  expr: aom_container_memory_usage * 0.8
+- id: aom_container_memory_workingset_used_megabytes
+  name: Used Working Set Memory
+  namespace: AOM PAAS.CONTAINER
+  level: container
+  unit: MB
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 3
+  kind: derived
+  expr: aom_container_memory_used_megabytes * 0.8

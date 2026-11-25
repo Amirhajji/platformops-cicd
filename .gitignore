@@ -21,3 +21,10 @@ yarn-error.log*
 Thumbs.db
 .vscode/
 .idea/
+
+simulator/output/
+simulator/.venv/
+__pycache__/
+
+# Local database settings
+backend/.env.local

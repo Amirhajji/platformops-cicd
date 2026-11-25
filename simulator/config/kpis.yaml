@@ -1,0 +1,350 @@
+status_bands:
+  healthy:
+  - 80
+  - 100
+  degraded:
+  - 50
+  - 79.99
+  critical:
+  - 0
+  - 49.99
+kpis:
+- component: C1
+  id: dws_cpu
+  name: CPU load
+  signal: saturation
+  type: average
+  level: node
+  input: dws010_cpu_usage
+  good: 60
+  bad: 90
+  better: lower
+- component: C1
+  id: dws_mem
+  name: Memory load
+  signal: saturation
+  type: average
+  level: node
+  input: dws011_mem_usage
+  good: 70
+  bad: 90
+  better: lower
+- component: C1
+  id: dws_disk
+  name: Disk fill
+  signal: saturation
+  type: maximum
+  level: node
+  input: dws015_disk_usage
+  good: 70
+  bad: 90
+  better: lower
+- component: C1
+  id: dws_cache
+  name: Cache efficiency
+  signal: latency
+  type: value
+  level: cluster
+  input: dws001_shared_buffer_hit_ratio
+  good: 95
+  bad: 80
+  better: higher
+- component: C1
+  id: dws_io_wait
+  name: Disk write latency
+  signal: latency
+  type: maximum
+  level: node
+  input: dws021_avg_disk_sec_per_write
+  good: 0.01
+  bad: 0.1
+  better: lower
+- component: C2
+  id: kafka_backlog
+  name: Consumer backlog
+  signal: latency
+  type: value
+  level: consumer group
+  input: consumer_messages_remained
+  good: 1000
+  bad: 100000
+  better: lower
+- component: C2
+  id: kafka_disk
+  name: Broker disk fill
+  signal: saturation
+  type: maximum
+  level: broker
+  input: broker_disk_usage
+  good: 70
+  bad: 90
+  better: lower
+- component: C2
+  id: kafka_cpu
+  name: Broker CPU
+  signal: saturation
+  type: average
+  level: broker
+  input: broker_cpu_usage
+  good: 60
+  bad: 90
+  better: lower
+- component: C2
+  id: kafka_alive
+  name: Brokers alive
+  signal: errors
+  type: ratio
+  level: broker
+  input:
+    part: sum(broker_alive)
+    total: count(broker)
+  good: 100
+  bad: 66
+  better: higher
+- component: C2
+  id: kafka_produce_lat
+  name: Produce latency
+  signal: latency
+  type: maximum
+  level: broker
+  input: broker_produce_mean
+  good: 10
+  bad: 100
+  better: lower
+- component: C3
+  id: ldr_cpu
+  name: CPU load
+  signal: saturation
+  type: value
+  level: server
+  input: cpu_usage
+  good: 60
+  bad: 90
+  better: lower
+- component: C3
+  id: ldr_mem
+  name: Memory load
+  signal: saturation
+  type: value
+  level: server
+  input: mem_usedPercent
+  good: 70
+  bad: 90
+  better: lower
+- component: C3
+  id: ldr_disk
+  name: Disk fill
+  signal: saturation
+  type: value
+  level: server
+  input: disk_usedPercent
+  good: 70
+  bad: 90
+  better: lower
+- component: C3
+  id: ldr_iowait
+  name: I/O wait
+  signal: latency
+  type: value
+  level: server
+  input: cpu_usage_iowait
+  good: 5
+  bad: 30
+  better: lower
+- component: C3
+  id: ldr_retrans
+  name: TCP retransmission
+  signal: errors
+  type: value
+  level: server
+  input: net_tcp_retrans
+  good: 1
+  bad: 5
+  better: lower
+- component: C4
+  id: bst_cpu
+  name: CPU load
+  signal: saturation
+  type: value
+  level: server
+  input: cpu_util
+  good: 60
+  bad: 90
+  better: lower
+- component: C4
+  id: bst_disk
+  name: Disk fill
+  signal: saturation
+  type: value
+  level: server
+  input: disk_util_inband
+  good: 70
+  bad: 90
+  better: lower
+- component: C4
+  id: bst_conn
+  name: Open connections
+  signal: traffic
+  type: value
+  level: server
+  input: network_vm_connections
+  good: 50
+  bad: 500
+  better: lower
+- component: C5
+  id: obs_err
+  name: Error rate
+  signal: errors
+  type: ratio
+  level: bucket
+  input:
+    part: request_count_4xx + request_count_5xx
+    total: get_request_count + put_request_count + post_request_count + head_request_count + delete_request_count
+  good: 1
+  bad: 5
+  better: lower
+- component: C5
+  id: obs_success
+  name: Request success
+  signal: errors
+  type: value
+  level: bucket
+  input: request_success_rate
+  good: 99.9
+  bad: 95
+  better: higher
+- component: C5
+  id: obs_latency
+  name: Request latency
+  signal: latency
+  type: value
+  level: bucket
+  input: total_request_latency
+  good: 100
+  bad: 1000
+  better: lower
+- component: C5
+  id: obs_first_byte
+  name: First byte delay
+  signal: latency
+  type: value
+  level: bucket
+  input: first_byte_latency
+  good: 50
+  bad: 500
+  better: lower
+- component: C6
+  id: nat_snat
+  name: SNAT connection usage
+  signal: saturation
+  type: value
+  level: gateway
+  input: snat_connection_ratio
+  good: 50
+  bad: 80
+  better: lower
+- component: C6
+  id: nat_out_bw
+  name: Outbound bandwidth usage
+  signal: saturation
+  type: value
+  level: gateway
+  input: outbound_bandwidth_ratio
+  good: 60
+  bad: 90
+  better: lower
+- component: C6
+  id: nat_drops
+  name: Dropped packets
+  signal: errors
+  type: maximum
+  level: gateway
+  input:
+  - packets_drop_count_snat_connection_beyond
+  - packets_drop_count_pps_beyond
+  - packets_drop_count_eip_port_alloc_beyond
+  good: 0
+  bad: 100
+  better: lower
+- component: C7
+  id: eip_out
+  name: EIP outbound usage
+  signal: saturation
+  type: maximum
+  level: EIP / bandwidth
+  input: upstream_bandwidth_usage
+  good: 60
+  bad: 90
+  better: lower
+- component: C7
+  id: eip_in
+  name: EIP inbound usage
+  signal: saturation
+  type: maximum
+  level: EIP / bandwidth
+  input: downstream_bandwidth_usage
+  good: 60
+  bad: 90
+  better: lower
+- component: C7
+  id: subnet_ip
+  name: Subnet IP usage
+  signal: saturation
+  type: maximum
+  level: subnet
+  input: subnet_ipv4_availability_usage_percentage
+  good: 70
+  bad: 90
+  better: lower
+- component: C8
+  id: cce_cpu
+  name: Cluster CPU
+  signal: saturation
+  type: value
+  level: cluster
+  input: aom_cluster_cpu_usage
+  good: 60
+  bad: 90
+  better: lower
+- component: C8
+  id: cce_mem
+  name: Cluster memory
+  signal: saturation
+  type: value
+  level: cluster
+  input: aom_cluster_memory_usage
+  good: 70
+  bad: 90
+  better: lower
+- component: C8
+  id: cce_node_disk
+  name: Node disk fill
+  signal: saturation
+  type: maximum
+  level: node
+  input: aom_node_disk_usage
+  good: 70
+  bad: 90
+  better: lower
+- component: C8
+  id: cce_pod_mem
+  name: Workload memory
+  signal: saturation
+  type: maximum
+  level: container
+  input: aom_container_memory_usage
+  good: 70
+  bad: 90
+  better: lower
+- component: C8
+  id: cce_workloads_ok
+  name: Workloads healthy
+  signal: errors
+  type: ratio
+  level: container
+  input:
+    part: count(aom_process_status == 0)
+    total: count(container)
+  good: 100
+  bad: 66
+  better: higher

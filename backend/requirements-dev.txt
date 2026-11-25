@@ -1,0 +1,6 @@
+# Windows only, never shipped: migrations, loader, tests.
+-r requirements.txt
+alembic==1.14.1
+PyYAML==6.0.3
+pytest==8.3.5
+httpx==0.28.1

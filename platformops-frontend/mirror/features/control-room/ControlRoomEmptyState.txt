@@ -1,2 +1,0 @@
-﻿ORIGINAL FILE: C:\Users\h50048240\3D Objects\PlatformOPS\platformops-frontend\src\features\control-room\ControlRoomEmptyState.tsx
-==================================================

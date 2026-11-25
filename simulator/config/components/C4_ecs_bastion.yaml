@@ -1,0 +1,295 @@
+id: C4
+name: ECS bastion
+resources:
+  server:
+  - bastion
+metrics:
+- id: cpu_util
+  name: CPU Usage
+  namespace: SYS.ECS
+  level: server
+  unit: '%'
+  official_range:
+  - 0.0
+  - 100.0
+  period_min: 5
+  decimals: 2
+  kind: random
+  normal:
+  - 1
+  - 5
+  bad:
+  - 92
+  - 98
+- id: mem_util
+  name: Memory Usage
+  namespace: SYS.ECS
+  level: server
+  unit: '%'
+  official_range:
+  - 0.0
+  - 100.0
+  period_min: 5
+  decimals: 2
+  kind: random
+  normal:
+  - 20
+  - 35
+  bad:
+  - 88
+  - 96
+- id: disk_util_inband
+  name: Disk Usage
+  namespace: SYS.ECS
+  level: server
+  unit: '%'
+  official_range:
+  - 0.0
+  - 100.0
+  period_min: 5
+  decimals: 2
+  kind: random
+  normal:
+  - 25
+  - 35
+  bad:
+  - 92
+  - 96
+- id: disk_read_bytes_rate
+  name: Disk Read Bandwidth
+  namespace: SYS.ECS
+  level: server
+  unit: byte/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 5
+  decimals: 2
+  kind: random
+  normal:
+  - 1600.0
+  - 2400.0
+  bad:
+  - 200.0
+  - 800.0
+- id: disk_write_bytes_rate
+  name: Disk Write Bandwidth
+  namespace: SYS.ECS
+  level: server
+  unit: byte/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 5
+  decimals: 2
+  kind: random
+  normal:
+  - 4000.0
+  - 6000.0
+  bad:
+  - 500.0
+  - 2000.0
+- id: disk_read_requests_rate
+  name: Disk Read IOPS
+  namespace: SYS.ECS
+  level: server
+  unit: request/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 5
+  decimals: 2
+  kind: random
+  normal:
+  - 0.8
+  - 1.2
+  bad:
+  - 0.1
+  - 0.4
+- id: disk_write_requests_rate
+  name: Disk Write IOPS
+  namespace: SYS.ECS
+  level: server
+  unit: request/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 5
+  decimals: 2
+  kind: random
+  normal:
+  - 1.6
+  - 2.4
+  bad:
+  - 0.2
+  - 0.8
+- id: network_incoming_bytes_rate_inband
+  name: Inband Incoming Rate
+  namespace: SYS.ECS
+  level: server
+  unit: byte/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 5
+  decimals: 2
+  kind: random
+  normal:
+  - 1600.0
+  - 2400.0
+  bad:
+  - 200.0
+  - 800.0
+- id: network_outgoing_bytes_rate_inband
+  name: Inband Outgoing Rate
+  namespace: SYS.ECS
+  level: server
+  unit: byte/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 5
+  decimals: 2
+  kind: random
+  normal:
+  - 1600.0
+  - 2400.0
+  bad:
+  - 200.0
+  - 800.0
+- id: network_incoming_bytes_aggregate_rate
+  name: Outband Incoming Rate
+  namespace: SYS.ECS
+  level: server
+  unit: byte/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 5
+  decimals: 2
+  kind: random
+  normal:
+  - 1600.0
+  - 2400.0
+  bad:
+  - 200.0
+  - 800.0
+- id: network_outgoing_bytes_aggregate_rate
+  name: Outband Outgoing Rate
+  namespace: SYS.ECS
+  level: server
+  unit: byte/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 5
+  decimals: 2
+  kind: random
+  normal:
+  - 1600.0
+  - 2400.0
+  bad:
+  - 200.0
+  - 800.0
+- id: network_vm_connections
+  name: Network Connections
+  namespace: SYS.ECS
+  level: server
+  unit: count
+  official_range:
+  - 0.0
+  - null
+  period_min: 5
+  decimals: 0
+  kind: random
+  normal:
+  - 2
+  - 10
+  bad:
+  - 600
+  - 900
+- id: network_vm_bandwidth_in
+  name: Server Inbound Bandwidth
+  namespace: SYS.ECS
+  level: server
+  unit: byte/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 5
+  decimals: 2
+  kind: random
+  normal:
+  - 1600.0
+  - 2400.0
+  bad:
+  - 200.0
+  - 800.0
+- id: network_vm_bandwidth_out
+  name: Server Outbound Bandwidth
+  namespace: SYS.ECS
+  level: server
+  unit: byte/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 5
+  decimals: 2
+  kind: random
+  normal:
+  - 1600.0
+  - 2400.0
+  bad:
+  - 200.0
+  - 800.0
+- id: network_vm_pps_in
+  name: Server Inbound PPS
+  namespace: SYS.ECS
+  level: server
+  unit: packet/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 5
+  decimals: 2
+  kind: random
+  normal:
+  - 8.0
+  - 12.0
+  bad:
+  - 1.0
+  - 4.0
+- id: network_vm_pps_out
+  name: Server Outbound PPS
+  namespace: SYS.ECS
+  level: server
+  unit: packet/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 5
+  decimals: 2
+  kind: random
+  normal:
+  - 8.0
+  - 12.0
+  bad:
+  - 1.0
+  - 4.0
+- id: network_vm_newconnections
+  name: New Connections
+  namespace: SYS.ECS
+  level: server
+  unit: connect/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 5
+  decimals: 2
+  kind: random
+  normal:
+  - 0
+  - 1
+  bad:
+  - 20
+  - 50

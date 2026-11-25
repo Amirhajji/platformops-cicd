@@ -1,0 +1,1428 @@
+id: C5
+name: OBS
+resources:
+  bucket:
+  - telemetry-obs-dev
+metrics:
+- id: get_request_count
+  name: GET Requests
+  namespace: SYS.OBS
+  level: bucket
+  unit: count
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 0
+  kind: random
+  normal:
+  - 40
+  - 80
+  bad:
+  - 40
+  - 80
+- id: put_request_count
+  name: PUT Requests
+  namespace: SYS.OBS
+  level: bucket
+  unit: count
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 0
+  kind: random
+  normal:
+  - 10
+  - 30
+  bad:
+  - 10
+  - 30
+- id: post_request_count
+  name: POST Requests
+  namespace: SYS.OBS
+  level: bucket
+  unit: count
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 0
+  kind: random
+  normal:
+  - 0
+  - 2
+  bad:
+  - 0
+  - 2
+- id: head_request_count
+  name: HEAD Requests
+  namespace: SYS.OBS
+  level: bucket
+  unit: count
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 0
+  kind: random
+  normal:
+  - 10
+  - 30
+  bad:
+  - 10
+  - 30
+- id: delete_request_count
+  name: DELETE Requests
+  namespace: SYS.OBS
+  level: bucket
+  unit: count
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 0
+  kind: random
+  normal:
+  - 0
+  - 2
+  bad:
+  - 0
+  - 2
+- id: first_byte_latency
+  name: First Byte Download Delay
+  namespace: SYS.OBS
+  level: bucket
+  unit: ms
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 20
+  - 40
+  bad:
+  - 500
+  - 900
+- id: request_count_4xx
+  name: 4XX Status Codes
+  namespace: SYS.OBS
+  level: bucket
+  unit: count
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 0
+  kind: random
+  normal:
+  - 0
+  - 0
+  bad:
+  - 10
+  - 30
+- id: request_count_5xx
+  name: 5XX Status Codes
+  namespace: SYS.OBS
+  level: bucket
+  unit: count
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 0
+  kind: random
+  normal:
+  - 0
+  - 0
+  bad:
+  - 10
+  - 30
+- id: total_request_latency
+  name: Average Request Latency
+  namespace: SYS.OBS
+  level: bucket
+  unit: ms
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 40
+  - 160
+  bad:
+  - 1000
+  - 2000
+- id: total_request_callback_latency
+  name: Average Request Callback Latency
+  namespace: SYS.OBS
+  level: bucket
+  unit: ms
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 30
+  - 60
+  bad:
+  - 300
+  - 900
+- id: request_count_per_second
+  name: Total QPS
+  namespace: SYS.OBS
+  level: bucket
+  unit: count/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: derived
+  expr: (get_request_count + put_request_count + post_request_count + head_request_count + delete_request_count) / 60
+- id: request_count_get_per_second
+  name: GET Request QPS
+  namespace: SYS.OBS
+  level: bucket
+  unit: count/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: derived
+  expr: get_request_count / 60
+- id: request_count_put_per_second
+  name: PUT Request QPS
+  namespace: SYS.OBS
+  level: bucket
+  unit: count/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: derived
+  expr: put_request_count / 60
+- id: request_count_delete_per_second
+  name: DELETE Request QPS
+  namespace: SYS.OBS
+  level: bucket
+  unit: count/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: derived
+  expr: delete_request_count / 60
+- id: request_count_post_per_second
+  name: POST Request QPS
+  namespace: SYS.OBS
+  level: bucket
+  unit: count/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: derived
+  expr: post_request_count / 60
+- id: request_count_head_per_second
+  name: HEAD Request QPS
+  namespace: SYS.OBS
+  level: bucket
+  unit: count/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: derived
+  expr: head_request_count / 60
+- id: request_success_rate
+  name: Request Success Rate
+  namespace: SYS.OBS
+  level: bucket
+  unit: '%'
+  official_range:
+  - 0.0
+  - 100.0
+  period_min: 1
+  decimals: 2
+  kind: derived
+  expr: 100 * (1 - (request_count_4xx + request_count_5xx) / (get_request_count + put_request_count + post_request_count + head_request_count + delete_request_count))
+- id: effective_request_rate
+  name: Valid Request Rate
+  namespace: SYS.OBS
+  level: bucket
+  unit: '%'
+  official_range:
+  - 0.0
+  - 100.0
+  period_min: 1
+  decimals: 2
+  kind: derived
+  expr: 100 * (1 - request_count_4xx / (get_request_count + put_request_count + post_request_count + head_request_count + delete_request_count))
+- id: request_break_rate
+  name: Request Interruption Rate
+  namespace: SYS.OBS
+  level: bucket
+  unit: '%'
+  official_range:
+  - 0.0
+  - 100.0
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 0
+  - 0.2
+  bad:
+  - 2
+  - 8
+- id: request_code_count
+  name: Status Codes
+  namespace: SYS.OBS
+  level: bucket
+  unit: count
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 0
+  kind: derived
+  expr: get_request_count + put_request_count + post_request_count + head_request_count + delete_request_count
+- id: api_request_count_per_second
+  name: API Request QPS
+  namespace: SYS.OBS
+  level: bucket
+  unit: count/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: derived
+  expr: request_count_per_second
+- id: request_count_monitor_2XX
+  name: 2xx Status Codes
+  namespace: SYS.OBS
+  level: bucket
+  unit: count
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 0
+  kind: derived
+  expr: request_code_count - request_count_4xx - request_count_5xx
+- id: request_count_monitor_3XX
+  name: 3xx Status Codes
+  namespace: SYS.OBS
+  level: bucket
+  unit: count
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 0
+  kind: constant
+  value: 0
+- id: download_bytes
+  name: Total Download Bandwidth
+  namespace: SYS.OBS
+  level: bucket
+  unit: byte/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: derived
+  expr: download_bytes_intranet + download_bytes_extranet
+- id: download_bytes_extranet
+  name: Download Bandwidth (Internet)
+  namespace: SYS.OBS
+  level: bucket
+  unit: byte/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: constant
+  value: 0
+- id: download_bytes_intranet
+  name: Download Bandwidth (Intranet)
+  namespace: SYS.OBS
+  level: bucket
+  unit: byte/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 160000.0
+  - 240000.0
+  bad:
+  - 20000.0
+  - 80000.0
+- id: upload_bytes
+  name: Total Upload Bandwidth
+  namespace: SYS.OBS
+  level: bucket
+  unit: byte/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: derived
+  expr: upload_bytes_extranet + upload_bytes_intranet
+- id: upload_bytes_extranet
+  name: Upload Bandwidth (Internet)
+  namespace: SYS.OBS
+  level: bucket
+  unit: byte/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 40000.0
+  - 60000.0
+  bad:
+  - 5000.0
+  - 20000.0
+- id: upload_bytes_intranet
+  name: Upload Bandwidth (Intranet)
+  namespace: SYS.OBS
+  level: bucket
+  unit: byte/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: constant
+  value: 0
+- id: download_traffic
+  name: Total Download Traffic
+  namespace: SYS.OBS
+  level: bucket
+  unit: byte
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: derived
+  expr: download_bytes * 60
+- id: download_traffic_extranet
+  name: Download Traffic (Internet)
+  namespace: SYS.OBS
+  level: bucket
+  unit: byte
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: derived
+  expr: download_bytes_extranet * 60
+- id: download_traffic_intranet
+  name: Download Traffic (Intranet)
+  namespace: SYS.OBS
+  level: bucket
+  unit: byte
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: derived
+  expr: download_bytes_intranet * 60
+- id: upload_traffic
+  name: Total Upload Traffic
+  namespace: SYS.OBS
+  level: bucket
+  unit: byte
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: derived
+  expr: upload_bytes * 60
+- id: upload_traffic_extranet
+  name: Upload Traffic (Internet)
+  namespace: SYS.OBS
+  level: bucket
+  unit: byte
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: derived
+  expr: upload_bytes_extranet * 60
+- id: upload_traffic_intranet
+  name: Upload Traffic (Intranet)
+  namespace: SYS.OBS
+  level: bucket
+  unit: byte
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: derived
+  expr: upload_bytes_intranet * 60
+- id: upload_transfer_rate
+  name: Average Upload Rate
+  namespace: SYS.OBS
+  level: bucket
+  unit: byte/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 800000.0
+  - 1200000.0
+  bad:
+  - 100000.0
+  - 400000.0
+- id: download_transfer_rate
+  name: Average Download Rate
+  namespace: SYS.OBS
+  level: bucket
+  unit: byte/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 800000.0
+  - 1200000.0
+  bad:
+  - 100000.0
+  - 400000.0
+- id: request_get_size_le_1MB_latency
+  name: GET Request Latency (Object <= 1 MB)
+  namespace: SYS.OBS
+  level: bucket
+  unit: ms
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 30
+  - 60
+  bad:
+  - 300
+  - 900
+- id: request_get_size_between_1MB_4MB_latency
+  name: GET Request Latency (1-4 MB)
+  namespace: SYS.OBS
+  level: bucket
+  unit: ms
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 60
+  - 120
+  bad:
+  - 600
+  - 1800
+- id: request_get_size_between_4MB_10MB_latency
+  name: GET Request Latency (4-10 MB)
+  namespace: SYS.OBS
+  level: bucket
+  unit: ms
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 120
+  - 240
+  bad:
+  - 1200
+  - 3600
+- id: request_get_size_between_10MB_100MB_latency
+  name: GET Request Latency (10-100 MB)
+  namespace: SYS.OBS
+  level: bucket
+  unit: ms
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 400
+  - 800
+  bad:
+  - 4000
+  - 12000
+- id: request_get_size_gt_100MB_latency
+  name: GET Request Latency (> 100 MB)
+  namespace: SYS.OBS
+  level: bucket
+  unit: ms
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 1500
+  - 3000
+  bad:
+  - 15000
+  - 45000
+- id: request_put_size_le_1MB_latency
+  name: PUT Request Latency (Object <= 1 MB)
+  namespace: SYS.OBS
+  level: bucket
+  unit: ms
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 30
+  - 60
+  bad:
+  - 300
+  - 900
+- id: request_put_size_between_1MB_4MB_latency
+  name: PUT Request Latency (1-4 MB)
+  namespace: SYS.OBS
+  level: bucket
+  unit: ms
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 60
+  - 120
+  bad:
+  - 600
+  - 1800
+- id: request_put_size_between_4MB_10MB_latency
+  name: PUT Request Latency (4-10 MB)
+  namespace: SYS.OBS
+  level: bucket
+  unit: ms
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 120
+  - 240
+  bad:
+  - 1200
+  - 3600
+- id: request_put_size_between_10MB_100MB_latency
+  name: PUT Request Latency (10-100 MB)
+  namespace: SYS.OBS
+  level: bucket
+  unit: ms
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 400
+  - 800
+  bad:
+  - 4000
+  - 12000
+- id: request_put_size_gt_100MB_latency
+  name: PUT Request Latency (> 100 MB)
+  namespace: SYS.OBS
+  level: bucket
+  unit: ms
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 1500
+  - 3000
+  bad:
+  - 15000
+  - 45000
+- id: upload_server_request_latency
+  name: Total Server-Side Upload Latency
+  namespace: SYS.OBS
+  level: bucket
+  unit: ms
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 25
+  - 50
+  bad:
+  - 250
+  - 750
+- id: upload_total_request_latency
+  name: Total E2E Upload Latency
+  namespace: SYS.OBS
+  level: bucket
+  unit: ms
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 40
+  - 80
+  bad:
+  - 400
+  - 1200
+- id: download_server_request_latency
+  name: Total Server-Side Download Latency
+  namespace: SYS.OBS
+  level: bucket
+  unit: ms
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 25
+  - 50
+  bad:
+  - 250
+  - 750
+- id: download_total_request_latency
+  name: Total E2E Download Latency
+  namespace: SYS.OBS
+  level: bucket
+  unit: ms
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 40
+  - 80
+  bad:
+  - 400
+  - 1200
+- id: request_size_le_1MB_latency_p99
+  name: P99 Request Latency (<= 1 MB)
+  namespace: SYS.OBS
+  level: bucket
+  unit: ms
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 90
+  - 180
+  bad:
+  - 900
+  - 2700
+- id: request_size_between_1MB_4MB_latency_p99
+  name: P99 E2E Request Latency (1-4 MB)
+  namespace: SYS.OBS
+  level: bucket
+  unit: ms
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 180
+  - 360
+  bad:
+  - 1800
+  - 5400
+- id: request_size_between_4MB_10MB_latency_p99
+  name: P99 E2E Request Latency (4-10 MB)
+  namespace: SYS.OBS
+  level: bucket
+  unit: ms
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 360
+  - 720
+  bad:
+  - 3600
+  - 10800
+- id: request_size_between_10MB_100MB_latency_p99
+  name: P99 E2E Request Latency (10-100 MB)
+  namespace: SYS.OBS
+  level: bucket
+  unit: ms
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 1200
+  - 2400
+  bad:
+  - 12000
+  - 36000
+- id: request_size_gt_100MB_latency_p99
+  name: P99 E2E Request Latency (> 100 MB)
+  namespace: SYS.OBS
+  level: bucket
+  unit: ms
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 4500
+  - 9000
+  bad:
+  - 45000
+  - 135000
+- id: request_size_le_1MB_latency_p95
+  name: P95 Request Latency (<= 1 MB)
+  namespace: SYS.OBS
+  level: bucket
+  unit: ms
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 60
+  - 120
+  bad:
+  - 600
+  - 1800
+- id: request_size_between_1MB_4MB_latency_p95
+  name: P95 E2E Request Latency (1-4 MB)
+  namespace: SYS.OBS
+  level: bucket
+  unit: ms
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 120
+  - 240
+  bad:
+  - 1200
+  - 3600
+- id: request_size_between_4MB_10MB_latency_p95
+  name: P95 E2E Request Latency (4-10 MB)
+  namespace: SYS.OBS
+  level: bucket
+  unit: ms
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 240
+  - 480
+  bad:
+  - 2400
+  - 7200
+- id: request_size_between_10MB_100MB_latency_p95
+  name: P95 E2E Request Latency (10-100 MB)
+  namespace: SYS.OBS
+  level: bucket
+  unit: ms
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 800
+  - 1600
+  bad:
+  - 8000
+  - 24000
+- id: request_size_gt_100MB_latency_p95
+  name: P95 E2E Request Latency (> 100 MB)
+  namespace: SYS.OBS
+  level: bucket
+  unit: ms
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 3000
+  - 6000
+  bad:
+  - 30000
+  - 90000
+- id: request_size_le_1MB_latency_p90
+  name: P90 Request Latency (<= 1 MB)
+  namespace: SYS.OBS
+  level: bucket
+  unit: ms
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 45.0
+  - 90.0
+  bad:
+  - 450.0
+  - 1350.0
+- id: request_size_between_1MB_4MB_latency_p90
+  name: P90 E2E Request Latency (1-4 MB)
+  namespace: SYS.OBS
+  level: bucket
+  unit: ms
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 90.0
+  - 180.0
+  bad:
+  - 900.0
+  - 2700.0
+- id: request_size_between_4MB_10MB_latency_p90
+  name: P90 E2E Request Latency (4-10 MB)
+  namespace: SYS.OBS
+  level: bucket
+  unit: ms
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 180.0
+  - 360.0
+  bad:
+  - 1800.0
+  - 5400.0
+- id: request_size_between_10MB_100MB_latency_p90
+  name: P90 E2E Request Latency (10-100 MB)
+  namespace: SYS.OBS
+  level: bucket
+  unit: ms
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 600.0
+  - 1200.0
+  bad:
+  - 6000.0
+  - 18000.0
+- id: request_size_gt_100MB_latency_p90
+  name: P90 E2E Request Latency (> 100 MB)
+  namespace: SYS.OBS
+  level: bucket
+  unit: ms
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 2250.0
+  - 4500.0
+  bad:
+  - 22500.0
+  - 67500.0
+- id: request_count_monitor_6XX
+  name: 6XX Status Codes
+  namespace: SYS.OBS
+  level: bucket
+  unit: count
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 0
+  kind: constant
+  value: 0
+- id: request_count_monitor_7XX
+  name: 7XX Status Codes
+  namespace: SYS.OBS
+  level: bucket
+  unit: count
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 0
+  kind: constant
+  value: 0
+- id: standard_request_upload_bandwidths
+  name: Avg. Bandwidth for Uploading Standard Objects
+  namespace: SYS.OBS
+  level: bucket
+  unit: byte/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: derived
+  expr: upload_bytes
+- id: standard_request_delete_bytes
+  name: Avg. Bandwidth for Deleting Standard Objects
+  namespace: SYS.OBS
+  level: bucket
+  unit: byte/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 800.0
+  - 1200.0
+  bad:
+  - 100.0
+  - 400.0
+- id: standard_request_download_bandwidths
+  name: Avg. Bandwidth for Downloading Standard Objects
+  namespace: SYS.OBS
+  level: bucket
+  unit: byte/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: derived
+  expr: download_bytes
+- id: standard_download_request_count
+  name: Standard Object Download Requests
+  namespace: SYS.OBS
+  level: bucket
+  unit: count
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 0
+  kind: derived
+  expr: get_request_count
+- id: standard_upload_request_count
+  name: Standard Object Upload Requests
+  namespace: SYS.OBS
+  level: bucket
+  unit: count
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 0
+  kind: derived
+  expr: put_request_count
+- id: capacity_total
+  name: Total Used Storage Space
+  namespace: SYS.OBS
+  level: bucket
+  unit: byte
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: counter
+  start: 5000000000.0
+  normal_inc:
+  - 300000.0
+  - 600000.0
+  bad_inc:
+  - 0
+  - 100000.0
+- id: capacity_standard
+  name: Used Space - Standard Storage
+  namespace: SYS.OBS
+  level: bucket
+  unit: byte
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: derived
+  expr: capacity_total
+- id: object_num_all
+  name: Total Number of Objects
+  namespace: SYS.OBS
+  level: bucket
+  unit: count
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 0
+  kind: counter
+  start: 2000
+  normal_inc:
+  - 0
+  - 1
+  bad_inc:
+  - 0
+  - 0
+- id: object_num_standard_total
+  name: Number of Objects - Standard Storage
+  namespace: SYS.OBS
+  level: bucket
+  unit: count
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 0
+  kind: derived
+  expr: object_num_all
+- id: capacity_standard_single_az
+  name: Standard Storage (Single-AZ)
+  namespace: SYS.OBS
+  level: bucket
+  unit: byte
+  official_range:
+  - 0.0
+  - null
+  period_min: 30
+  decimals: 2
+  kind: derived
+  expr: capacity_standard
+- id: object_num_standard_single_az
+  name: Standard Objects (Single-AZ)
+  namespace: SYS.OBS
+  level: bucket
+  unit: count
+  official_range:
+  - 0.0
+  - null
+  period_min: 30
+  decimals: 0
+  kind: derived
+  expr: object_num_standard_total
+- id: bucket_quota_usage
+  name: Bucket Quota Usage
+  namespace: SYS.OBS
+  level: bucket
+  unit: '%'
+  official_range:
+  - 0.0
+  - null
+  period_min: 30
+  decimals: 2
+  kind: constant
+  value: 0
+- id: bucket_total_ConcurrentRequestLimit_max
+  name: QoS - Peak Concurrent Requests (Bucket)
+  namespace: SYS.OBS
+  level: bucket
+  unit: count
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 0
+  kind: random
+  normal:
+  - 2
+  - 8
+  bad:
+  - 20
+  - 60
+- id: bucket_total_QpsLimit_Get_max
+  name: QoS - Peak Read QPS (Bucket)
+  namespace: SYS.OBS
+  level: bucket
+  unit: count/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: derived
+  expr: request_count_get_per_second * 1.5
+- id: bucket_total_QpsLimit_Get_usage
+  name: QoS - Peak Read QPS Utilization (Bucket)
+  namespace: SYS.OBS
+  level: bucket
+  unit: '%'
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 0
+  - 1
+  bad:
+  - 5
+  - 20
+- id: bucket_total_QpsLimit_PutPostDelete_max
+  name: QoS - Peak Write QPS (Bucket)
+  namespace: SYS.OBS
+  level: bucket
+  unit: count/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: derived
+  expr: (request_count_put_per_second + request_count_post_per_second + request_count_delete_per_second) * 1.5
+- id: bucket_total_QpsLimit_PutPostDelete_usage
+  name: QoS - Peak Write QPS Utilization (Bucket)
+  namespace: SYS.OBS
+  level: bucket
+  unit: '%'
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 0
+  - 1
+  bad:
+  - 5
+  - 20
+- id: bucket_total_QpsLimit_List_max
+  name: QoS - Peak List QPS (Bucket)
+  namespace: SYS.OBS
+  level: bucket
+  unit: count/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 0
+  - 1
+  bad:
+  - 0
+  - 1
+- id: bucket_total_QpsLimit_List_usage
+  name: QoS - Peak List QPS Utilization (Bucket)
+  namespace: SYS.OBS
+  level: bucket
+  unit: '%'
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 0
+  - 1
+  bad:
+  - 0
+  - 1
+- id: bucket_total_QpsLimit_Total_max
+  name: QoS - Peak QPS (Bucket)
+  namespace: SYS.OBS
+  level: bucket
+  unit: count/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: derived
+  expr: request_count_per_second * 1.5
+- id: bucket_total_QpsLimit_Total_usage
+  name: QoS - Peak QPS Utilization (Bucket)
+  namespace: SYS.OBS
+  level: bucket
+  unit: '%'
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 0
+  - 1
+  bad:
+  - 5
+  - 20
+- id: bucket_total_BpsLimit_Get_max
+  name: QoS - Peak Read BPS (Bucket)
+  namespace: SYS.OBS
+  level: bucket
+  unit: byte/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: derived
+  expr: download_bytes * 1.5
+- id: bucket_total_BpsLimit_Get_usage
+  name: QoS - Peak Read BPS Utilization (Bucket)
+  namespace: SYS.OBS
+  level: bucket
+  unit: '%'
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 0
+  - 1
+  bad:
+  - 5
+  - 20
+- id: bucket_total_BpsLimit_PutPost_max
+  name: QoS - Peak Write BPS (Bucket)
+  namespace: SYS.OBS
+  level: bucket
+  unit: byte/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: derived
+  expr: upload_bytes * 1.5
+- id: bucket_total_BpsLimit_PutPost_usage
+  name: QoS - Peak Write BPS Utilization (Bucket)
+  namespace: SYS.OBS
+  level: bucket
+  unit: '%'
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 0
+  - 1
+  bad:
+  - 5
+  - 20
+- id: bucket_total_BpsLimit_Total_max
+  name: QoS - Peak BPS (Bucket)
+  namespace: SYS.OBS
+  level: bucket
+  unit: byte/s
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: derived
+  expr: (download_bytes + upload_bytes) * 1.5
+- id: bucket_total_BpsLimit_Total_usage
+  name: QoS - Peak BPS Utilization (Bucket)
+  namespace: SYS.OBS
+  level: bucket
+  unit: '%'
+  official_range:
+  - 0.0
+  - null
+  period_min: 1
+  decimals: 2
+  kind: random
+  normal:
+  - 0
+  - 1
+  bad:
+  - 5
+  - 20
