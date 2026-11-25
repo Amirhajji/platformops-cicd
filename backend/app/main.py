@@ -1,10 +1,12 @@
-"""PlatformOPS API."""
+"""PlatformOPS API (docs/API_V1.md)."""
 from typing import Dict
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.router import router
 from app.core.config import CORS_ORIGINS
+from app.core.errors import add_error_handlers
 
 app = FastAPI(title="PlatformOPS API")
 app.add_middleware(
@@ -13,6 +15,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+add_error_handlers(app)
+app.include_router(router)
 
 
 @app.get("/health")

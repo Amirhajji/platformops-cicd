@@ -16,7 +16,7 @@ Data comes from the simulator (`simulator/SPEC.md`, spec v1.2). Deployment rules
 
 ## 2. Schema
 
-Owned by one Alembic migration (`backend/alembic/versions/`). Models:
+Owned by the Alembic migrations (`backend/alembic/versions/`). Models:
 `backend/app/db/models.py`. Timestamps are not stored per point:
 `ts = start_utc + tick * tick_seconds`.
 
@@ -33,6 +33,7 @@ Owned by one Alembic migration (`backend/alembic/versions/`). Models:
 | `alerts` | id, kpi_id, component_id, start_tick, end_tick, min_health | computed |
 | `incidents` | id, component_id, start_tick, end_tick, alert_count, min_z | computed |
 | `users` | id, username (unique), password_hash, role, created_at | accounts |
+| `auth_secret` | id (always 1), value, created_at | 1 |
 
 - `metrics`: one row per resource and metric. `column_name` is
   `<component>.<resource>.<metric_id>`, for example `C1.node1.dws010_cpu_usage`. Resource
@@ -70,6 +71,9 @@ incident can therefore end later than the simulated one, by less than one period
 component and their intervals overlap. Each simulated incident must match exactly one
 detected incident.
 
+**Token secret**: the env var `SECRET_KEY` if set, else `auth_secret.value`: 32 random bytes
+that the loader creates once and never replaces. Without either, login answers 503.
+
 These rules are computed once, by the loader. The API only reads the tables.
 
 ## 4. Load procedure (Windows, never deployed)
@@ -81,21 +85,21 @@ py -3.8 -m venv .venv
 .venv\Scripts\python -m pip install -r requirements-dev.txt
 .venv\Scripts\python -m alembic upgrade head
 .venv\Scripts\python tools\load_simulation.py
-.venv\Scripts\python tools\load_simulation.py --admin-password <password>   # + admin user
+.venv\Scripts\python tools\create_user.py --username admin --role admin   # asks the password
 ```
 
 Generate the data first: `python -m simulator run` and `validate` (`simulator/README.md`).
 
 The target database comes from `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`:
 environment variables first, then `backend/.env.local` (git-ignored), then the defaults of
-the VM. Alembic and the loader refuse to start when `DB_NAME` is not set explicitly, so
+the VM (none for the password). Alembic and the loader refuse to start when `DB_NAME` is not set explicitly, so
 that the deployed database is never changed by accident.
 
 The loader, in one transaction (an error leaves the database as it was):
 
 1. checks the sha256 and row count of every file in `manifest.json`, that the manifest
    matches `run.yaml`, and that the metrics match the in-scope catalog;
-2. truncates every table except `users`, and reloads them (COPY for the points);
+2. truncates and reloads every table except `users` and `auth_secret` (COPY for points);
 3. computes statuses, alerts and incidents, and checks the global status against
    `z_kqis.csv`;
 4. checks the row count of every table, then commits and prints the detected incidents
@@ -108,6 +112,9 @@ Shipped by Jenkins: `backend/app/` and `backend/requirements.txt` only.
 | Path | Role |
 |---|---|
 | `app/main.py` | FastAPI app, CORS, `GET /health` (no database) |
-| `app/core/config.py` | settings, never connects at import |
+| `app/api/` | routers (contract: `API_V1.md`) |
+| `app/schemas/` | pydantic models of requests and responses |
+| `app/services/` | queries; PostgreSQL does the bucketing |
+| `app/core/` | settings, database session, errors, passwords and tokens |
 | `app/db/models.py` | SQLAlchemy models |
 | `alembic/`, `alembic.ini`, `tools/`, `tests/`, `requirements-dev.txt` | not shipped |

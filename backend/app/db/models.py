@@ -127,6 +127,19 @@ class Incident(Base):
     min_z: Mapped[float] = mapped_column(Double)
 
 
+class AuthSecret(Base):
+    """The secret that signs the login tokens: a single random row."""
+    __tablename__ = "auth_secret"
+    __table_args__ = (
+        CheckConstraint("id = 1", name="auth_secret_single_row_check"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=False)
+    value: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now())
+
+
 class User(Base):
     __tablename__ = "users"
     __table_args__ = (

@@ -2,7 +2,7 @@
 
 The database settings come only from DB_HOST, DB_PORT, DB_NAME, DB_USER and DB_PASSWORD:
 environment variables first, then backend/.env.local (development only, never shipped),
-then the defaults below, which match the backend VM.
+then the defaults below, which match the backend VM. The password has no default.
 """
 import os
 from functools import lru_cache
@@ -17,7 +17,7 @@ DEFAULTS = {
     "DB_PORT": "5432",
     "DB_NAME": "platformops",
     "DB_USER": "platformops",
-    "DB_PASSWORD": "platformops",
+    "DB_PASSWORD": "",
 }
 CORS_ORIGINS: List[str] = [
     "http://192.168.21.134",

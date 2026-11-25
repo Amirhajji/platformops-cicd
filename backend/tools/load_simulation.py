@@ -24,6 +24,7 @@ BACKEND = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(BACKEND))
 
 from app.db import models  # noqa: E402
+from tools.create_user import AccountError, check_account, save_user  # noqa: E402
 from tools.database import target_engine  # noqa: E402
 
 SIMULATOR = BACKEND.parent / "simulator"
@@ -34,9 +35,8 @@ SPEC = SIMULATOR / "SPEC.md"
 
 ALERT_HEALTH = 50  # an alert is open while health < ALERT_HEALTH
 MERGE_GAP = 5  # alerts at most this many ticks apart belong to the same incident
-PBKDF2_ITERATIONS = 600000
 
-# Every table except users, which holds accounts and is never truncated.
+# Every table except users and auth_secret, which are never truncated.
 LOADED = [models.SimulationRun, models.Component, models.Metric, models.MetricPoint,
           models.Kpi, models.KpiPoint, models.KqiPoint, models.SimulatedIncident,
           models.Alert, models.Incident]
@@ -62,7 +62,7 @@ class Incident(NamedTuple):
     min_z: float
 
 
-# --- rules: alerts, incidents, status, passwords ---------------------------
+# --- rules: alerts, incidents, status --------------------------------------
 
 def find_alerts(kpi_id: str, component_id: str, health: List[float]) -> List[Alert]:
     """One alert per run of consecutive ticks with health < 50."""
@@ -94,12 +94,6 @@ def merge_alerts(component_id: str, alerts: List[Alert], z: List[float]) -> List
 def status_of(z: float, bands: Dict[str, List[float]]) -> str:
     """The band with the highest lower bound that z reaches."""
     return max((low, name) for name, (low, _) in bands.items() if z >= low)[1]
-
-
-def hash_password(password: str) -> str:
-    salt = secrets.token_bytes(16)
-    digest = hashlib.pbkdf2_hmac("sha256", password.encode(), salt, PBKDF2_ITERATIONS)
-    return f"pbkdf2_sha256${PBKDF2_ITERATIONS}${salt.hex()}${digest.hex()}"
 
 
 # --- reading the simulator files -------------------------------------------
@@ -269,12 +263,11 @@ def load_detections(connection: Connection, kpis: List[Dict[str, Any]],
     insert_rows(connection, models.Incident, [i._asdict() for i in incidents])
 
 
-def save_admin(connection: Connection, password: str) -> None:
-    values = {"username": "admin", "password_hash": hash_password(password),
-              "role": "admin"}
-    connection.execute(upsert(models.User).values(values).on_conflict_do_update(
-        index_elements=["username"],
-        set_={"password_hash": values["password_hash"], "role": "admin"}))
+def create_secret(connection: Connection) -> None:
+    """Create the secret that signs the login tokens, unless there is one already."""
+    connection.execute(upsert(models.AuthSecret)
+                       .values(id=1, value=secrets.token_hex(32))
+                       .on_conflict_do_nothing())
 
 
 def load_all(connection: Connection, admin_password: Optional[str]) -> None:
@@ -295,8 +288,9 @@ def load_all(connection: Connection, admin_password: Optional[str]) -> None:
     z_of = load_kqis(connection, component_ids, kpi_config["status_bands"])
     load_labels(connection)
     load_detections(connection, kpis, component_ids, health_of, z_of)
+    create_secret(connection)
     if admin_password is not None:
-        save_admin(connection, admin_password)
+        save_user(connection, "admin", admin_password, "admin")
 
     metric_count = sum(len(component["resources"][metric["level"]])
                        for component in components for metric in component["metrics"])
@@ -363,9 +357,11 @@ def main() -> int:
     started = time.perf_counter()
     engine = target_engine()
     try:
+        if arguments.admin_password is not None:
+            check_account("admin", arguments.admin_password, "admin")
         with engine.begin() as connection:
             load_all(connection, arguments.admin_password)
-    except LoadError as error:
+    except (LoadError, AccountError) as error:
         print(f"Nothing was loaded: {error}")
         return 1
     print(f"Load time: {time.perf_counter() - started:.1f} s\n")

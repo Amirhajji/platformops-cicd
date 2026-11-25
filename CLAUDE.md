@@ -77,7 +77,7 @@ DB_HOST=192.168.21.1
 DB_PORT=5432
 DB_NAME=platformops
 DB_USER=platformops
-DB_PASSWORD=platformops
+DB_PASSWORD=<from /opt/backend/shared/.env>
 LOG_LEVEL=info
 ```
 
@@ -135,7 +135,7 @@ Nothing under `app/` may import from `alembic/`, `tools/` or `tests/`.
 
 **Configuration**
 - One config module, `app/core/config.py`.
-- It reads the env var names from §1, with defaults matching the VM values.
+- It reads the env var names from §1, with defaults matching the VM values. Exception: `DB_PASSWORD` has no default and comes only from the VM `.env` (`/opt/backend/shared/.env`).
 - In development, allow an optional local `.env`; it is not shipped and not required.
 
 **CORS** must allow:
@@ -171,7 +171,7 @@ Nothing under `app/` may import from `alembic/`, `tools/` or `tests/`.
 ## 5. Database (PostgreSQL on the Windows host)
 
 - **PostgreSQL 17** (Windows service `postgresql-x64-17`, binaries in `C:\Program Files\PostgreSQL\17\bin`, not on PATH).
-- The backend VM connects to `192.168.21.1:5432` as `platformops/platformops`, database **`platformops`**. Connectivity is verified.
+- The backend VM connects to `192.168.21.1:5432` as user `platformops` (password `<from /opt/backend/shared/.env>`), database **`platformops`**. Connectivity is verified.
 - **Cut-over plan** (on Windows, done once by the user):
   1. `pg_dump -Fc platformops > platformops_before_rebuild.dump`
   2. `ALTER DATABASE platformops RENAME TO platformops_old;`

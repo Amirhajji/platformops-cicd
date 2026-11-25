@@ -1,14 +1,7 @@
-"""Alert, incident, status and password rules (docs/PLATFORM_V1.md, section 3)."""
-import hashlib
-import sys
-from pathlib import Path
-
+"""Alert, incident and status rules of the loader (docs/PLATFORM_V1.md, section 3)."""
 import pytest
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-
-from tools.load_simulation import (Alert, find_alerts, hash_password,  # noqa: E402
-                                   merge_alerts, status_of)
+from tools.load_simulation import Alert, find_alerts, merge_alerts, status_of
 
 BANDS = {"healthy": [80, 100], "degraded": [50, 79.99], "critical": [0, 49.99]}
 
@@ -55,12 +48,3 @@ def test_a_short_alert_does_not_shorten_the_incident():
     (49.99, "critical"), (0, "critical")])
 def test_status(z, expected):
     assert status_of(z, BANDS) == expected
-
-
-def test_password_hash_is_salted_and_can_be_verified():
-    first, second = hash_password("secret"), hash_password("secret")
-    assert first != second
-    algorithm, iterations, salt, digest = first.split("$")
-    assert algorithm == "pbkdf2_sha256"
-    assert digest == hashlib.pbkdf2_hmac(
-        "sha256", b"secret", bytes.fromhex(salt), int(iterations)).hex()
